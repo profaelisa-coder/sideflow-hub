@@ -3,164 +3,181 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SideFlow Hub - STAFF ODE AREA</title>
+    <title>SideFlow - ODE Registration</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
-        :root { --bg: #1d3557; --sec: #2a4a73; --gold: #ffb703; --blue: #457b9d; --red: #e63946; --dark: #162a44; }
-        body { font-family: 'Segoe UI', sans-serif; background: var(--bg); color: white; margin: 0; padding: 20px; }
-        .container { max-width: 600px; margin: 0 auto; padding-top: 50px; }
-        h2 { text-align: center; letter-spacing: 2px; color: var(--gold); text-transform: uppercase; margin-bottom: 30px; }
+        :root { --bg: #0d1b2a; --sec: #1b263b; --gold: #ffb703; --blue: #457b9d; --white: #e0e1dd; --red: #e63946; }
+        body { font-family: 'Segoe UI', sans-serif; background: var(--bg); color: var(--white); margin: 0; padding: 20px; padding-bottom: 100px; display: flex; flex-direction: column; align-items: center; }
+        .container { width: 100%; max-width: 600px; }
         
-        .card { background: var(--sec); padding: 30px; border-radius: 12px; border-left: 6px solid var(--gold); box-shadow: 0 4px 15px rgba(0,0,0,0.3); }
-        .label-group { display: flex; flex-direction: column; margin-bottom: 20px; }
-        label { font-size: 0.75rem; font-weight: bold; color: rgba(255,255,255,0.7); margin-bottom: 8px; text-transform: uppercase; }
+        h2 { color: var(--gold); text-transform: uppercase; letter-spacing: 2px; text-align: center; margin-bottom: 5px; }
+        .sub-title { text-align: center; font-size: 0.8rem; opacity: 0.7; margin-bottom: 25px; letter-spacing: 1px; }
         
-        /* Estilização dos Inputs e Menus Suspensos Corrigida */
-        input, select { 
-            padding: 14px; 
-            border-radius: 8px; 
-            border: 1px solid rgba(255,255,255,0.2); 
-            background: rgba(255,255,255,0.1); 
-            color: white; 
-            font-size: 1rem; 
-            width: 100%; 
-            box-sizing: border-box;
-            appearance: none;
-        }
-
-        /* Cores do Menu Suspenso (Dropdown) */
-        select option {
-            background-color: var(--dark);
-            color: white;
-        }
-
-        input:focus { border-color: var(--gold); outline: none; background: rgba(255,255,255,0.15); }
-
-        .btn-register { 
-            width: 100%; 
-            padding: 18px; 
-            background: var(--gold); 
-            color: var(--bg); 
-            border: none; 
-            border-radius: 8px; 
-            font-weight: bold; 
-            font-size: 1rem; 
-            cursor: pointer; 
-            text-transform: uppercase; 
-            transition: 0.3s; 
-            margin-top: 10px; 
-        }
-        .btn-register:hover { transform: scale(1.02); filter: brightness(1.1); }
+        .box { background: var(--sec); padding: 25px; border-radius: 12px; box-shadow: 0 8px 25px rgba(0,0,0,0.4); margin-bottom: 25px; border-bottom: 4px solid var(--gold); }
         
-        #msg { text-align: center; margin-top: 20px; font-weight: bold; font-size: 0.9rem; }
+        label { display: block; font-size: 0.75rem; font-weight: bold; margin-bottom: 8px; color: var(--gold); text-transform: uppercase; }
+        input, select { width: 100%; padding: 15px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.1); background: var(--bg); color: white; font-size: 1rem; margin-bottom: 20px; box-sizing: border-box; }
+        select option { background: var(--sec); }
+
+        button { width: 100%; padding: 16px; border-radius: 8px; border: none; font-weight: bold; text-transform: uppercase; cursor: pointer; transition: 0.3s; font-size: 0.9rem; }
+        .btn-reg { background: var(--gold); color: var(--bg); margin-top: 10px; }
+        .btn-reg:hover { background: #ffca3a; transform: translateY(-2px); }
+        
+        .live-label { color: var(--gold); font-size: 0.9rem; font-weight: bold; margin-bottom: 15px; display: flex; align-items: center; gap: 8px; }
+        .live-dot { width: 8px; height: 8px; background: var(--red); border-radius: 50%; animation: blink 1s infinite; }
+        @keyframes blink { 0% { opacity: 1; } 50% { opacity: 0.3; } 100% { opacity: 1; } }
+
+        .pod-row { background: var(--sec); padding: 15px; border-radius: 8px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; border-left: 4px solid var(--blue); box-shadow: 0 4px 10px rgba(0,0,0,0.2); }
+        .pod-info b { color: var(--gold); font-size: 1rem; }
+        .pod-count { background: var(--blue); padding: 6px 15px; border-radius: 20px; font-weight: bold; font-size: 0.9rem; }
+
+        /* Login Overlay */
+        #loginOverlay { position: fixed; top:0; left:0; width:100%; height:100%; background: var(--bg); display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 1000; }
+        
+        .nav-footer { position: fixed; bottom: 0; left: 0; width: 100%; background: #162a44; padding: 15px; display: flex; justify-content: center; gap: 15px; border-top: 1px solid rgba(255,255,255,0.1); }
+        .nav-footer button { width: auto; padding: 10px 20px; font-size: 0.75rem; background: var(--blue); color: white; }
+        .btn-back { background: rgba(255,255,255,0.1) !important; color: white !important; }
     </style>
 </head>
 <body>
 
+<div id="loginOverlay">
+    <h2>STAFF ACCESS</h2>
+    <p style="font-size: 0.8rem; opacity: 0.6; margin-bottom: 20px;">ENTER ODE PASSWORD TO CONTINUE</p>
+    <input type="password" id="passInput" placeholder="PASSWORD" style="width: 250px; text-align: center;">
+    <button onclick="checkLogin()" style="width: 250px;" class="btn-reg">UNLOCK</button>
+</div>
+
 <div class="container">
-    <h2>TOURNAMENT REGISTRATION</h2>
-
-    <div class="card">
-        <div class="label-group">
-            <label>Tournament</label>
-            <select id="tourSelect">
-                <option value="">Loading...</option>
-            </select>
-        </div>
-
-        <div class="label-group">
-            <label>Player Name</label>
-            <input type="text" id="playerName" placeholder="Full Name" autocomplete="off">
-        </div>
-
-        <div class="label-group">
-            <label>WhatsApp Number</label>
-            <input type="text" id="playerWA" placeholder="Ex: 5511999999999" autocomplete="off">
-        </div>
-
-        <button class="btn-register" id="regBtn" onclick="registerPlayer()">REGISTER PLAYER</button>
-        <div id="msg"></div>
+    <h2>TOURNAMENT REGISTRATION ODE</h2>
+    <div class="sub-title">ON-DEMAND EVENT MANAGEMENT</div>
+    
+    <div class="box">
+        <label>Player Full Name</label>
+        <input type="text" id="playerName" placeholder="EX: ASH KETCHUM" autocomplete="off">
+        
+        <label>Tournament Pod</label>
+        <select id="tourSelect">
+            <option value="">LOADING CATALOG...</option>
+        </select>
+        
+        <button class="btn-reg" onclick="registerPlayer()">REGISTER PLAYER</button>
     </div>
+
+    <div class="live-label"><div class="live-dot"></div> LIVE QUEUE STATUS</div>
+    <div id="waitingList">
+        </div>
+</div>
+
+<div class="nav-footer">
+    <button class="btn-back" onclick="backToLead()">⬅ BACK TO LEAD SETUP</button>
+    <button onclick="navToTables()">🗺 VIEW TABLE MAP</button>
 </div>
 
 <script>
     const supabaseUrl = 'https://hocpoastnlcwgedvcyqs.supabase.co';
     const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhvY3BvYXN0bmxjd2dlZHZjeXFzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQyODU0MTYsImV4cCI6MjA4OTg2MTQxNn0.1MvvcFsnGW4e0Bj7mzoUKs_3bGM-eHDJTOqsvgKe-pI';
     const _supabase = supabase.createClient(supabaseUrl, supabaseKey);
-    const eventPrefix = new URLSearchParams(window.location.search).get('event');
+    
+    const urlParams = new URLSearchParams(window.location.search);
+    let eventPrefix = urlParams.get('event') || localStorage.getItem('active_event_id');
 
     window.onload = () => {
-        if(!eventPrefix) return;
-        loadTournaments();
+        if(!eventPrefix) { document.body.innerHTML="<h2 style='margin-top:50px'>ERROR: MISSING EVENT ID</h2>"; return; }
+        localStorage.setItem('active_event_id', eventPrefix);
+        
+        if(sessionStorage.getItem('ode_auth') === 'true') {
+            document.getElementById('loginOverlay').style.display = 'none';
+            loadData();
+        }
     };
 
-    async function loadTournaments() {
-        const { data } = await _supabase.from('tournament_catalog').select('*').eq('event_id', eventPrefix).eq('item_type', 'ODE');
+    function checkLogin() {
+        if(document.getElementById('passInput').value.toUpperCase() === 'ODE') {
+            sessionStorage.setItem('ode_auth', 'true');
+            location.reload();
+        } else { alert("ACCESS DENIED"); }
+    }
+
+    async function loadData() {
+        // Puxa apenas itens do tipo ODE
+        const { data: catalog } = await _supabase.from('tournament_catalog')
+            .select('*')
+            .eq('event_id', eventPrefix)
+            .eq('item_type', 'ODE');
+
         const select = document.getElementById('tourSelect');
-        select.innerHTML = '<option value="">Choose...</option>';
-        if(data) {
-            data.forEach(item => {
-                select.innerHTML += `<option value="${item.tname}">[${item.game}] ${item.tname}</option>`;
+        select.innerHTML = '<option value="">-- SELECT TOURNAMENT --</option>';
+        
+        if(catalog) {
+            catalog.forEach(t => {
+                select.innerHTML += `<option value="${t.tname}" data-size="${t.pod_size}">[${t.game}] ${t.tname}</option>`;
             });
         }
+        updateWaitingList();
     }
 
-   async function registerPlayer() {
-    const btn = document.getElementById('regBtn');
-    const msg = document.getElementById('msg');
-    const tname = document.getElementById('tourSelect').value;
-    const pname = document.getElementById('playerName').value;
-    const pwa = document.getElementById('playerWA').value;
-
-    if(!tname || !pname || !pwa) { alert("Fill all fields!"); return; }
-
-    btn.disabled = true;
-    btn.innerText = "SAVING...";
-
-    // 1. Insere o jogador
-    const { error } = await _supabase.from('ode_registrations').insert([{
-        event_id: eventPrefix,
-        tname: tname,
-        player_name: pname,
-        whatsapp: pwa,
-        status: 'waiting'
-    }]);
-
-    if(!error) {
-        // 2. VERIFICAÇÃO DE FECHAMENTO (A LÓGICA DE 4)
-        const { data: participants } = await _supabase
-            .from('ode_registrations')
-            .select('id')
+    async function updateWaitingList() {
+        const { data: regs } = await _supabase.from('ode_registrations')
+            .select('*')
             .eq('event_id', eventPrefix)
-            .eq('tname', tname)
             .eq('status', 'waiting');
 
-        if (participants.length >= 4) {
-            // Se chegou a 4, vamos marcar como "busy" (ocupado/fechado)
-            const idsToClose = participants.map(p => p.id);
-            
-            await _supabase
-                .from('ode_registrations')
-                .update({ status: 'closed' }) // ou 'playing'
-                .in('id', idsToClose);
+        const listDiv = document.getElementById('waitingList');
+        listDiv.innerHTML = "";
 
-            alert("🚨 POD CLOSED! Send these 4 players to a table.");
+        if(!regs || regs.length === 0) {
+            listDiv.innerHTML = "<p style='opacity:0.5; text-align:center; font-size:0.9rem;'>No players in queue.</p>";
+            return;
         }
 
-        msg.style.color = "var(--gold)";
-        msg.innerText = "✅ PLAYER REGISTERED!";
-        document.getElementById('playerName').value = "";
-        document.getElementById('playerWA').value = "";
-        setTimeout(() => { msg.innerText = ""; }, 3000);
-    } else {
-        alert("Error: " + error.message);
-    }
-    
-    btn.disabled = false;
-    btn.innerText = "REGISTER PLAYER";
-}
-    }
-</script>
+        const groups = {};
+        regs.forEach(r => { groups[r.tname] = (groups[r.tname] || 0) + 1; });
 
+        for (const [name, count] of Object.entries(groups)) {
+            const option = document.querySelector(`#tourSelect option[value="${name}"]`);
+            const targetSize = option ? option.dataset.size : 4;
+
+            listDiv.innerHTML += `
+                <div class="pod-row">
+                    <div class="pod-info"><b>${name}</b></div>
+                    <div class="pod-count">${count} / ${targetSize}</div>
+                </div>
+            `;
+        }
+    }
+
+    async function registerPlayer() {
+        const name = document.getElementById('playerName').value.trim();
+        const tname = document.getElementById('tourSelect').value;
+        if(!name || !tname) { alert("Please enter player name and select a tournament."); return; }
+
+        const { error } = await _supabase.from('ode_registrations').insert([
+            { event_id: eventPrefix, player_name: name, tname: tname, status: 'waiting' }
+        ]);
+
+        if(!error) {
+            document.getElementById('playerName').value = "";
+            updateWaitingList();
+            // Som de sucesso opcional pode ser adicionado aqui
+        }
+    }
+
+    function backToLead() {
+        const pass = prompt("ENTER LEAD PASSWORD TO GO BACK:");
+        if(pass && pass.toUpperCase() === 'LEAD') {
+            window.location.href = `admin_lead.html?event=${eventPrefix}`;
+        } else if(pass) {
+            alert("WRONG PASSWORD!");
+        }
+    }
+
+    function navToTables() {
+        window.location.href = `admin_tables.html?event=${eventPrefix}`;
+    }
+
+    // Real-time sync: se outro tablet registrar, esse aqui atualiza sozinho
+    _supabase.channel('any').on('postgres_changes', { event: '*', schema: 'public', table: 'ode_registrations' }, updateWaitingList).subscribe();
+</script>
 </body>
 </html>
