@@ -17,7 +17,7 @@
 <body>
     <div class="login-card">
         <h1>SideFlow Hub</h1>
-        <p>CENTRAL DE COMANDO (PLANO C)</p>
+        <p>CENTRAL DE COMANDO</p>
         <input type="password" id="accessCode" placeholder="CÓDIGO DE ACESSO">
         <button onclick="verificarAcesso()">ENTRAR</button>
     </div>
@@ -99,7 +99,7 @@
                     let dados = await resposta.json();
 
                     if (dados.length > 0) {
-                        window.location.href = "scheduled.html"; 
+                        window.location.href = "scheduled.html?event=" + prefix; 
                     } else {
                         alert("🚫 Acesso negado. Evento SCH não encontrado.");
                     }
