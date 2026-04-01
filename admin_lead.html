@@ -41,6 +41,21 @@
         </div>
     </div>
 
+    <div class="sector" id="sec-init">
+        <span class="sector-title">SECTION 0: TABLE INITIALIZATION</span>
+        <div class="grid" style="grid-template-columns: 1fr 2fr auto;">
+            <div class="input-group">
+                <label>Total Mesas</label>
+                <input type="number" id="setupTableCount" value="120">
+            </div>
+            <div style="font-size: 0.8rem; opacity: 0.8; padding-top: 10px;">
+                Informe o número de mesas e clique ao lado para gerar o mapa físico. <br>
+                <strong>Atenção:</strong> Use apenas uma vez no início do evento.
+            </div>
+            <button class="btn-add" onclick="initTables()" style="background: var(--blue); color: white;">🛠️ GENERATE TABLES</button>
+        </div>
+    </div>
+
     <div class="sector" id="sec-sch">
         <span class="sector-title">SECTION 2: SCHEDULED CATALOG</span>
         <div class="grid" style="grid-template-columns: 2fr 1fr 1fr;">
@@ -86,6 +101,21 @@
 
     window.onload = () => { if(!eventPrefix) window.location.href='index.html'; loadAll(); };
 
+    async function initTables() {
+        const count = parseInt(document.getElementById('setupTableCount').value);
+        if(!count || count <= 0) { alert("Insira um número válido!"); return; }
+        if(!confirm(`Deseja gerar ${count} mesas para o evento ${eventPrefix}?`)) return;
+
+        const tableData = [];
+        for (let i = 1; i <= count; i++) {
+            tableData.push({ event_id: eventPrefix, table_number: i, status: 'vacant' });
+        }
+
+        const { error } = await _supabase.from('event_tables').insert(tableData);
+        if (error) { alert("Erro: " + error.message); } 
+        else { alert(`${count} mesas geradas com sucesso!`); }
+    }
+
     async function updateIdentity() {
         await _supabase.from('tournament_history').upsert({ 
             event_id: eventPrefix, tournament_id: 'IDENTITY_ANCHOR', 
@@ -106,24 +136,14 @@
             payload.tfee = document.getElementById('schFee').value;
             payload.tcost = document.getElementById('schCost').value;
             const { error } = await _supabase.from('tournament_catalog').insert([payload]);
-            if(!error) {
-                const container = document.getElementById('sec-sch');
-                if(container) container.querySelectorAll('input').forEach(i => i.value = "");
-                loadAll();
-            }
+            if(!error) { loadAll(); }
         } else if(type === 'ODE_FULL') {
             const tname = document.getElementById('odeName').value;
-            const range = document.getElementById('tableRange').value;
-            if(!tname || !range) { alert("Fill all fields!"); return; }
             const { error } = await _supabase.from('tournament_catalog').insert([
                 { event_id: eventPrefix, item_type: 'ODE', game: document.getElementById('odeGame').value, tname: tname, tfee: document.getElementById('odeFee').value, tcost: document.getElementById('odeCost').value },
-                { event_id: eventPrefix, item_type: 'TABLE', tname: tname, value: range }
+                { event_id: eventPrefix, item_type: 'TABLE', tname: tname, value: document.getElementById('tableRange').value }
             ]);
-            if(!error) {
-                const container = document.getElementById('sec-ode');
-                if(container) container.querySelectorAll('input').forEach(i => i.value = "");
-                loadAll();
-            }
+            if(!error) { loadAll(); }
         }
     }
 
@@ -135,11 +155,10 @@
         schTbody.innerHTML = ""; odeTbody.innerHTML = "";
         data.forEach(item => {
             if(item.item_type === 'SCH') {
-                schTbody.innerHTML += `<tr><td><strong>${item.tname}</strong></td><td>${item.tday} | ${item.thour}</td><td style="color:var(--gold)">$${item.tfee}</td><td style="text-align:right"><button onclick="del('${item.id}')" class="btn-del">REMOVE</button></td></tr>`;
-            } else if(item.item_type === 'ODE' || item.item_type === 'TABLE') {
+                schTbody.innerHTML += `<tr><td><strong>${item.tname}</strong></td><td>${item.tday} | ${item.thour}</td><td>$${item.tfee}</td><td><button onclick="del('${item.id}')" class="btn-del">REMOVE</button></td></tr>`;
+            } else {
                 const label = item.item_type === 'TABLE' ? '📌 TABLE' : `🎮 ${item.game}`;
-                const val = item.item_type === 'TABLE' ? item.value : `$${item.tfee}`;
-                odeTbody.innerHTML += `<tr><td>${item.tname}</td><td style="font-size: 0.7rem; opacity: 0.7;">${label}</td><td style="color:var(--gold)">${val}</td><td style="text-align:right"><button onclick="del('${item.id}')" class="btn-del">REMOVE</button></td></tr>`;
+                odeTbody.innerHTML += `<tr><td>${item.tname}</td><td>${label}</td><td>${item.tfee || item.value}</td><td><button onclick="del('${item.id}')" class="btn-del">REMOVE</button></td></tr>`;
             }
         });
     }
