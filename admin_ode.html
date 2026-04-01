@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SideFlow Hub - Painel do Juiz</title>
+    <style>
+        body { font-family: sans-serif; background: #0a0a0a; color: #e0e0e0; display: flex; justify-content: center; padding: 20px; }
+        .container { background: #161616; padding: 25px; border-radius: 12px; border: 1px solid #333; width: 100%; max-width: 400px; }
+        h1 { color: #0070f3; text-align: center; font-size: 22px; }
+        label { display: block; margin-top: 15px; font-size: 13px; color: #888; }
+        input, select { width: 100%; padding: 12px; margin-top: 5px; border-radius: 6px; border: 1px solid #333; background: #222; color: white; box-sizing: border-box; }
+        button { width: 100%; padding: 15px; margin-top: 25px; background: #0070f3; color: white; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>SideFlow Hub</h1>
+        <p style="text-align: center; font-size: 12px; color: #666;">CADASTRO ON-DEMAND</p>
+        
+        <label>Nome do Jogador</label>
+        <input type="text" id="nomeJogador" placeholder="Nome Completo">
+        
+        <label>WhatsApp (DDD + Número)</label>
+        <input type="text" id="zapJogador" placeholder="Ex: 11999998888">
+        
+        <label>Selecione o Torneio</label>
+        <select id="tipoJogo">
+            <optgroup label="TCG">
+                <option value="Kit Estratégico">Kit Estratégico (B&B)</option>
+                <option value="Ditto Double Booster">Ditto Double Booster</option>
+                <option value="TCG Formato Padrão">TCG Formato Padrão</option>
+                <option value="Poké Catch">Poké Catch</option>
+                <option value="TCG Juniors Matches!">TCG Juniors Matches!</option>
+            </optgroup>
+            <optgroup label="VGC">
+                <option value="VG FrLg">VG FrLg</option>
+                <option value="Liga Kanto">Liga Kanto</option>
+                <option value="VG Junior Matches!">VG Junior Matches!</option>
+            </optgroup>
+            <optgroup label="GO / POCKET">
+                <option value="Autorekt">Autorekt (GO)</option>
+                <option value="Pocket On Demand">Pocket On Demand</option>
+            </optgroup>
+        </select>
+
+        <button onclick="alert('Visual funcionando! Próximo passo: Conectar ao Banco.')">Registrar Jogador</button>
+    </div>
+</body>
+</html>
