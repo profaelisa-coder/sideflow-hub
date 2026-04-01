@@ -1,14 +1,14 @@
 <!DOCTYPE html>
-<html lang="pt-br">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SideFlow Hub - Acesso</title>
+    <title>SideFlow Hub - LOGIN</title>
     <style>
         body { font-family: sans-serif; background: #0a0a0a; color: white; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; margin: 0; }
         .login-card { background: #161616; padding: 40px; border-radius: 15px; border: 1px solid #333; text-align: center; width: 300px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
         h1 { color: #0070f3; font-size: 26px; margin-bottom: 5px; }
-        p { color: #eab308; font-size: 13px; margin-bottom: 25px; font-weight: bold; } /* Amarelo rastreador */
+        p { color: #eab308; font-size: 13px; margin-bottom: 25px; font-weight: bold; }
         input { width: 100%; padding: 15px; margin: 10px 0; border-radius: 6px; border: 1px solid #333; background: #222; color: white; text-align: center; box-sizing: border-box; font-size: 18px; letter-spacing: 2px; text-transform: uppercase; }
         button { width: 100%; padding: 15px; background: #0070f3; color: white; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; margin-top: 15px; font-size: 16px; transition: 0.3s; }
         button:hover { background: #005bc1; }
@@ -17,54 +17,27 @@
 <body>
     <div class="login-card">
         <h1>SideFlow Hub</h1>
-        <p>CENTRAL DE COMANDO</p>
-        <input type="password" id="accessCode" placeholder="CÓDIGO DE ACESSO">
-        <button onclick="verificarAcesso()">ENTRAR</button>
+        <p>SYSTEM LOGIN</p>
+        <input type="password" id="accessCode" placeholder="ACCESS CODE">
+        <button onclick="verificarAcesso()">ENTER</button>
     </div>
 
     <script>
-        // PLANO C: CONEXÃO DIRETA (SEM SDK, SEM FRESCURA)
         const supabaseUrl = 'https://hocpoastnlcwgedvcyqs.supabase.co';
         const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhvY3BvYXN0bmxjd2dlZHZjeXFzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQyODU0MTYsImV4cCI6MjA4OTg2MTQxNn0.1MvvcFsnGW4e0Bj7mzoUKs_3bGM-eHDJTOqsvgKe-pI';
 
         async function verificarAcesso() {
             let code = document.getElementById('accessCode').value.toUpperCase().trim();
-            if (!code) { alert("Digite um código de acesso!"); return; }
+            if (!code) { alert("Please enter an access code!"); return; }
 
-            // 1. LÓGICA DO LEAD
+            // 1. LEAD LOGIN
             if (code.endsWith("_LEAD")) {
-                let base = code.replace("_LEAD", ""); 
-                if (base.length < 5) { alert("Código muito curto. Use LLL+NNNN+_LEAD"); return; }
-                
-                let numbers = base.slice(-4);
-                let prefix = base.slice(0, -4); 
-                let num_ode = numbers.slice(0, 2); 
-                let num_sch = numbers.slice(2, 4);
-
-                try {
-                    let resposta = await fetch(`${supabaseUrl}/rest/v1/active_events`, {
-                        method: 'POST',
-                        headers: {
-                            'apikey': supabaseKey,
-                            'Authorization': `Bearer ${supabaseKey}`,
-                            'Content-Type': 'application/json',
-                            'Prefer': 'return=minimal'
-                        },
-                        body: JSON.stringify({ prefix: prefix, num_ode: num_ode, num_sch: num_sch, lead_password: code })
-                    });
-
-                    if (!resposta.ok) {
-                        let erro = await resposta.text();
-                        alert("Erro do banco: " + erro);
-                    } else {
-                        alert("🎉 Evento " + prefix + " ativado com sucesso!\n\nSenhas geradas:\nStaff ODE: " + prefix + num_ode + "ODE\nStaff SCH: " + prefix + num_sch + "SCH");
-                    }
-                } catch (err) {
-                    alert("Erro de conexão: " + err.message);
-                }
+                let prefix = code.replace("_LEAD", "");
+                // Redireciona para a nova página do Lead (que faremos no passo 2)
+                window.location.href = "admin_lead.html?event=" + prefix;
             }
             
-            // 2. LÓGICA DO STAFF ODE
+            // 2. ODE STAFF LOGIN
             else if (code.endsWith("ODE")) {
                 let base = code.replace("ODE", ""); 
                 let num_ode = base.slice(-2); 
@@ -79,14 +52,14 @@
                     if (dados.length > 0) {
                         window.location.href = "admin_ode.html?event=" + prefix;
                     } else {
-                        alert("🚫 Acesso negado. Evento ODE não encontrado.");
+                        alert("🚫 Access Denied. Event not found.");
                     }
                 } catch (err) {
-                    alert("Erro de conexão: " + err.message);
+                    alert("Connection error: " + err.message);
                 }
             }
 
-            // 3. LÓGICA DO STAFF SCH
+            // 3. SCH STAFF LOGIN
             else if (code.endsWith("SCH")) {
                 let base = code.replace("SCH", ""); 
                 let num_sch = base.slice(-2); 
@@ -99,18 +72,15 @@
                     let dados = await resposta.json();
 
                     if (dados.length > 0) {
-                        window.location.href = "admin_sch.html?event=" + prefix; 
+                        window.location.href = "admin_sch.html?event=" + prefix;
                     } else {
-                        alert("🚫 Acesso negado. Evento SCH não encontrado.");
+                        alert("🚫 Access Denied. Event not found.");
                     }
                 } catch (err) {
-                    alert("Erro de conexão: " + err.message);
+                    alert("Connection error: " + err.message);
                 }
-            }
-
-            // 4. DIGITOU OUTRA COISA
-            else {
-                alert("🚫 Código inválido. Verifique o formato.");
+            } else {
+                alert("🚫 Invalid Code.");
             }
         }
     </script>
