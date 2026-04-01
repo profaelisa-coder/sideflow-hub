@@ -6,66 +6,81 @@
     <title>SideFlow Hub - STAFF ODE AREA</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
-        :root { --bg: #1d3557; --sec: #2a4a73; --gold: #ffb703; --blue: #457b9d; --red: #e63946; }
+        :root { --bg: #1d3557; --sec: #2a4a73; --gold: #ffb703; --blue: #457b9d; --red: #e63946; --dark: #162a44; }
         body { font-family: 'Segoe UI', sans-serif; background: var(--bg); color: white; margin: 0; padding: 20px; }
-        .container { max-width: 800px; margin: 0 auto; padding-bottom: 50px; }
+        .container { max-width: 600px; margin: 0 auto; padding-top: 50px; }
         h2 { text-align: center; letter-spacing: 2px; color: var(--gold); text-transform: uppercase; margin-bottom: 30px; }
         
-        .card { background: var(--sec); padding: 25px; border-radius: 12px; margin-bottom: 25px; border-left: 6px solid var(--gold); box-shadow: 0 4px 15px rgba(0,0,0,0.3); }
-        .label-group { display: flex; flex-direction: column; margin-bottom: 15px; }
-        label { font-size: 0.75rem; font-weight: bold; color: rgba(255,255,255,0.7); margin-bottom: 6px; text-transform: uppercase; }
+        .card { background: var(--sec); padding: 30px; border-radius: 12px; border-left: 6px solid var(--gold); box-shadow: 0 4px 15px rgba(0,0,0,0.3); }
+        .label-group { display: flex; flex-direction: column; margin-bottom: 20px; }
+        label { font-size: 0.75rem; font-weight: bold; color: rgba(255,255,255,0.7); margin-bottom: 8px; text-transform: uppercase; }
         
-        input, select { padding: 14px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.2); background: rgba(255,255,255,0.1); color: white; font-size: 1rem; width: 100%; box-sizing: border-box; }
+        /* Estilização dos Inputs e Menus Suspensos Corrigida */
+        input, select { 
+            padding: 14px; 
+            border-radius: 8px; 
+            border: 1px solid rgba(255,255,255,0.2); 
+            background: rgba(255,255,255,0.1); 
+            color: white; 
+            font-size: 1rem; 
+            width: 100%; 
+            box-sizing: border-box;
+            appearance: none;
+        }
+
+        /* Cores do Menu Suspenso (Dropdown) */
+        select option {
+            background-color: var(--dark);
+            color: white;
+        }
+
         input:focus { border-color: var(--gold); outline: none; background: rgba(255,255,255,0.15); }
 
-        .btn-register { width: 100%; padding: 16px; background: var(--gold); color: var(--bg); border: none; border-radius: 8px; font-weight: bold; font-size: 1rem; cursor: pointer; text-transform: uppercase; transition: 0.3s; margin-top: 10px; }
+        .btn-register { 
+            width: 100%; 
+            padding: 18px; 
+            background: var(--gold); 
+            color: var(--bg); 
+            border: none; 
+            border-radius: 8px; 
+            font-weight: bold; 
+            font-size: 1rem; 
+            cursor: pointer; 
+            text-transform: uppercase; 
+            transition: 0.3s; 
+            margin-top: 10px; 
+        }
         .btn-register:hover { transform: scale(1.02); filter: brightness(1.1); }
-
-        .list-header { display: flex; justify-content: space-between; align-items: center; margin-top: 40px; border-bottom: 1px solid var(--gold); padding-bottom: 10px; }
-        .list-header h3 { margin: 0; color: var(--gold); font-size: 1rem; }
-
-        .reg-item { background: rgba(0,0,0,0.2); padding: 15px; border-radius: 8px; margin-top: 10px; display: flex; justify-content: space-between; align-items: center; border: 1px solid rgba(255,255,255,0.05); }
-        .player-info { display: flex; flex-direction: column; }
-        .player-name { font-weight: bold; font-size: 1rem; }
-        .player-meta { font-size: 0.8rem; color: rgba(255,255,255,0.6); }
         
-        .badge { padding: 4px 8px; border-radius: 4px; font-size: 0.7rem; font-weight: bold; background: var(--blue); color: white; margin-bottom: 4px; display: inline-block; }
-        .btn-del { color: var(--red); background: none; border: none; cursor: pointer; font-weight: bold; }
+        #msg { text-align: center; margin-top: 20px; font-weight: bold; font-size: 0.9rem; }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <h2>PLAYER REGISTRATION</h2>
+    <h2>TOURNAMENT REGISTRATION</h2>
 
     <div class="card">
         <div class="label-group">
-            <label>Select Event / Tournament</label>
+            <label>Tournament</label>
             <select id="tourSelect">
-                <option value="">Loading tournaments...</option>
+                <option value="">Loading...</option>
             </select>
         </div>
 
         <div class="label-group">
             <label>Player Name</label>
-            <input type="text" id="playerName" placeholder="Full Name">
+            <input type="text" id="playerName" placeholder="Full Name" autocomplete="off">
         </div>
 
         <div class="label-group">
             <label>WhatsApp Number</label>
-            <input type="text" id="playerWA" placeholder="Ex: 5511999999999">
+            <input type="text" id="playerWA" placeholder="Ex: 5511999999999" autocomplete="off">
         </div>
 
-        <button class="btn-register" onclick="registerPlayer()">REGISTER PLAYER</button>
+        <button class="btn-register" id="regBtn" onclick="registerPlayer()">REGISTER PLAYER</button>
+        <div id="msg"></div>
     </div>
-
-    <div class="list-header">
-        <h3>RECENT REGISTRATIONS</h3>
-        <span id="regCount" style="font-size: 0.8rem; color: var(--gold);">0 total</span>
-    </div>
-    
-    <div id="registrationList">
-        </div>
 </div>
 
 <script>
@@ -75,95 +90,53 @@
     const eventPrefix = new URLSearchParams(window.location.search).get('event');
 
     window.onload = () => {
-        if(!eventPrefix) { alert("No event ID found!"); return; }
+        if(!eventPrefix) return;
         loadTournaments();
-        loadRegistrations();
     };
 
-    // 1. Puxa os torneios cadastrados no Lead Setup (Catalog)
     async function loadTournaments() {
-        const { data, error } = await _supabase
-            .from('tournament_catalog')
-            .select('*')
-            .eq('event_id', eventPrefix)
-            .eq('item_type', 'ODE');
-
+        const { data } = await _supabase.from('tournament_catalog').select('*').eq('event_id', eventPrefix).eq('item_type', 'ODE');
         const select = document.getElementById('tourSelect');
-        select.innerHTML = '<option value="">Choose a tournament...</option>';
-
-        if(data && data.length > 0) {
+        select.innerHTML = '<option value="">Choose...</option>';
+        if(data) {
             data.forEach(item => {
-                let opt = document.createElement('option');
-                opt.value = item.tname;
-                opt.innerText = `[${item.game}] ${item.tname}`;
-                select.appendChild(opt);
+                select.innerHTML += `<option value="${item.tname}">[${item.game}] ${item.tname}</option>`;
             });
-        } else {
-            select.innerHTML = '<option value="">No ODE tournaments found</option>';
         }
     }
 
-    // 2. Registra o jogador no banco
     async function registerPlayer() {
-        const tname = document.getElementById('tourSelect').value;
-        const pname = document.getElementById('playerName').value;
-        const pwa = document.getElementById('playerWA').value;
+        const btn = document.getElementById('regBtn');
+        const msg = document.getElementById('msg');
+        const payload = {
+            event_id: eventPrefix,
+            tname: document.getElementById('tourSelect').value,
+            player_name: document.getElementById('playerName').value,
+            whatsapp: document.getElementById('playerWA').value,
+            status: 'waiting'
+        };
 
-        if(!tname || !pname || !pwa) {
-            alert("Please fill all fields!");
-            return;
+        if(!payload.tname || !payload.player_name || !payload.whatsapp) {
+            alert("Fill all fields!"); return;
         }
 
-        const { error } = await _supabase.from('ode_registrations').insert([{
-            event_id: eventPrefix,
-            tname: tname,
-            player_name: pname,
-            whatsapp: pwa,
-            status: 'waiting'
-        }]);
+        btn.disabled = true;
+        btn.innerText = "SAVING...";
+
+        const { error } = await _supabase.from('ode_registrations').insert([payload]);
 
         if(!error) {
+            msg.style.color = "var(--gold)";
+            msg.innerText = "✅ PLAYER REGISTERED!";
             document.getElementById('playerName').value = "";
             document.getElementById('playerWA').value = "";
-            loadRegistrations();
+            setTimeout(() => { msg.innerText = ""; }, 3000);
         } else {
             alert("Error: " + error.message);
         }
-    }
-
-    // 3. Carrega a lista de inscritos para o Juiz ver
-    async function loadRegistrations() {
-        const { data, error } = await _supabase
-            .from('ode_registrations')
-            .select('*')
-            .eq('event_id', eventPrefix)
-            .order('created_at', { ascending: false });
-
-        const listDiv = document.getElementById('registrationList');
-        listDiv.innerHTML = "";
         
-        if(data) {
-            document.getElementById('regCount').innerText = `${data.length} total`;
-            data.forEach(reg => {
-                listDiv.innerHTML += `
-                    <div class="reg-item">
-                        <div class="player-info">
-                            <span class="badge">${reg.tname}</span>
-                            <span class="player-name">${reg.player_name}</span>
-                            <span class="player-meta">WA: ${reg.whatsapp}</span>
-                        </div>
-                        <button class="btn-del" onclick="deleteReg('${reg.id}')">REMOVE</button>
-                    </div>
-                `;
-            });
-        }
-    }
-
-    async function deleteReg(id) {
-        if(confirm("Remove this registration?")) {
-            await _supabase.from('ode_registrations').delete().eq('id', id);
-            loadRegistrations();
-        }
+        btn.disabled = false;
+        btn.innerText = "REGISTER PLAYER";
     }
 </script>
 
