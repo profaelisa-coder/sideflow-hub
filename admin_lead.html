@@ -80,20 +80,38 @@
     const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhvY3BvYXN0bmxjd2dlZHZjeXFzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQyODU0MTYsImV4cCI6MjA4OTg2MTQxNn0.1MvvcFsnGW4e0Bj7mzoUKs_3bGM-eHDJTOqsvgKe-pI';
     const _supabase = supabase.createClient(supabaseUrl, supabaseKey);
     const eventPrefix = new URLSearchParams(window.location.search).get('event');
-    window.onload = () => { if(!eventPrefix) window.location.href='index.html'; loadAll(); };
+
+    window.onload = () => { 
+        if(!eventPrefix) window.location.href='index.html'; 
+        checkTable(); // Teste de diagnóstico
+        loadAll(); 
+    };
+
+    // FUNÇÃO DE DIAGNÓSTICO
+    async function checkTable() {
+        const { data, error } = await _supabase.from('tournament_catalog').select('*').limit(1);
+        if (error) {
+            console.error("❌ ERRO DE CONEXÃO/TABELA:", error.message);
+        } else {
+            console.log("✅ TABELA CONECTADA. COLUNAS DETECTADAS:", Object.keys(data[0] || {}));
+        }
+    }
+
     async function updateIdentity() {
         await _supabase.from('tournament_history').upsert({ 
             event_id: eventPrefix, tournament_id: 'IDENTITY_ANCHOR', 
             event_name: document.getElementById('masterEvent').value, logo_type: document.getElementById('masterLogo').value 
         }, { onConflict: 'event_id, tournament_id' });
     }
+
     async function addItem(type) {
         let payload = { event_id: eventPrefix, item_type: type };
+        
         if(type === 'TABLE') {
-            payload.t_names = document.getElementById('tableName').value;
+            payload.t_name = document.getElementById('tableName').value;
             payload.value = document.getElementById('tableRange').value;
         } else if(type === 'SCH') {
-            payload.t_names = document.getElementById('schName').value;
+            payload.t_name = document.getElementById('schName').value;
             payload.t_day = document.getElementById('schDay').value;
             payload.t_hour = document.getElementById('schHour').value;
             payload.t_fee = document.getElementById('schFee').value;
@@ -102,37 +120,48 @@
             payload.spread = document.getElementById('schSpread').value;
         } else if(type === 'ODE') {
             payload.game = document.getElementById('odeGame').value;
-            payload.t_names = document.getElementById('odeName').value;
+            payload.t_name = document.getElementById('odeName').value;
         }
-        const { error } = await _supabase.from('tournament_catalog').insert([payload]);
-        if(!error) {
+
+        console.log("Tentando enviar este pacote:", payload);
+
+        const { data, error } = await _supabase.from('tournament_catalog').insert([payload]).select();
+        
+        if(error) {
+            console.error("❌ ERRO AO SALVAR:", error);
+            alert("Erro Supabase: " + error.message);
+        } else {
+            console.log("✅ SALVO COM SUCESSO:", data);
             document.querySelectorAll('input[type="text"], input[type="number"]').forEach(i => { if(i.id !== 'masterEvent') i.value = ""; });
             loadAll();
-        } else { console.error("DEBUG SUPABASE ERROR:", error); alert("Error: " + error.message); }
+        }
     }
+
     async function loadAll() {
         const { data } = await _supabase.from('tournament_catalog').select('*').eq('event_id', eventPrefix);
-        document.querySelector('#tableRules tbody').innerHTML = "";
-        document.querySelector('#schList tbody').innerHTML = "";
-        document.querySelector('#odeList tbody').innerHTML = "";
+        const tables = {
+            'TABLE': document.querySelector('#tableRules tbody'),
+            'SCH': document.querySelector('#schList tbody'),
+            'ODE': document.querySelector('#odeList tbody')
+        };
+        
+        Object.values(tables).forEach(t => t.innerHTML = "");
         if(!data) return;
+
         data.forEach(item => {
             let row = `<tr>`;
             if(item.item_type === 'TABLE') {
-                row += `<td>${item.t_names}</td><td style="color:var(--gold)">${item.value}</td><td style="text-align:right"><button onclick="del('${item.id}')" class="btn-del">REMOVE</button></td></tr>`;
-                document.querySelector('#tableRules tbody').innerHTML += row;
+                row += `<td>${item.t_name}</td><td>${item.value}</td>`;
             } else if(item.item_type === 'SCH') {
-                row += `<td><strong>${item.t_names}</strong></td><td>${item.t_day} | ${item.t_hour}</td><td style="color:var(--gold)">$${item.t_fee}</td><td style="text-align:right"><button onclick="del('${item.id}')" class="btn-del">REMOVE</button></td></tr>`;
-                document.querySelector('#schList tbody').innerHTML += row;
+                row += `<td><strong>${item.t_name}</strong></td><td>${item.t_day} | ${item.t_hour}</td><td>$${item.t_fee}</td>`;
             } else if(item.item_type === 'ODE') {
-                row += `<td style="width:20%; color:var(--gold)"><strong>${item.game}</strong></td><td>${item.t_names}</td><td style="text-align:right"><button onclick="del('${item.id}')" class="btn-del">REMOVE</button></td></tr>`;
-                document.querySelector('#odeList tbody').innerHTML += row;
+                row += `<td style="color:var(--gold)"><strong>${item.game}</strong></td><td>${item.t_name}</td>`;
             }
+            row += `<td style="text-align:right"><button onclick="del('${item.id}')" class="btn-del">REMOVE</button></td></tr>`;
+            if(tables[item.item_type]) tables[item.item_type].innerHTML += row;
         });
     }
+
     async function del(id) { if(confirm("Confirm removal?")) { await _supabase.from('tournament_catalog').delete().eq('id', id); loadAll(); } }
     function navStaff(target) { window.location.href = `admin_${target}.html?event=${eventPrefix}`; }
     async function resetSystem() { if(confirm("RESET ALL?")) { await _supabase.from('tournament_catalog').delete().eq('event_id', eventPrefix); loadAll(); } }
-</script>
-</body>
-</html>
