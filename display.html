@@ -20,83 +20,90 @@
         }
 
         header { 
-            padding: 20px; 
+            padding: 25px; 
             text-align: center; 
-            background: rgba(0,0,0,0.3); 
-            border-bottom: 2px solid var(--gold);
+            background: rgba(0,0,0,0.4); 
+            border-bottom: 3px solid var(--gold);
+            box-shadow: 0 4px 20px rgba(0,0,0,0.5);
         }
         
-        h1 { margin: 0; letter-spacing: 5px; text-transform: uppercase; color: var(--gold); font-size: 2.5rem; }
+        h1 { margin: 0; letter-spacing: 8px; text-transform: uppercase; color: var(--gold); font-size: 3rem; text-shadow: 2px 2px 10px rgba(255,183,3,0.3); }
 
         .hype-container { 
             display: grid; 
-            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr)); 
-            gap: 25px; 
-            padding: 40px; 
+            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr)); 
+            gap: 30px; 
+            padding: 50px; 
             flex-grow: 1;
             align-content: start;
         }
 
         .pod-card { 
-            background: var(--sec); 
-            border-radius: 20px; 
-            padding: 30px; 
+            background: linear-gradient(145deg, var(--sec), #0d1b2a);
+            border-radius: 25px; 
+            padding: 35px; 
             position: relative; 
-            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-            transition: 0.5s;
-            border: 2px solid rgba(255,255,255,0.1);
+            box-shadow: 0 15px 35px rgba(0,0,0,0.6);
+            transition: 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            border: 2px solid rgba(255,255,255,0.05);
         }
 
-        .pod-category { font-size: 1rem; color: var(--gold); font-weight: bold; text-transform: uppercase; }
-        .pod-name { font-size: 2rem; margin: 10px 0; font-weight: 800; }
+        .pod-category { font-size: 1.1rem; color: var(--gold); font-weight: bold; text-transform: uppercase; letter-spacing: 2px; }
+        .pod-name { font-size: 2.4rem; margin: 12px 0; font-weight: 800; color: white; }
         
-        /* Progress Bar */
+        /* Progress Bar Wrapper */
         .progress-container { 
-            background: rgba(255,255,255,0.1); 
-            height: 30px; 
-            border-radius: 15px; 
-            margin-top: 20px; 
+            background: rgba(255,255,255,0.05); 
+            height: 45px; 
+            border-radius: 22px; 
+            margin-top: 25px; 
             overflow: hidden;
             position: relative;
+            border: 1px solid rgba(255,255,255,0.1);
         }
         
         .progress-bar { 
             height: 100%; 
-            background: linear-gradient(90deg, var(--blue), #a8dadc); 
+            background: linear-gradient(90deg, #1d3557, var(--blue), #a8dadc); 
             width: 0%; 
-            transition: width 1s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            transition: width 0.8s ease-in-out;
+            box-shadow: 0 0 20px rgba(69, 123, 157, 0.5);
         }
 
         .pod-status { 
             position: absolute; 
-            right: 15px; 
+            width: 100%;
+            text-align: center;
             top: 50%; 
             transform: translateY(-50%); 
-            font-weight: bold; 
-            text-shadow: 1px 1px 2px black;
+            font-weight: 900; 
+            font-size: 1.2rem;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.8);
+            letter-spacing: 3px;
         }
 
-        /* Golden Pulse Effect */
+        /* Efeito Golden Pulse (Ativa no 3/4) */
         .pulse-gold { 
             border-color: var(--gold) !important;
-            box-shadow: 0 0 40px rgba(255, 183, 3, 0.4);
-            animation: pulse-animation 1.5s infinite;
+            box-shadow: 0 0 50px rgba(255, 183, 3, 0.3);
+            animation: pulse-animation 1.2s infinite;
         }
 
         @keyframes pulse-animation {
             0% { transform: scale(1); }
-            50% { transform: scale(1.03); box-shadow: 0 0 60px rgba(255, 183, 3, 0.7); }
+            50% { transform: scale(1.02); box-shadow: 0 0 70px rgba(255, 183, 3, 0.6); }
             100% { transform: scale(1); }
         }
 
         footer { 
-            padding: 15px; 
+            padding: 20px; 
             text-align: center; 
-            font-size: 1.2rem; 
+            font-size: 1.4rem; 
             background: var(--gold); 
             color: var(--bg); 
-            font-weight: bold; 
+            font-weight: 900; 
             text-transform: uppercase;
+            letter-spacing: 4px;
         }
     </style>
 </head>
@@ -122,37 +129,50 @@
     async function initDisplay() {
         if(!eventPrefix) return;
         
-        // 1. Get Event Identity
+        // Carrega identidade do evento
         const { data: info } = await _supabase.from('tournament_history').select('*').eq('event_id', eventPrefix).single();
         if(info) document.getElementById('eventName').innerText = info.event_name;
 
         updateDisplay();
         
-        // Real-time listener for registrations
+        // ESCUTA REAL-TIME (Tanto novos registros quanto mudanças de status)
         _supabase
             .channel('any')
             .on('postgres_changes', { event: '*', schema: 'public', table: 'ode_registrations' }, () => {
+                updateDisplay();
+            })
+            .on('postgres_changes', { event: '*', schema: 'public', table: 'tournament_catalog' }, () => {
                 updateDisplay();
             })
             .subscribe();
     }
 
     async function updateDisplay() {
-        // Get ODE tournaments
-        const { data: tours } = await _supabase.from('tournament_catalog').select('*').eq('event_id', eventPrefix).eq('item_type', 'ODE');
-        // Get active registrations
-        const { data: regs } = await _supabase.from('ode_registrations').select('*').eq('event_id', eventPrefix).eq('status', 'waiting');
+        // 1. Puxa os torneios ODE ativos
+        const { data: tours } = await _supabase.from('tournament_catalog')
+            .select('*')
+            .eq('event_id', eventPrefix)
+            .eq('item_type', 'ODE');
+
+        // 2. Puxa apenas players 'waiting'
+        const { data: regs } = await _supabase.from('ode_registrations')
+            .select('*')
+            .eq('event_id', eventPrefix)
+            .eq('status', 'waiting');
 
         const displayArea = document.getElementById('displayArea');
         displayArea.innerHTML = "";
 
-        if(!tours) return;
+        if(!tours || tours.length === 0) {
+            displayArea.innerHTML = "<div style='text-align:center; width:100%; font-size:1.5rem; opacity:0.5;'>Waiting for On-Demand setups...</div>";
+            return;
+        }
 
         tours.forEach(t => {
             const count = regs ? regs.filter(r => r.tname === t.tname).length : 0;
-            const target = 4; // Default pod size
-            const percentage = (count / target) * 100;
-            const isPulsing = count === (target - 1); // 3 out of 4 players
+            const target = 4; // Target padrão
+            const percentage = Math.min((count / target) * 100, 100);
+            const isPulsing = count === 3; // Brilha no 3/4
 
             const card = document.createElement('div');
             card.className = `pod-card ${isPulsing ? 'pulse-gold' : ''}`;
