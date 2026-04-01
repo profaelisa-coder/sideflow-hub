@@ -77,7 +77,7 @@
                     let dados = await resposta.json();
 
                     if (dados.length > 0) {
-                        window.location.href = "admin.html";
+                        window.location.href = "admin_ode.html?event=" + prefix;
                     } else {
                         alert("🚫 Acesso negado. Evento ODE não encontrado.");
                     }
@@ -99,7 +99,7 @@
                     let dados = await resposta.json();
 
                     if (dados.length > 0) {
-                        window.location.href = "scheduled.html?event=" + prefix; 
+                        window.location.href = "admin_sch.html?event=" + prefix; 
                     } else {
                         alert("🚫 Acesso negado. Evento SCH não encontrado.");
                     }
