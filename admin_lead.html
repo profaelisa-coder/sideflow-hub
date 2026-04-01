@@ -31,7 +31,7 @@
 <div class="container">
     <h2>LEAD SETUP AREA</h2>
 
-    <div class="sector">
+    <div class="sector" id="sec-identity">
         <span class="sector-title">SECTION 1: EVENT IDENTITY</span>
         <div class="grid" style="grid-template-columns: 2fr 1fr 1fr 1fr;">
             <div class="input-group"><label>Event Name</label><input type="text" id="masterEvent" onchange="updateIdentity()"></div>
@@ -41,11 +41,11 @@
         </div>
     </div>
 
-    <div class="sector">
+    <div class="sector" id="sec-sch">
         <span class="sector-title">SECTION 2: SCHEDULED CATALOG</span>
         <div class="grid" style="grid-template-columns: 2fr 1fr 1fr;">
             <div class="input-group"><label>Tournament Name</label><input type="text" id="schName"></div>
-            <div class="input-group"><label>Day</label><select id="schDay"><option>Day 1</option> <option>Day 2</option> <option>Day 3</option></select></div>
+            <div class="input-group"><label>Day</label><select id="schDay"><option>Day 1</option><option>Day 2</option><option>Day 3</option></select></div>
             <div class="input-group"><label>Hour</label><input type="text" id="schHour" placeholder="9:00 AM"></div>
         </div>
         <div class="grid" style="grid-template-columns: 1fr 1fr auto; margin-top: 15px;">
@@ -56,11 +56,13 @@
         <table id="schList"><tbody></tbody></table>
     </div>
 
-    <div class="sector">
-        <span class="sector-title">SECTION 3: ON-DEMAND & TABLES</span>
-        <div class="grid" style="grid-template-columns: 1fr 2fr auto;">
-            <div class="input-group"><label>Category</label><select id="odeGame"><option>TCG</option><option>VGC</option><option>GO</option><option>POCKET</option></select></div>
-            <div class="input-group"><label>Tournament Name</label><input type="text" id="odeName" placeholder="Ex: Systherhood"></div>
+    <div class="sector" id="sec-ode">
+        <span class="sector-title">SECTION 3: ON-DEMAND CATALOG</span>
+        <div class="grid" style="grid-template-columns: 1fr 2fr 1fr 1fr auto;">
+            <div class="input-group"><label>Game</label><select id="odeGame"><option>TCG</option><option>VGC</option><option>GO</option><option>POCKET</option></select></div>
+            <div class="input-group"><label>Pod Name</label><input type="text" id="odeName" placeholder="Ex: Turbo 4-man"></div>
+            <div class="input-group"><label>Fee ($)</label><input type="number" id="odeFee"></div>
+            <div class="input-group"><label>Cost ($)</label><input type="number" id="odeCost"></div>
             <button class="btn-add" onclick="addItem('ODE')">+ ADD ODE</button>
         </div>
         <table id="odeList"><tbody></tbody></table>
@@ -77,7 +79,6 @@
     <div class="sector" style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
         <button class="btn-blue" onclick="navStaff('ode')">STAFF ODE AREA</button>
         <button class="btn-blue" onclick="navStaff('sch')">STAFF SCH AREA</button>
-        <button class="btn-red" onclick="alert('Generating...')">GENERATE FINAL REPORT</button>
         <button class="btn-red" onclick="resetSystem()">RESET SYSTEM</button>
     </div>
 </div>
@@ -102,24 +103,30 @@
 
     async function addItem(type) {
         let payload = { event_id: eventPrefix, item_type: type };
+        let sectorId = "";
+
         if(type === 'TABLE') {
             payload.tname = document.getElementById('tableName').value;
             payload.value = document.getElementById('tableRange').value;
+            sectorId = "sec-ode";
         } else if(type === 'SCH') {
             payload.tname = document.getElementById('schName').value;
             payload.tday = document.getElementById('schDay').value;
             payload.thour = document.getElementById('schHour').value;
             payload.tfee = document.getElementById('schFee').value;
             payload.tcost = document.getElementById('schCost').value;
-            payload.part = document.getElementById('masterTax').value;
-            payload.spread = document.getElementById('masterFactor').value;
+            sectorId = "sec-sch";
         } else if(type === 'ODE') {
             payload.game = document.getElementById('odeGame').value;
             payload.tname = document.getElementById('odeName').value;
+            payload.tfee = document.getElementById('odeFee').value;
+            payload.tcost = document.getElementById('odeCost').value;
+            sectorId = "sec-ode";
         }
+
         const { error } = await _supabase.from('tournament_catalog').insert([payload]);
         if(!error) {
-            document.querySelectorAll('input:not(#masterEvent)').forEach(i => i.value = "");
+            document.querySelectorAll(`#${sectorId} input`).forEach(i => i.value = "");
             loadAll();
         } else { alert(error.message); }
     }
@@ -132,7 +139,7 @@
         document.querySelector('#tableRules tbody').innerHTML = "";
 
         data.forEach(item => {
-            let row = `<tr><td>${item.tname}</td><td>${item.tday || ''} ${item.thour || ''}</td><td style="color:var(--gold)">${item.value || '$'+item.tfee}</td><td style="text-align:right"><button onclick="del('${item.id}')" class="btn-del">REMOVE</button></td></tr>`;
+            let row = `<tr><td>${item.tname}</td><td>${item.tday || item.game || ''}</td><td style="color:var(--gold)">${item.value || '$'+item.tfee}</td><td style="text-align:right"><button onclick="del('${item.id}')" class="btn-del">REMOVE</button></td></tr>`;
             if(item.item_type === 'TABLE') document.querySelector('#tableRules tbody').innerHTML += row;
             else if(item.item_type === 'SCH') document.querySelector('#schList tbody').innerHTML += row;
             else if(item.item_type === 'ODE') document.querySelector('#odeList tbody').innerHTML += row;
@@ -141,7 +148,7 @@
 
     async function del(id) { if(confirm("Remove?")) { await _supabase.from('tournament_catalog').delete().eq('id', id); loadAll(); } }
     function navStaff(target) { window.location.href = `admin_${target}.html?event=${eventPrefix}`; }
-    async function resetSystem() { if(confirm("RESET?")) { await _supabase.from('tournament_catalog').delete().eq('event_id', eventPrefix); loadAll(); } }
+    async function resetSystem() { if(confirm("RESET SYSTEM? This will delete all catalog items.")) { await _supabase.from('tournament_catalog').delete().eq('event_id', eventPrefix); loadAll(); } }
 </script>
 </body>
 </html>
