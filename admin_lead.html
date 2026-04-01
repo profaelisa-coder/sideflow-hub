@@ -8,19 +8,15 @@
     <style>
         :root { 
             --bg-dark-blue: #1d3557; 
-            --section-blue: #2a4a73; /* Azul um pouco mais claro para as seções */
+            --section-blue: #2a4a73; 
             --gold: #ffb703; 
             --blue-action: #457b9d; 
             --red-action: #e63946; 
             --text-light: #ffffff;
         }
-
         body { font-family: 'Segoe UI', sans-serif; background: var(--bg-dark-blue); color: white; margin: 0; padding: 20px; }
         .container { max-width: 1000px; margin: 0 auto; padding-bottom: 100px; }
-        
         h2 { text-align: center; letter-spacing: 3px; color: var(--gold); text-transform: uppercase; margin-bottom: 30px; }
-
-        /* Estilo das Seções Unificado */
         .sector { 
             background: var(--section-blue); 
             padding: 25px; 
@@ -29,7 +25,6 @@
             margin-bottom: 25px; 
             border-left: 6px solid var(--gold);
         }
-
         .sector-title { 
             color: var(--gold); 
             font-weight: bold; 
@@ -40,11 +35,9 @@
             border-bottom: 1px solid rgba(255,255,255,0.1); 
             padding-bottom: 10px; 
         }
-        
         .grid-row { display: grid; gap: 15px; align-items: end; }
         .input-group { display: flex; flex-direction: column; }
         label { font-size: 0.7rem; font-weight: bold; color: rgba(255,255,255,0.7); margin-bottom: 6px; text-transform: uppercase; }
-        
         input, select { 
             padding: 12px; 
             border-radius: 6px; 
@@ -54,32 +47,22 @@
             font-size: 0.9rem; 
         }
         input:focus { border-color: var(--gold); outline: none; background: rgba(255,255,255,0.2); }
-        
         button { padding: 12px 20px; border-radius: 6px; font-weight: bold; cursor: pointer; border: none; text-transform: uppercase; transition: 0.3s; }
         .btn-add { background: var(--gold); color: var(--bg-dark-blue); }
         .btn-blue { background: var(--blue-action); color: white; width: 100%; }
         .btn-red { background: var(--red-action); color: white; width: 100%; }
-        
-        /* Tabelas sem cabeçalho (Limpas) */
         table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 0.9rem; }
         td { padding: 12px; border-bottom: 1px solid rgba(255,255,255,0.1); }
-        
         .btn-del { color: var(--red-action); background: none; border: none; font-size: 11px; cursor: pointer; font-weight: bold; }
-        
         .action-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; }
-
-        /* Reset System mais visível */
         .footer-reset { position: fixed; bottom: 20px; right: 20px; opacity: 0.8; }
         .footer-reset:hover { opacity: 1; }
-
         .sub-section-header { margin-top: 30px; margin-bottom: 15px; display: block; font-weight: bold; color: var(--gold); text-transform: uppercase; font-size: 0.85rem; }
     </style>
 </head>
 <body>
-
 <div class="container">
     <h2>LEAD SETUP AREA</h2>
-
     <div class="sector">
         <span class="sector-title">SECTION 1: EVENT IDENTITY</span>
         <div class="grid-row" style="grid-template-columns: 2fr 1fr;">
@@ -87,7 +70,6 @@
             <div class="input-group"><label>Logo Type</label><select id="masterLogo" onchange="updateIdentity()"><option value="REGIONAL">REGIONAL</option><option value="IC">IC</option></select></div>
         </div>
     </div>
-
     <div class="sector">
         <span class="sector-title">SECTION 2: SCHEDULED TOURNAMENT CATALOG</span>
         <div class="grid-row" style="grid-template-columns: 2fr 1fr 1fr;">
@@ -104,17 +86,14 @@
         </div>
         <table id="schList"><tbody></tbody></table>
     </div>
-
     <div class="sector">
         <span class="sector-title">SECTION 3: ON-DEMAND CATALOG & TABLES</span>
-        
         <div class="grid-row" style="grid-template-columns: 1fr 2fr auto;">
             <div class="input-group"><label>Category</label><select id="odeGame"><option>TCG</option><option>VGC</option><option>GO</option><option>POCKET</option></select></div>
             <div class="input-group"><label>Tournament Name</label><input type="text" id="odeName" placeholder="Ex: Systherhood"></div>
             <button class="btn-add" onclick="addItem('ODE')">+ ADD ODE</button>
         </div>
         <table id="odeList"><tbody></tbody></table>
-
         <span class="sub-section-header">Table Allocation</span>
         <div class="grid-row" style="grid-template-columns: 2fr 1fr auto;">
             <div class="input-group"><label>Tournament / Category</label><input type="text" id="tableName" placeholder="Ex: TCG RAID"></div>
@@ -123,7 +102,6 @@
         </div>
         <table id="tableRules"><tbody></tbody></table>
     </div>
-
     <div class="sector">
         <span class="sector-title">SECTION 4: GLOBAL ACTIONS</span>
         <div class="action-grid">
@@ -133,20 +111,16 @@
             <button class="btn-red" onclick="alert('Exporting Spreadsheet...')">EXPORT SHEET</button>
         </div>
     </div>
-
     <div class="footer-reset">
         <button class="btn-red" style="padding: 8px 15px; font-size: 0.7rem;" onclick="resetSystem()">RESET SYSTEM</button>
     </div>
 </div>
-
 <script>
     const supabaseUrl = 'https://hocpoastnlcwgedvcyqs.supabase.co';
     const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhvY3BvYXN0bmxjd2dlZHZjeXFzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQyODU0MTYsImV4cCI6MjA4OTg2MTQxNn0.1MvvcFsnGW4e0Bj7mzoUKs_3bGM-eHDJTOqsvgKe-pI';
     const _supabase = supabase.createClient(supabaseUrl, supabaseKey);
     const eventPrefix = new URLSearchParams(window.location.search).get('event');
-
     window.onload = () => { if(!eventPrefix) window.location.href='index.html'; loadAll(); };
-
     async function updateIdentity() {
         const payload = { 
             event_id: eventPrefix, 
@@ -156,7 +130,6 @@
         };
         await _supabase.from('tournament_history').upsert(payload, { onConflict: 'event_id, tournament_id' });
     }
-
     async function addItem(type) {
         let payload = { event_id: eventPrefix };
         if(type === 'TABLE') {
@@ -169,34 +142,35 @@
         } else if(type === 'ODE') {
             payload = { ...payload, item_type: 'ODE', game: document.getElementById('odeGame').value, t_name: document.getElementById('odeName').value };
         }
-        await _supabase.from('tournament_catalog').insert([payload]);
-        loadAll();
+        const { error } = await _supabase.from('tournament_catalog').insert([payload]);
+        if(!error) {
+            if(type === 'TABLE') { document.getElementById('tableName').value = ""; document.getElementById('tableRange').value = ""; }
+            if(type === 'ODE') { document.getElementById('odeName').value = ""; }
+            if(type === 'SCH') { document.getElementById('schName').value = ""; document.getElementById('schFee').value = ""; document.getElementById('schCost').value = ""; }
+            loadAll();
+        }
     }
-
     async function loadAll() {
         const { data } = await _supabase.from('tournament_catalog').select('*').eq('event_id', eventPrefix);
         document.querySelector('#tableRules tbody').innerHTML = "";
         document.querySelector('#schList tbody').innerHTML = "";
         document.querySelector('#odeList tbody').innerHTML = "";
-
         data.forEach(item => {
             let row = `<tr>`;
             if(item.item_type === 'TABLE') {
-                row += `<td style="width:50%">${item.name}</td><td style="color:var(--gold)">${item.value}</td><td style="text-align:right"><button onclick="del('${item.id}')" class="btn-del">REMOVE</button></td></tr>`;
+                row += `<td style="width:50%">${item.t_name}</td><td style="color:var(--gold)">${item.value}</td><td style="text-align:right"><button onclick="del('${item.id}')" class="btn-del">REMOVE</button></td></tr>`;
                 document.querySelector('#tableRules tbody').innerHTML += row;
             } else if(item.item_type === 'SCH') {
-                row += `<td><strong>${item.name}</strong></td><td>${item.day} | ${item.hour}</td><td style="color:var(--gold)">$${item.fee}</td><td style="text-align:right"><button onclick="del('${item.id}')" class="btn-del">REMOVE</button></td></tr>`;
+                row += `<td><strong>${item.t_name}</strong></td><td>${item.t_day} | ${item.t_hour}</td><td style="color:var(--gold)">$${item.t_fee}</td><td style="text-align:right"><button onclick="del('${item.id}')" class="btn-del">REMOVE</button></td></tr>`;
                 document.querySelector('#schList tbody').innerHTML += row;
             } else if(item.item_type === 'ODE') {
-                row += `<td style="width:20%; color:var(--gold)"><strong>${item.game}</strong></td><td>${item.name}</td><td style="text-align:right"><button onclick="del('${item.id}')" class="btn-del">REMOVE</button></td></tr>`;
+                row += `<td style="width:20%; color:var(--gold)"><strong>${item.game}</strong></td><td>${item.t_name}</td><td style="text-align:right"><button onclick="del('${item.id}')" class="btn-del">REMOVE</button></td></tr>`;
                 document.querySelector('#odeList tbody').innerHTML += row;
             }
         });
     }
-
-    async function del(id) { await _supabase.from('tournament_catalog').delete().eq('id', id); loadAll(); }
+    async function del(id) { if(confirm("Confirm removal?")) { await _supabase.from('tournament_catalog').delete().eq('id', id); loadAll(); } }
     function navStaff(target) { window.location.href = `admin_${target}.html?event=${eventPrefix}`; }
-    
     async function resetSystem() {
         if(confirm("RESET EVENT DATA?")) {
             await _supabase.from('tournament_catalog').delete().eq('event_id', eventPrefix);
