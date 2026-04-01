@@ -8,26 +8,31 @@
     <style>
         :root { --bg: #1d3557; --sec: #2a4a73; --gold: #ffb703; --blue: #457b9d; --red: #e63946; --dark: #162a44; --green: #2ecc71; }
         body { font-family: 'Segoe UI', sans-serif; background: var(--bg); color: white; margin: 0; padding: 20px; }
-        .container { max-width: 1200px; margin: 0 auto; padding-bottom: 150px; }
+        .container { max-width: 1250px; margin: 0 auto; padding-bottom: 150px; }
         h2 { text-align: center; letter-spacing: 3px; color: var(--gold); text-transform: uppercase; margin-bottom: 30px; }
         .sector { background: var(--sec); padding: 25px; border-radius: 12px; margin-bottom: 25px; border-left: 6px solid var(--gold); box-shadow: 0 4px 15px rgba(0,0,0,0.3); }
         .sector-title { color: var(--gold); font-weight: bold; text-transform: uppercase; font-size: 0.9rem; display: block; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 10px; margin-bottom: 20px; }
-        .grid { display: grid; gap: 15px; align-items: end; }
+        .grid { display: grid; gap: 12px; align-items: end; }
         .input-group { display: flex; flex-direction: column; }
-        label { font-size: 0.65rem; font-weight: bold; color: rgba(255,255,255,0.7); margin-bottom: 6px; text-transform: uppercase; }
-        input, select { padding: 10px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.2); background: rgba(255,255,255,0.1); color: white; font-size: 0.85rem; }
-        button { padding: 12px 20px; border-radius: 6px; font-weight: bold; cursor: pointer; border: none; text-transform: uppercase; transition: 0.3s; font-size: 0.75rem; }
+        label { font-size: 0.65rem; font-weight: bold; color: rgba(255,255,255,0.7); margin-bottom: 6px; text-transform: uppercase; white-space: nowrap; }
+        
+        /* Estilização corrigida dos Inputs e Selects */
+        input, select { padding: 10px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.2); background: var(--dark); color: white; font-size: 0.85rem; width: 100%; box-sizing: border-box; }
+        select { cursor: pointer; appearance: listbox; }
+        select option { background: var(--dark); color: white; }
+        input:focus { border-color: var(--gold); outline: none; }
+
+        button { padding: 12px 15px; border-radius: 6px; font-weight: bold; cursor: pointer; border: none; text-transform: uppercase; transition: 0.3s; font-size: 0.75rem; }
         .btn-add { background: var(--gold); color: var(--bg); width: 100%; margin-top: 15px; }
         .btn-blue { background: var(--blue); color: white; }
         .btn-green { background: var(--green); color: white; }
 
-        /* Floating Reset Link */
-        .reset-link { position: fixed; bottom: 20px; right: 20px; color: var(--red); cursor: pointer; font-weight: bold; font-size: 0.75rem; text-decoration: underline; opacity: 0.7; transition: 0.3s; z-index: 100; }
+        .reset-link { position: fixed; bottom: 20px; right: 20px; color: var(--red); cursor: pointer; font-weight: bold; font-size: 0.75rem; text-decoration: underline; opacity: 0.7; z-index: 100; }
         .reset-link:hover { opacity: 1; }
 
         table { width: 100%; border-collapse: collapse; margin-top: 20px; }
         td { padding: 10px; border-bottom: 1px solid rgba(255,255,255,0.1); font-size: 0.85rem; }
-        .btn-del { color: var(--red); background: none; font-size: 10px; padding: 0; }
+        .btn-del { color: var(--red); background: none; font-size: 10px; cursor: pointer; }
     </style>
 </head>
 <body>
@@ -44,23 +49,23 @@
 
     <div class="sector">
         <span class="sector-title">SECTION 0: TABLE INITIALIZATION</span>
-        <div class="grid" style="grid-template-columns: 1fr 3fr auto;">
+        <div class="grid" style="grid-template-columns: 0.8fr 3fr auto;">
             <div class="input-group"><label>Total Mesas</label><input type="number" id="setupTableCount" value="120"></div>
-            <div style="font-size: 0.75rem; opacity: 0.7;">Gere o mapa físico no início do evento.</div>
+            <div style="font-size: 0.75rem; opacity: 0.7;">Inicialize o mapa físico apenas uma vez.</div>
             <button class="btn-blue" onclick="initTables()">🛠️ GENERATE TABLES</button>
         </div>
     </div>
 
     <div class="sector" id="sec-sch">
         <span class="sector-title">SECTION 2: SCHEDULED CATALOG (Variable Payout)</span>
-        <div class="grid" style="grid-template-columns: 2fr 1fr 1fr 1fr 1fr 1fr 1fr auto;">
+        <div class="grid" style="grid-template-columns: 2fr 0.8fr 0.8fr 0.7fr 0.7fr 0.7fr 0.7fr;">
             <div class="input-group"><label>Torney Name</label><input type="text" id="schName"></div>
             <div class="input-group"><label>Day</label><select id="schDay"><option>Day 1</option><option>Day 2</option><option>Day 3</option></select></div>
             <div class="input-group"><label>Hour</label><input type="text" id="schHour" placeholder="9:00 AM"></div>
             <div class="input-group"><label>Fee ($)</label><input type="number" id="schFee"></div>
             <div class="input-group"><label>Cost ($)</label><input type="number" id="schCost"></div>
             <div class="input-group"><label>Part %</label><input type="number" id="schTax" value="20"></div>
-            <div class="input-group"><label>Spread</label><input type="number" id="schSpread" value="2.0" step="0.25"></div>
+            <div class="input-group"><label>Spread</label><input type="text" id="schSpread" value="2.0"></div>
         </div>
         <button class="btn-add" onclick="addItem('SCH')">+ ADD SCHEDULED TOURNAMENT</button>
         <table id="schList"><tbody></tbody></table>
@@ -68,7 +73,7 @@
 
     <div class="sector" id="sec-ode">
         <span class="sector-title">SECTION 3: ON-DEMAND CATALOG (Fixed Payout)</span>
-        <div class="grid" style="grid-template-columns: 1fr 2fr 1fr 1fr 1fr 1.5fr auto;">
+        <div class="grid" style="grid-template-columns: 0.8fr 2fr 0.8fr 0.7fr 0.7fr 1fr;">
             <div class="input-group"><label>Game</label><select id="odeGame"><option>TCG</option><option>VGC</option><option>GO</option><option>POCKET</option></select></div>
             <div class="input-group"><label>Pod Name</label><input type="text" id="odeName" placeholder="Turbo"></div>
             <div class="input-group"><label>Size</label><select id="odeSize"><option value="4">4 PPL</option><option value="6">6 PPL</option><option value="8">8 PPL</option></select></div>
@@ -80,9 +85,9 @@
         <table id="odeList"><tbody></tbody></table>
     </div>
 
-    <div style="display:grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 15px;">
+    <div style="display:grid; grid-template-columns: repeat(4, 1fr); gap: 15px;">
         <button class="btn-blue" onclick="navStaff('ode')">STAFF ODE</button>
-        <button class="btn-blue" onclick="navStaff('tables')">TABLE MAP</button>
+        <button class="btn-blue" onclick="navStaff('sch')">STAFF SCH</button>
         <button class="btn-green" onclick="alert('Relatório Gerado')">📊 GENERATE PAYOUT</button>
         <button class="btn-blue" onclick="alert('E-mail enviado')">📧 EMAIL REPORT</button>
     </div>
@@ -106,10 +111,14 @@
     async function initTables() {
         const count = parseInt(document.getElementById('setupTableCount').value);
         if(!confirm(`Fabricar ${count} mesas para ${eventPrefix}?`)) return;
+        
+        // Limpa antes para evitar erro 409
+        await _supabase.from('event_tables').delete().eq('event_id', eventPrefix);
+
         const tables = [];
         for(let i=1; i<=count; i++) tables.push({ event_id: eventPrefix, table_number: i, status: 'vacant' });
         const { error } = await _supabase.from('event_tables').insert(tables);
-        alert(error ? error.message : "Mesas inicializadas!");
+        alert(error ? error.message : "Mesas inicializadas com sucesso!");
     }
 
     async function updateIdentity() {
@@ -122,7 +131,7 @@
 
     async function addItem(type) {
         if(type === 'SCH') {
-            const { error } = await _supabase.from('tournament_catalog').insert([{
+            await _supabase.from('tournament_catalog').insert([{
                 event_id: eventPrefix, item_type: 'SCH',
                 tname: document.getElementById('schName').value,
                 tday: document.getElementById('schDay').value,
@@ -132,20 +141,14 @@
                 tax: document.getElementById('schTax').value,
                 spread: document.getElementById('schSpread').value
             }]);
-            if(!error) loadAll();
         } else {
             const tname = document.getElementById('odeName').value;
-            const { error } = await _supabase.from('tournament_catalog').insert([
-                { event_id: eventPrefix, item_type: 'ODE', tname: tname, 
-                  game: document.getElementById('odeGame').value,
-                  pod_size: document.getElementById('odeSize').value,
-                  tfee: document.getElementById('odeFee').value,
-                  tcost: document.getElementById('odeCost').value
-                },
+            await _supabase.from('tournament_catalog').insert([
+                { event_id: eventPrefix, item_type: 'ODE', tname: tname, game: document.getElementById('odeGame').value, pod_size: document.getElementById('odeSize').value, tfee: document.getElementById('odeFee').value, tcost: document.getElementById('odeCost').value },
                 { event_id: eventPrefix, item_type: 'TABLE', tname: tname, value: document.getElementById('tableRange').value }
             ]);
-            if(!error) loadAll();
         }
+        loadAll();
     }
 
     async function loadAll() {
@@ -162,7 +165,13 @@
 
     async function del(id) { if(confirm("Del?")) { await _supabase.from('tournament_catalog').delete().eq('id', id); loadAll(); } }
     function navStaff(t) { window.location.href = `admin_${t}.html?event=${eventPrefix}`; }
-    async function resetSystem() { if(confirm("Deseja apagar TUDO?")) { await _supabase.from('tournament_catalog').delete().eq('event_id', eventPrefix); loadAll(); } }
+    async function resetSystem() { 
+        if(confirm("Deseja apagar TUDO (Torneios e Mesas)?")) { 
+            await _supabase.from('tournament_catalog').delete().eq('event_id', eventPrefix); 
+            await _supabase.from('event_tables').delete().eq('event_id', eventPrefix);
+            loadAll(); 
+        } 
+    }
 </script>
 </body>
 </html>
