@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SideFlow Hub - HYPE DISPLAY</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        :root { --bg: #0d1b2a; --sec: #1b263b; --gold: #ffb703; --blue: #457b9d; --white: #e0e1dd; }
+        
+        body { 
+            font-family: 'Segoe UI', sans-serif; 
+            background: var(--bg); 
+            color: var(--white); 
+            margin: 0; 
+            overflow: hidden; 
+            display: flex; 
+            flex-direction: column; 
+            height: 100vh;
+        }
+
+        header { 
+            padding: 20px; 
+            text-align: center; 
+            background: rgba(0,0,0,0.3); 
+            border-bottom: 2px solid var(--gold);
+        }
+        
+        h1 { margin: 0; letter-spacing: 5px; text-transform: uppercase; color: var(--gold); font-size: 2.5rem; }
+
+        .hype-container { 
+            display: grid; 
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr)); 
+            gap: 25px; 
+            padding: 40px; 
+            flex-grow: 1;
+            align-content: start;
+        }
+
+        .pod-card { 
+            background: var(--sec); 
+            border-radius: 20px; 
+            padding: 30px; 
+            position: relative; 
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            transition: 0.5s;
+            border: 2px solid rgba(255,255,255,0.1);
+        }
+
+        .pod-category { font-size: 1rem; color: var(--gold); font-weight: bold; text-transform: uppercase; }
+        .pod-name { font-size: 2rem; margin: 10px 0; font-weight: 800; }
+        
+        /* Progress Bar */
+        .progress-container { 
+            background: rgba(255,255,255,0.1); 
+            height: 30px; 
+            border-radius: 15px; 
+            margin-top: 20px; 
+            overflow: hidden;
+            position: relative;
+        }
+        
+        .progress-bar { 
+            height: 100%; 
+            background: linear-gradient(90deg, var(--blue), #a8dadc); 
+            width: 0%; 
+            transition: width 1s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        .pod-status { 
+            position: absolute; 
+            right: 15px; 
+            top: 50%; 
+            transform: translateY(-50%); 
+            font-weight: bold; 
+            text-shadow: 1px 1px 2px black;
+        }
+
+        /* Golden Pulse Effect */
+        .pulse-gold { 
+            border-color: var(--gold) !important;
+            box-shadow: 0 0 40px rgba(255, 183, 3, 0.4);
+            animation: pulse-animation 1.5s infinite;
+        }
+
+        @keyframes pulse-animation {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.03); box-shadow: 0 0 60px rgba(255, 183, 3, 0.7); }
+            100% { transform: scale(1); }
+        }
+
+        footer { 
+            padding: 15px; 
+            text-align: center; 
+            font-size: 1.2rem; 
+            background: var(--gold); 
+            color: var(--bg); 
+            font-weight: bold; 
+            text-transform: uppercase;
+        }
+    </style>
+</head>
+<body>
+
+<header>
+    <h1 id="eventName">SIDEFLOW HUB</h1>
+</header>
+
+<div class="hype-container" id="displayArea">
+    </div>
+
+<footer>
+    JOIN THE ON-DEMAND PODS AT THE STAFF DESK!
+</footer>
+
+<script>
+    const supabaseUrl = 'https://hocpoastnlcwgedvcyqs.supabase.co';
+    const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhvY3BvYXN0bmxjd2dlZHZjeXFzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQyODU0MTYsImV4cCI6MjA4OTg2MTQxNn0.1MvvcFsnGW4e0Bj7mzoUKs_3bGM-eHDJTOqsvgKe-pI';
+    const _supabase = supabase.createClient(supabaseUrl, supabaseKey);
+    const eventPrefix = new URLSearchParams(window.location.search).get('event');
+
+    async function initDisplay() {
+        if(!eventPrefix) return;
+        
+        // 1. Get Event Identity
+        const { data: info } = await _supabase.from('tournament_history').select('*').eq('event_id', eventPrefix).single();
+        if(info) document.getElementById('eventName').innerText = info.event_name;
+
+        updateDisplay();
+        
+        // Real-time listener for registrations
+        _supabase
+            .channel('any')
+            .on('postgres_changes', { event: '*', schema: 'public', table: 'ode_registrations' }, () => {
+                updateDisplay();
+            })
+            .subscribe();
+    }
+
+    async function updateDisplay() {
+        // Get ODE tournaments
+        const { data: tours } = await _supabase.from('tournament_catalog').select('*').eq('event_id', eventPrefix).eq('item_type', 'ODE');
+        // Get active registrations
+        const { data: regs } = await _supabase.from('ode_registrations').select('*').eq('event_id', eventPrefix).eq('status', 'waiting');
+
+        const displayArea = document.getElementById('displayArea');
+        displayArea.innerHTML = "";
+
+        if(!tours) return;
+
+        tours.forEach(t => {
+            const count = regs ? regs.filter(r => r.tname === t.tname).length : 0;
+            const target = 4; // Default pod size
+            const percentage = (count / target) * 100;
+            const isPulsing = count === (target - 1); // 3 out of 4 players
+
+            const card = document.createElement('div');
+            card.className = `pod-card ${isPulsing ? 'pulse-gold' : ''}`;
+            
+            card.innerHTML = `
+                <div class="pod-category">${t.game}</div>
+                <div class="pod-name">${t.tname}</div>
+                <div class="progress-container">
+                    <div class="progress-bar" style="width: ${percentage}%"></div>
+                    <div class="pod-status">${count} / ${target}</div>
+                </div>
+            `;
+            displayArea.appendChild(card);
+        });
+    }
+
+    initDisplay();
+</script>
+</body>
+</html>
