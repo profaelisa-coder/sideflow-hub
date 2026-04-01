@@ -117,7 +117,7 @@
 
         <span class="sub-section-header">Table Allocation</span>
         <div class="grid-row" style="grid-template-columns: 2fr 1fr auto;">
-            <div class="input-group"><label>Category / Tournament</label><input type="text" id="tableName" placeholder="Ex: TCG RAID"></div>
+            <div class="input-group"><label>Tournament / Category</label><input type="text" id="tableName" placeholder="Ex: TCG RAID"></div>
             <div class="input-group"><label>Table Range</label><input type="text" id="tableRange" placeholder="Ex: 1 TO 4"></div>
             <button class="btn-add" onclick="addItem('TABLE')" style="background: rgba(255,255,255,0.2); color: white;">+ ALLOCATE</button>
         </div>
@@ -160,14 +160,14 @@
     async function addItem(type) {
         let payload = { event_id: eventPrefix };
         if(type === 'TABLE') {
-            payload = { ...payload, item_type: 'TABLE', name: document.getElementById('tableName').value, value: document.getElementById('tableRange').value };
+            payload = { ...payload, item_type: 'TABLE', t_name: document.getElementById('tableName').value, value: document.getElementById('tableRange').value };
         } else if(type === 'SCH') {
-            payload = { ...payload, item_type: 'SCH', name: document.getElementById('schName').value, 
-                        day: document.getElementById('schDay').value, hour: document.getElementById('schHour').value,
-                        fee: document.getElementById('schFee').value, cost: document.getElementById('schCost').value,
+            payload = { ...payload, item_type: 'SCH', t_name: document.getElementById('schName').value, 
+                        t_day: document.getElementById('schDay').value, t_hour: document.getElementById('schHour').value,
+                        t_fee: document.getElementById('schFee').value, t_cost: document.getElementById('schCost').value,
                         part: document.getElementById('schPart').value, spread: document.getElementById('schSpread').value };
         } else if(type === 'ODE') {
-            payload = { ...payload, item_type: 'ODE', game: document.getElementById('odeGame').value, name: document.getElementById('odeName').value };
+            payload = { ...payload, item_type: 'ODE', game: document.getElementById('odeGame').value, t_name: document.getElementById('odeName').value };
         }
         await _supabase.from('tournament_catalog').insert([payload]);
         loadAll();
