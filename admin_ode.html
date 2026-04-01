@@ -105,38 +105,60 @@
         }
     }
 
-    async function registerPlayer() {
-        const btn = document.getElementById('regBtn');
-        const msg = document.getElementById('msg');
-        const payload = {
-            event_id: eventPrefix,
-            tname: document.getElementById('tourSelect').value,
-            player_name: document.getElementById('playerName').value,
-            whatsapp: document.getElementById('playerWA').value,
-            status: 'waiting'
-        };
+   async function registerPlayer() {
+    const btn = document.getElementById('regBtn');
+    const msg = document.getElementById('msg');
+    const tname = document.getElementById('tourSelect').value;
+    const pname = document.getElementById('playerName').value;
+    const pwa = document.getElementById('playerWA').value;
 
-        if(!payload.tname || !payload.player_name || !payload.whatsapp) {
-            alert("Fill all fields!"); return;
+    if(!tname || !pname || !pwa) { alert("Fill all fields!"); return; }
+
+    btn.disabled = true;
+    btn.innerText = "SAVING...";
+
+    // 1. Insere o jogador
+    const { error } = await _supabase.from('ode_registrations').insert([{
+        event_id: eventPrefix,
+        tname: tname,
+        player_name: pname,
+        whatsapp: pwa,
+        status: 'waiting'
+    }]);
+
+    if(!error) {
+        // 2. VERIFICAÇÃO DE FECHAMENTO (A LÓGICA DE 4)
+        const { data: participants } = await _supabase
+            .from('ode_registrations')
+            .select('id')
+            .eq('event_id', eventPrefix)
+            .eq('tname', tname)
+            .eq('status', 'waiting');
+
+        if (participants.length >= 4) {
+            // Se chegou a 4, vamos marcar como "busy" (ocupado/fechado)
+            const idsToClose = participants.map(p => p.id);
+            
+            await _supabase
+                .from('ode_registrations')
+                .update({ status: 'closed' }) // ou 'playing'
+                .in('id', idsToClose);
+
+            alert("🚨 POD CLOSED! Send these 4 players to a table.");
         }
 
-        btn.disabled = true;
-        btn.innerText = "SAVING...";
-
-        const { error } = await _supabase.from('ode_registrations').insert([payload]);
-
-        if(!error) {
-            msg.style.color = "var(--gold)";
-            msg.innerText = "✅ PLAYER REGISTERED!";
-            document.getElementById('playerName').value = "";
-            document.getElementById('playerWA').value = "";
-            setTimeout(() => { msg.innerText = ""; }, 3000);
-        } else {
-            alert("Error: " + error.message);
-        }
-        
-        btn.disabled = false;
-        btn.innerText = "REGISTER PLAYER";
+        msg.style.color = "var(--gold)";
+        msg.innerText = "✅ PLAYER REGISTERED!";
+        document.getElementById('playerName').value = "";
+        document.getElementById('playerWA').value = "";
+        setTimeout(() => { msg.innerText = ""; }, 3000);
+    } else {
+        alert("Error: " + error.message);
+    }
+    
+    btn.disabled = false;
+    btn.innerText = "REGISTER PLAYER";
+}
     }
 </script>
 
