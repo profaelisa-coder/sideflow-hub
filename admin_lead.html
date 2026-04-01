@@ -6,38 +6,72 @@
     <title>SideFlow Hub - LEAD SETUP AREA</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
-        :root { --primary-blue: #0070f3; --dark-bg: #0a0a0a; --card-bg: #161616; --gold: #eab308; --border: #333; --red: #e63946; }
-        body { font-family: 'Segoe UI', sans-serif; background: var(--dark-bg); color: white; margin: 0; padding: 20px; }
+        :root { 
+            --bg-blue: #1d3557; 
+            --card-white: #ffffff; 
+            --gold: #ffb703; 
+            --blue-action: #457b9d; 
+            --red-action: #e63946; 
+            --text-dark: #333333;
+        }
+
+        body { font-family: 'Segoe UI', sans-serif; background: var(--bg-blue); color: white; margin: 0; padding: 20px; }
         .container { max-width: 1000px; margin: 0 auto; padding-bottom: 100px; }
-        .sector { background: var(--card-bg); padding: 20px; border-radius: 12px; border: 1px solid var(--border); margin-bottom: 20px; }
-        .sector-title { color: var(--primary-blue); font-weight: bold; text-transform: uppercase; font-size: 0.8rem; margin-bottom: 15px; display: block; border-bottom: 1px solid var(--border); padding-bottom: 8px; }
+        
+        h2 { text-align: center; letter-spacing: 3px; color: var(--gold); text-transform: uppercase; margin-bottom: 30px; }
+
+        .sector { 
+            background: var(--card-white); 
+            padding: 25px; 
+            border-radius: 12px; 
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2); 
+            margin-bottom: 25px; 
+            color: var(--text-dark); 
+            border-left: 6px solid var(--gold);
+        }
+
+        .sector-title { 
+            color: var(--bg-blue); 
+            font-weight: bold; 
+            text-transform: uppercase; 
+            font-size: 0.9rem; 
+            margin-bottom: 20px; 
+            display: block; 
+            border-bottom: 1px solid #eee; 
+            padding-bottom: 10px; 
+        }
         
         .grid-row { display: grid; gap: 15px; align-items: end; }
         .input-group { display: flex; flex-direction: column; }
-        label { font-size: 0.65rem; font-weight: bold; color: #888; margin-bottom: 4px; text-transform: uppercase; }
-        input, select { padding: 10px; border-radius: 6px; border: 1px solid var(--border); background: #222; color: white; font-size: 0.85rem; }
+        label { font-size: 0.7rem; font-weight: bold; color: #777; margin-bottom: 4px; text-transform: uppercase; }
+        input, select { padding: 12px; border-radius: 6px; border: 1px solid #ddd; background: #f9f9f9; color: var(--text-dark); font-size: 0.9rem; }
         
-        button { padding: 10px 15px; border-radius: 6px; font-weight: bold; cursor: pointer; border: none; text-transform: uppercase; transition: 0.3s; }
-        .btn-add { background: var(--gold); color: black; }
-        .btn-blue { background: var(--primary-blue); color: white; }
-        .btn-red { background: var(--red); color: white; }
+        button { padding: 12px 20px; border-radius: 6px; font-weight: bold; cursor: pointer; border: none; text-transform: uppercase; transition: 0.3s; }
+        .btn-add { background: var(--gold); color: var(--bg-blue); }
+        .btn-blue { background: var(--blue-action); color: white; width: 100%; }
+        .btn-red { background: var(--red-action); color: white; width: 100%; }
         
-        table { width: 100%; border-collapse: collapse; margin-top: 15px; font-size: 0.8rem; }
-        th { text-align: left; color: var(--gold); border-bottom: 1px solid var(--border); padding: 8px; }
-        td { padding: 8px; border-bottom: 1px dotted #333; }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; font-size: 0.85rem; color: var(--text-dark); }
+        th { text-align: left; color: #999; border-bottom: 2px solid #eee; padding: 12px; text-transform: uppercase; font-size: 0.7rem; }
+        td { padding: 12px; border-bottom: 1px solid #eee; }
         
-        .action-bar { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
-        .footer-reset { position: fixed; bottom: 20px; right: 20px; opacity: 0.5; }
+        .btn-del { color: var(--red-action); background: none; border: none; font-size: 10px; cursor: pointer; font-weight: bold; }
+        
+        .action-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; }
+        .footer-reset { position: fixed; bottom: 20px; right: 20px; opacity: 0.3; }
         .footer-reset:hover { opacity: 1; }
+
+        /* Divisor interno para a alocação de mesas dentro do ODE */
+        .sub-section { margin-top: 30px; padding-top: 20px; border-top: 2px dashed #eee; }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <h2 style="text-align: center; letter-spacing: 3px; color: var(--gold);">LEAD SETUP AREA</h2>
+    <h2>LEAD SETUP AREA</h2>
 
     <div class="sector">
-        <span class="sector-title">** SECTION 1: EVENT IDENTITY</span>
+        <span class="sector-title">SECTION 1: EVENT IDENTITY</span>
         <div class="grid-row" style="grid-template-columns: 2fr 1fr;">
             <div class="input-group"><label>Event Name</label><input type="text" id="masterEvent" onchange="updateIdentity()"></div>
             <div class="input-group"><label>Logo Type</label><select id="masterLogo" onchange="updateIdentity()"><option value="REGIONAL">REGIONAL</option><option value="IC">IC</option></select></div>
@@ -45,55 +79,69 @@
     </div>
 
     <div class="sector">
-        <span class="sector-title">** SECTION 2: TABLE ALLOCATION</span>
-        <div class="grid-row" style="grid-template-columns: 2fr 1fr auto;">
-            <div class="input-group"><label>Tournament / Category</label><input type="text" id="tableName" placeholder="Ex: TCG RAID"></div>
-            <div class="input-group"><label>Tables</label><input type="text" id="tableRange" placeholder="Ex: 1 TO 4"></div>
-            <button class="btn-add" onclick="addItem('TABLE')">+ ADD RULE</button>
-        </div>
-        <table id="tableRules"><thead><tr><th>Tournament</th><th>Range</th><th>Action</th></tr></thead><tbody></tbody></table>
-    </div>
-
-    <div class="sector">
-        <span class="sector-title">** SECTION 3: SCHEDULED TOURNAMENT CATALOG</span>
+        <span class="sector-title">SECTION 2: SCHEDULED TOURNAMENT CATALOG</span>
         <div class="grid-row" style="grid-template-columns: 2fr 1fr 1fr;">
             <div class="input-group"><label>Name</label><input type="text" id="schName"></div>
             <div class="input-group"><label>Day</label><select id="schDay"><option>Day 1</option><option>Day 2</option><option>Day 3</option></select></div>
             <div class="input-group"><label>Hour</label><input type="text" id="schHour" placeholder="9:00 AM"></div>
         </div>
-        <div class="grid-row" style="grid-template-columns: 1fr 1fr 1fr 1fr auto; margin-top: 10px;">
+        <div class="grid-row" style="grid-template-columns: 1fr 1fr 1fr 1fr auto; margin-top: 15px;">
             <div class="input-group"><label>Fee ($)</label><input type="number" id="schFee"></div>
             <div class="input-group"><label>Cost ($)</label><input type="number" id="schCost"></div>
             <div class="input-group"><label>Part %</label><input type="number" id="schPart" value="20"></div>
             <div class="input-group"><label>Spread</label><select id="schSpread"><option>2.0</option><option>1.75</option><option>1.5</option></select></div>
             <button class="btn-add" onclick="addItem('SCH')">+ ADD SCH</button>
         </div>
-        <table id="schList"><thead><tr><th>Name</th><th>Day/Time</th><th>Fee/Cost</th><th>Action</th></tr></thead><tbody></tbody></table>
+        <table id="schList">
+            <thead><tr><th>Tournament Name</th><th>Schedule</th><th>Financials</th><th>Action</th></tr></thead>
+            <tbody></tbody>
+        </table>
     </div>
 
     <div class="sector">
-        <span class="sector-title">** SECTION 4: ODE TOURNAMENT CATALOG</span>
+        <span class="sector-title">SECTION 3: ON-DEMAND CATALOG & TABLES</span>
+        
         <div class="grid-row" style="grid-template-columns: 1fr 2fr auto;">
             <div class="input-group"><label>Game</label><select id="odeGame"><option>TCG</option><option>VGC</option><option>GO</option><option>POCKET</option></select></div>
-            <div class="input-group"><label>Tournament Name</label><input type="text" id="odeName" placeholder="Ex: 8-Player Single Elim"></div>
+            <div class="input-group"><label>Tournament Name</label><input type="text" id="odeName" placeholder="8-Player Single Elim"></div>
             <button class="btn-add" onclick="addItem('ODE')">+ ADD ODE</button>
         </div>
-        <table id="odeList"><thead><tr><th>Game</th><th>Tournament Name</th><th>Action</th></tr></thead><tbody></tbody></table>
+        <table id="odeList">
+            <thead><tr><th>Game</th><th>Name</th><th>Action</th></tr></thead>
+            <tbody></tbody>
+        </table>
+
+        <div class="sub-section">
+            <span class="sector-title" style="border:none; font-size: 0.8rem; color: #777;">Table Allocation (ODE Only)</span>
+            <div class="grid-row" style="grid-template-columns: 2fr 1fr auto;">
+                <div class="input-group"><label>Tournament / Category</label><input type="text" id="tableName" placeholder="Ex: TCG RAID"></div>
+                <div class="input-group"><label>Table Range</label><input type="text" id="tableRange" placeholder="Ex: 1 TO 4"></div>
+                <button class="btn-add" onclick="addItem('TABLE')" style="background: #eee; border: 1px solid #ccc;">+ ALLOCATE</button>
+            </div>
+            <table id="tableRules">
+                <thead><tr><th>Target</th><th>Range</th><th>Action</th></tr></thead>
+                <tbody></tbody>
+            </table>
+        </div>
     </div>
 
-    <div class="action-bar">
-        <button class="btn-blue" onclick="navStaff('ode')">STAFF ODE AREA</button>
-        <button class="btn-blue" onclick="navStaff('sch')">STAFF SCH AREA</button>
-        <button class="btn-red" onclick="alert('Relatório final em desenvolvimento...')">FINAL REPORT</button>
-        <button class="btn-red" onclick="alert('Exportando CSV...')">EXPORT SHEET</button>
+    <div class="sector" style="background: rgba(255,255,255,0.05); border-left-color: var(--blue-action);">
+        <span class="sector-title" style="color:white;">SECTION 4: GLOBAL ACTIONS</span>
+        <div class="action-grid">
+            <button class="btn-blue" onclick="navStaff('ode')">STAFF ODE AREA</button>
+            <button class="btn-blue" onclick="navStaff('sch')">STAFF SCH AREA</button>
+            <button class="btn-red" onclick="alert('Generating Final Report...')">GENERATE FINAL REPORT</button>
+            <button class="btn-red" onclick="alert('Exporting Spreadsheet...')">EXPORT SHEET</button>
+        </div>
     </div>
 
     <div class="footer-reset">
-        <button class="btn-red" style="font-size: 0.6rem;" onclick="resetSystem()">RESET SYSTEM</button>
+        <button class="btn-del" onclick="resetSystem()">RESET SYSTEM</button>
     </div>
 </div>
 
 <script>
+    // Configurações Supabase
     const supabaseUrl = 'https://hocpoastnlcwgedvcyqs.supabase.co';
     const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhvY3BvYXN0bmxjd2dlZHZjeXFzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQyODU0MTYsImV4cCI6MjA4OTg2MTQxNn0.1MvvcFsnGW4e0Bj7mzoUKs_3bGM-eHDJTOqsvgKe-pI';
     const _supabase = supabase.createClient(supabaseUrl, supabaseKey);
@@ -120,7 +168,7 @@
                         day: document.getElementById('schDay').value, hour: document.getElementById('schHour').value,
                         fee: document.getElementById('schFee').value, cost: document.getElementById('schCost').value,
                         part: document.getElementById('schPart').value, spread: document.getElementById('schSpread').value };
-        } else {
+        } else if(type === 'ODE') {
             payload = { ...payload, item_type: 'ODE', game: document.getElementById('odeGame').value, name: document.getElementById('odeName').value };
         }
         await _supabase.from('tournament_catalog').insert([payload]);
@@ -129,7 +177,6 @@
 
     async function loadAll() {
         const { data } = await _supabase.from('tournament_catalog').select('*').eq('event_id', eventPrefix);
-        // Limpa tabelas
         document.querySelector('#tableRules tbody').innerHTML = "";
         document.querySelector('#schList tbody').innerHTML = "";
         document.querySelector('#odeList tbody').innerHTML = "";
@@ -137,16 +184,13 @@
         data.forEach(item => {
             let row = `<tr>`;
             if(item.item_type === 'TABLE') {
-                row += `<td>${item.name}</td><td>${item.value}</td>`;
-                row += `<td><button onclick="del('${item.id}')" style="color:red; background:none;">DEL</button></td></tr>`;
+                row += `<td>${item.name}</td><td>${item.value}</td><td><button onclick="del('${item.id}')" class="btn-del">REMOVE</button></td></tr>`;
                 document.querySelector('#tableRules tbody').innerHTML += row;
             } else if(item.item_type === 'SCH') {
-                row += `<td>${item.name}</td><td>${item.day} - ${item.hour}</td><td>$${item.fee} / $${item.cost}</td>`;
-                row += `<td><button onclick="del('${item.id}')" style="color:red; background:none;">DEL</button></td></tr>`;
+                row += `<td>${item.name}</td><td>${item.day} | ${item.hour}</td><td>$${item.fee} Fee</td><td><button onclick="del('${item.id}')" class="btn-del">REMOVE</button></td></tr>`;
                 document.querySelector('#schList tbody').innerHTML += row;
             } else if(item.item_type === 'ODE') {
-                row += `<td>${item.game}</td><td>${item.name}</td>`;
-                row += `<td><button onclick="del('${item.id}')" style="color:red; background:none;">DEL</button></td></tr>`;
+                row += `<td><strong>${item.game}</strong></td><td>${item.name}</td><td><button onclick="del('${item.id}')" class="btn-del">REMOVE</button></td></tr>`;
                 document.querySelector('#odeList tbody').innerHTML += row;
             }
         });
@@ -156,7 +200,7 @@
     function navStaff(target) { window.location.href = `admin_${target}.html?event=${eventPrefix}`; }
     
     async function resetSystem() {
-        if(confirm("DANGER: Reset all event data?")) {
+        if(confirm("RESET EVENT DATA?")) {
             await _supabase.from('tournament_catalog').delete().eq('event_id', eventPrefix);
             await _supabase.from('tournament_history').delete().eq('event_id', eventPrefix);
             location.reload();
