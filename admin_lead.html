@@ -6,166 +6,163 @@
     <title>SideFlow Hub - LEAD SETUP AREA</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
-        :root { --bg: #1d3557; --sec: #2a4a73; --gold: #ffb703; --blue: #457b9d; --red: #e63946; --dark: #162a44; }
+        :root { --bg: #1d3557; --sec: #2a4a73; --gold: #ffb703; --blue: #457b9d; --red: #e63946; --dark: #162a44; --green: #2ecc71; }
         body { font-family: 'Segoe UI', sans-serif; background: var(--bg); color: white; margin: 0; padding: 20px; }
-        .container { max-width: 1000px; margin: 0 auto; padding-bottom: 100px; }
+        .container { max-width: 1200px; margin: 0 auto; padding-bottom: 150px; }
         h2 { text-align: center; letter-spacing: 3px; color: var(--gold); text-transform: uppercase; margin-bottom: 30px; }
         .sector { background: var(--sec); padding: 25px; border-radius: 12px; margin-bottom: 25px; border-left: 6px solid var(--gold); box-shadow: 0 4px 15px rgba(0,0,0,0.3); }
         .sector-title { color: var(--gold); font-weight: bold; text-transform: uppercase; font-size: 0.9rem; display: block; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 10px; margin-bottom: 20px; }
         .grid { display: grid; gap: 15px; align-items: end; }
         .input-group { display: flex; flex-direction: column; }
-        label { font-size: 0.7rem; font-weight: bold; color: rgba(255,255,255,0.7); margin-bottom: 6px; text-transform: uppercase; }
-        input, select { padding: 12px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.2); background: rgba(255,255,255,0.1); color: white; font-size: 0.9rem; appearance: none; }
-        select option { background-color: var(--dark); color: white; }
-        input:focus { border-color: var(--gold); outline: none; }
-        button { padding: 12px 20px; border-radius: 6px; font-weight: bold; cursor: pointer; border: none; text-transform: uppercase; transition: 0.3s; }
-        .btn-add { background: var(--gold); color: var(--bg); }
-        .btn-blue { background: var(--blue); color: white; width: 100%; }
-        .btn-red { background: var(--red); color: white; width: 100%; }
+        label { font-size: 0.65rem; font-weight: bold; color: rgba(255,255,255,0.7); margin-bottom: 6px; text-transform: uppercase; }
+        input, select { padding: 10px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.2); background: rgba(255,255,255,0.1); color: white; font-size: 0.85rem; }
+        button { padding: 12px 20px; border-radius: 6px; font-weight: bold; cursor: pointer; border: none; text-transform: uppercase; transition: 0.3s; font-size: 0.75rem; }
+        .btn-add { background: var(--gold); color: var(--bg); width: 100%; margin-top: 15px; }
+        .btn-blue { background: var(--blue); color: white; }
+        .btn-green { background: var(--green); color: white; }
+
+        /* Floating Reset Link */
+        .reset-link { position: fixed; bottom: 20px; right: 20px; color: var(--red); cursor: pointer; font-weight: bold; font-size: 0.75rem; text-decoration: underline; opacity: 0.7; transition: 0.3s; z-index: 100; }
+        .reset-link:hover { opacity: 1; }
+
         table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-        td { padding: 12px; border-bottom: 1px solid rgba(255,255,255,0.1); font-size: 0.9rem; }
-        .btn-del { color: var(--red); background: none; cursor: pointer; font-weight: bold; font-size: 11px; }
+        td { padding: 10px; border-bottom: 1px solid rgba(255,255,255,0.1); font-size: 0.85rem; }
+        .btn-del { color: var(--red); background: none; font-size: 10px; padding: 0; }
     </style>
 </head>
 <body>
 <div class="container">
     <h2>LEAD SETUP AREA</h2>
 
-    <div class="sector" id="sec-identity">
+    <div class="sector">
         <span class="sector-title">SECTION 1: EVENT IDENTITY</span>
-        <div class="grid" style="grid-template-columns: 2fr 1fr 1fr 1fr;">
-            <div class="input-group"><label>Event Name</label><input type="text" id="masterEvent" autocomplete="off" onchange="updateIdentity()"></div>
-            <div class="input-group"><label>Logo</label><select id="masterLogo" onchange="updateIdentity()"><option value="REGIONAL">REGIONAL</option><option value="IC">IC</option></select></div>
-            <div class="input-group"><label>Part %</label><input type="number" id="masterTax" value="20" autocomplete="off" onchange="updateIdentity()"></div>
-            <div class="input-group"><label>Spread</label><select id="masterFactor" onchange="updateIdentity()"><option value="2.0">2.0</option><option value="1.75">1.75</option><option value="1.5">1.5</option></select></div>
+        <div class="grid" style="grid-template-columns: 3fr 1fr;">
+            <div class="input-group"><label>Event Name</label><input type="text" id="masterEvent" onchange="updateIdentity()"></div>
+            <div class="input-group"><label>Logo Type</label><select id="masterLogo" onchange="updateIdentity()"><option>REGIONAL</option><option>IC</option></select></div>
         </div>
     </div>
 
-    <div class="sector" id="sec-init">
+    <div class="sector">
         <span class="sector-title">SECTION 0: TABLE INITIALIZATION</span>
-        <div class="grid" style="grid-template-columns: 1fr 2fr auto;">
-            <div class="input-group">
-                <label>Total Mesas</label>
-                <input type="number" id="setupTableCount" value="120">
-            </div>
-            <div style="font-size: 0.8rem; opacity: 0.8; padding-top: 10px;">
-                Informe o número de mesas e clique ao lado para gerar o mapa físico. <br>
-                <strong>Atenção:</strong> Use apenas uma vez no início do evento.
-            </div>
-            <button class="btn-add" onclick="initTables()" style="background: var(--blue); color: white;">🛠️ GENERATE TABLES</button>
+        <div class="grid" style="grid-template-columns: 1fr 3fr auto;">
+            <div class="input-group"><label>Total Mesas</label><input type="number" id="setupTableCount" value="120"></div>
+            <div style="font-size: 0.75rem; opacity: 0.7;">Gere o mapa físico no início do evento.</div>
+            <button class="btn-blue" onclick="initTables()">🛠️ GENERATE TABLES</button>
         </div>
     </div>
 
     <div class="sector" id="sec-sch">
-        <span class="sector-title">SECTION 2: SCHEDULED CATALOG</span>
-        <div class="grid" style="grid-template-columns: 2fr 1fr 1fr;">
-            <div class="input-group"><label>Tournament Name</label><input type="text" id="schName" autocomplete="off"></div>
+        <span class="sector-title">SECTION 2: SCHEDULED CATALOG (Variable Payout)</span>
+        <div class="grid" style="grid-template-columns: 2fr 1fr 1fr 1fr 1fr 1fr 1fr auto;">
+            <div class="input-group"><label>Torney Name</label><input type="text" id="schName"></div>
             <div class="input-group"><label>Day</label><select id="schDay"><option>Day 1</option><option>Day 2</option><option>Day 3</option></select></div>
-            <div class="input-group"><label>Hour</label><input type="text" id="schHour" placeholder="9:00 AM" autocomplete="off"></div>
+            <div class="input-group"><label>Hour</label><input type="text" id="schHour" placeholder="9:00 AM"></div>
+            <div class="input-group"><label>Fee ($)</label><input type="number" id="schFee"></div>
+            <div class="input-group"><label>Cost ($)</label><input type="number" id="schCost"></div>
+            <div class="input-group"><label>Part %</label><input type="number" id="schTax" value="20"></div>
+            <div class="input-group"><label>Spread</label><input type="number" id="schSpread" value="2.0" step="0.25"></div>
         </div>
-        <div class="grid" style="grid-template-columns: 1fr 1fr auto; margin-top: 15px;">
-            <div class="input-group"><label>Fee ($)</label><input type="number" id="schFee" autocomplete="off"></div>
-            <div class="input-group"><label>Cost ($)</label><input type="number" id="schCost" autocomplete="off"></div>
-            <button class="btn-add" onclick="addItem('SCH')">+ ADD SCH</button>
-        </div>
+        <button class="btn-add" onclick="addItem('SCH')">+ ADD SCHEDULED TOURNAMENT</button>
         <table id="schList"><tbody></tbody></table>
     </div>
 
     <div class="sector" id="sec-ode">
-        <span class="sector-title">SECTION 3: ON-DEMAND CATALOG & TABLES</span>
-        <div class="grid" style="grid-template-columns: 1fr 2fr 1fr 1fr 1fr;">
+        <span class="sector-title">SECTION 3: ON-DEMAND CATALOG (Fixed Payout)</span>
+        <div class="grid" style="grid-template-columns: 1fr 2fr 1fr 1fr 1fr 1.5fr auto;">
             <div class="input-group"><label>Game</label><select id="odeGame"><option>TCG</option><option>VGC</option><option>GO</option><option>POCKET</option></select></div>
-            <div class="input-group"><label>Pod Name</label><input type="text" id="odeName" placeholder="Ex: Turbo" autocomplete="off"></div>
-            <div class="input-group"><label>Fee ($)</label><input type="number" id="odeFee" autocomplete="off"></div>
-            <div class="input-group"><label>Cost ($)</label><input type="number" id="odeCost" autocomplete="off"></div>
-            <div class="input-group"><label>Table Range</label><input type="text" id="tableRange" placeholder="1 TO 4" autocomplete="off"></div>
+            <div class="input-group"><label>Pod Name</label><input type="text" id="odeName" placeholder="Turbo"></div>
+            <div class="input-group"><label>Size</label><select id="odeSize"><option value="4">4 PPL</option><option value="6">6 PPL</option><option value="8">8 PPL</option></select></div>
+            <div class="input-group"><label>Fee ($)</label><input type="number" id="odeFee"></div>
+            <div class="input-group"><label>Cost ($)</label><input type="number" id="odeCost"></div>
+            <div class="input-group"><label>Table Range</label><input type="text" id="tableRange" placeholder="1-50"></div>
         </div>
-        <div class="grid" style="margin-top: 15px;">
-            <button class="btn-add" onclick="addItem('ODE_FULL')">+ ADD ON-DEMAND TORNEY</button>
-        </div>
+        <button class="btn-add" onclick="addItem('ODE_FULL')">+ ADD ON-DEMAND POD</button>
         <table id="odeList"><tbody></tbody></table>
     </div>
 
-    <div class="sector" style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
-        <button class="btn-blue" onclick="navStaff('ode')">STAFF ODE AREA</button>
-        <button class="btn-blue" onclick="navStaff('sch')">STAFF SCH AREA</button>
-        <button class="btn-red" onclick="resetSystem()">RESET SYSTEM</button>
+    <div style="display:grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 15px;">
+        <button class="btn-blue" onclick="navStaff('ode')">STAFF ODE</button>
+        <button class="btn-blue" onclick="navStaff('tables')">TABLE MAP</button>
+        <button class="btn-green" onclick="alert('Relatório Gerado')">📊 GENERATE PAYOUT</button>
+        <button class="btn-blue" onclick="alert('E-mail enviado')">📧 EMAIL REPORT</button>
     </div>
+
+    <span class="reset-link" onclick="resetSystem()">⚠️ RESET SYSTEM</span>
 </div>
 
 <script>
     const supabaseUrl = 'https://hocpoastnlcwgedvcyqs.supabase.co';
     const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhvY3BvYXN0bmxjd2dlZHZjeXFzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQyODU0MTYsImV4cCI6MjA4OTg2MTQxNn0.1MvvcFsnGW4e0Bj7mzoUKs_3bGM-eHDJTOqsvgKe-pI';
     const _supabase = supabase.createClient(supabaseUrl, supabaseKey);
-    const eventPrefix = new URLSearchParams(window.location.search).get('event');
+    const urlParams = new URLSearchParams(window.location.search);
+    let eventPrefix = urlParams.get('event') || localStorage.getItem('active_event_id');
 
-    window.onload = () => { if(!eventPrefix) window.location.href='index.html'; loadAll(); };
+    window.onload = () => { 
+        if(!eventPrefix) { document.body.innerHTML="<h1>URL sem ID de Evento</h1>"; return; }
+        localStorage.setItem('active_event_id', eventPrefix);
+        loadAll(); 
+    };
 
     async function initTables() {
         const count = parseInt(document.getElementById('setupTableCount').value);
-        if(!count || count <= 0) { alert("Insira um número válido!"); return; }
-        if(!confirm(`Deseja gerar ${count} mesas para o evento ${eventPrefix}?`)) return;
-
-        const tableData = [];
-        for (let i = 1; i <= count; i++) {
-            tableData.push({ event_id: eventPrefix, table_number: i, status: 'vacant' });
-        }
-
-        const { error } = await _supabase.from('event_tables').insert(tableData);
-        if (error) { alert("Erro: " + error.message); } 
-        else { alert(`${count} mesas geradas com sucesso!`); }
+        if(!confirm(`Fabricar ${count} mesas para ${eventPrefix}?`)) return;
+        const tables = [];
+        for(let i=1; i<=count; i++) tables.push({ event_id: eventPrefix, table_number: i, status: 'vacant' });
+        const { error } = await _supabase.from('event_tables').insert(tables);
+        alert(error ? error.message : "Mesas inicializadas!");
     }
 
     async function updateIdentity() {
         await _supabase.from('tournament_history').upsert({ 
             event_id: eventPrefix, tournament_id: 'IDENTITY_ANCHOR', 
             event_name: document.getElementById('masterEvent').value,
-            logo_type: document.getElementById('masterLogo').value,
-            part_percent: document.getElementById('masterTax').value,
-            spread_factor: document.getElementById('masterFactor').value
+            logo_type: document.getElementById('masterLogo').value
         }, { onConflict: 'event_id, tournament_id' });
     }
 
     async function addItem(type) {
-        let payload = { event_id: eventPrefix };
         if(type === 'SCH') {
-            payload.item_type = 'SCH';
-            payload.tname = document.getElementById('schName').value;
-            payload.tday = document.getElementById('schDay').value;
-            payload.thour = document.getElementById('schHour').value;
-            payload.tfee = document.getElementById('schFee').value;
-            payload.tcost = document.getElementById('schCost').value;
-            const { error } = await _supabase.from('tournament_catalog').insert([payload]);
-            if(!error) { loadAll(); }
-        } else if(type === 'ODE_FULL') {
+            const { error } = await _supabase.from('tournament_catalog').insert([{
+                event_id: eventPrefix, item_type: 'SCH',
+                tname: document.getElementById('schName').value,
+                tday: document.getElementById('schDay').value,
+                thour: document.getElementById('schHour').value,
+                tfee: document.getElementById('schFee').value,
+                tcost: document.getElementById('schCost').value,
+                tax: document.getElementById('schTax').value,
+                spread: document.getElementById('schSpread').value
+            }]);
+            if(!error) loadAll();
+        } else {
             const tname = document.getElementById('odeName').value;
             const { error } = await _supabase.from('tournament_catalog').insert([
-                { event_id: eventPrefix, item_type: 'ODE', game: document.getElementById('odeGame').value, tname: tname, tfee: document.getElementById('odeFee').value, tcost: document.getElementById('odeCost').value },
+                { event_id: eventPrefix, item_type: 'ODE', tname: tname, 
+                  game: document.getElementById('odeGame').value,
+                  pod_size: document.getElementById('odeSize').value,
+                  tfee: document.getElementById('odeFee').value,
+                  tcost: document.getElementById('odeCost').value
+                },
                 { event_id: eventPrefix, item_type: 'TABLE', tname: tname, value: document.getElementById('tableRange').value }
             ]);
-            if(!error) { loadAll(); }
+            if(!error) loadAll();
         }
     }
 
     async function loadAll() {
-        const { data, error } = await _supabase.from('tournament_catalog').select('*').eq('event_id', eventPrefix);
-        if(error || !data) return;
-        const schTbody = document.querySelector('#schList tbody');
-        const odeTbody = document.querySelector('#odeList tbody');
-        schTbody.innerHTML = ""; odeTbody.innerHTML = "";
-        data.forEach(item => {
-            if(item.item_type === 'SCH') {
-                schTbody.innerHTML += `<tr><td><strong>${item.tname}</strong></td><td>${item.tday} | ${item.thour}</td><td>$${item.tfee}</td><td><button onclick="del('${item.id}')" class="btn-del">REMOVE</button></td></tr>`;
-            } else {
-                const label = item.item_type === 'TABLE' ? '📌 TABLE' : `🎮 ${item.game}`;
-                odeTbody.innerHTML += `<tr><td>${item.tname}</td><td>${label}</td><td>${item.tfee || item.value}</td><td><button onclick="del('${item.id}')" class="btn-del">REMOVE</button></td></tr>`;
-            }
+        const { data } = await _supabase.from('tournament_catalog').select('*').eq('event_id', eventPrefix);
+        if(!data) return;
+        const schT = document.querySelector('#schList tbody');
+        const odeT = document.querySelector('#odeList tbody');
+        schT.innerHTML = ""; odeT.innerHTML = "";
+        data.forEach(i => {
+            const row = `<tr><td>${i.tname}</td><td>${i.item_type === 'SCH' ? i.thour : i.game}</td><td>${i.tfee || i.value}</td><td style="text-align:right"><button class="btn-del" onclick="del('${i.id}')">REMOVE</button></td></tr>`;
+            if(i.item_type === 'SCH') schT.innerHTML += row; else odeT.innerHTML += row;
         });
     }
 
-    async function del(id) { if(confirm("Remove?")) { await _supabase.from('tournament_catalog').delete().eq('id', id); loadAll(); } }
-    function navStaff(target) { window.location.href = `admin_${target}.html?event=${eventPrefix}`; }
-    async function resetSystem() { if(confirm("RESET ALL?")) { await _supabase.from('tournament_catalog').delete().eq('event_id', eventPrefix); loadAll(); } }
+    async function del(id) { if(confirm("Del?")) { await _supabase.from('tournament_catalog').delete().eq('id', id); loadAll(); } }
+    function navStaff(t) { window.location.href = `admin_${t}.html?event=${eventPrefix}`; }
+    async function resetSystem() { if(confirm("Deseja apagar TUDO?")) { await _supabase.from('tournament_catalog').delete().eq('event_id', eventPrefix); loadAll(); } }
 </script>
 </body>
 </html>
