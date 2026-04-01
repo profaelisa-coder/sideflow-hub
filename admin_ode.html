@@ -1,50 +1,171 @@
 <!DOCTYPE html>
-<html lang="pt-br">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SideFlow Hub - Painel do Juiz</title>
+    <title>SideFlow Hub - STAFF ODE AREA</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
-        body { font-family: sans-serif; background: #0a0a0a; color: #e0e0e0; display: flex; justify-content: center; padding: 20px; }
-        .container { background: #161616; padding: 25px; border-radius: 12px; border: 1px solid #333; width: 100%; max-width: 400px; }
-        h1 { color: #0070f3; text-align: center; font-size: 22px; }
-        label { display: block; margin-top: 15px; font-size: 13px; color: #888; }
-        input, select { width: 100%; padding: 12px; margin-top: 5px; border-radius: 6px; border: 1px solid #333; background: #222; color: white; box-sizing: border-box; }
-        button { width: 100%; padding: 15px; margin-top: 25px; background: #0070f3; color: white; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; }
+        :root { --bg: #1d3557; --sec: #2a4a73; --gold: #ffb703; --blue: #457b9d; --red: #e63946; }
+        body { font-family: 'Segoe UI', sans-serif; background: var(--bg); color: white; margin: 0; padding: 20px; }
+        .container { max-width: 800px; margin: 0 auto; padding-bottom: 50px; }
+        h2 { text-align: center; letter-spacing: 2px; color: var(--gold); text-transform: uppercase; margin-bottom: 30px; }
+        
+        .card { background: var(--sec); padding: 25px; border-radius: 12px; margin-bottom: 25px; border-left: 6px solid var(--gold); box-shadow: 0 4px 15px rgba(0,0,0,0.3); }
+        .label-group { display: flex; flex-direction: column; margin-bottom: 15px; }
+        label { font-size: 0.75rem; font-weight: bold; color: rgba(255,255,255,0.7); margin-bottom: 6px; text-transform: uppercase; }
+        
+        input, select { padding: 14px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.2); background: rgba(255,255,255,0.1); color: white; font-size: 1rem; width: 100%; box-sizing: border-box; }
+        input:focus { border-color: var(--gold); outline: none; background: rgba(255,255,255,0.15); }
+
+        .btn-register { width: 100%; padding: 16px; background: var(--gold); color: var(--bg); border: none; border-radius: 8px; font-weight: bold; font-size: 1rem; cursor: pointer; text-transform: uppercase; transition: 0.3s; margin-top: 10px; }
+        .btn-register:hover { transform: scale(1.02); filter: brightness(1.1); }
+
+        .list-header { display: flex; justify-content: space-between; align-items: center; margin-top: 40px; border-bottom: 1px solid var(--gold); padding-bottom: 10px; }
+        .list-header h3 { margin: 0; color: var(--gold); font-size: 1rem; }
+
+        .reg-item { background: rgba(0,0,0,0.2); padding: 15px; border-radius: 8px; margin-top: 10px; display: flex; justify-content: space-between; align-items: center; border: 1px solid rgba(255,255,255,0.05); }
+        .player-info { display: flex; flex-direction: column; }
+        .player-name { font-weight: bold; font-size: 1rem; }
+        .player-meta { font-size: 0.8rem; color: rgba(255,255,255,0.6); }
+        
+        .badge { padding: 4px 8px; border-radius: 4px; font-size: 0.7rem; font-weight: bold; background: var(--blue); color: white; margin-bottom: 4px; display: inline-block; }
+        .btn-del { color: var(--red); background: none; border: none; cursor: pointer; font-weight: bold; }
     </style>
 </head>
 <body>
-    <div class="container">
-        <h1>SideFlow Hub</h1>
-        <p style="text-align: center; font-size: 12px; color: #666;">CADASTRO ON-DEMAND</p>
-        
-        <label>Nome do Jogador</label>
-        <input type="text" id="nomeJogador" placeholder="Nome Completo">
-        
-        <label>WhatsApp (DDD + Número)</label>
-        <input type="text" id="zapJogador" placeholder="Ex: 11999998888">
-        
-        <label>Selecione o Torneio</label>
-        <select id="tipoJogo">
-            <optgroup label="TCG">
-                <option value="Kit Estratégico">Kit Estratégico (B&B)</option>
-                <option value="Ditto Double Booster">Ditto Double Booster</option>
-                <option value="TCG Formato Padrão">TCG Formato Padrão</option>
-                <option value="Poké Catch">Poké Catch</option>
-                <option value="TCG Juniors Matches!">TCG Juniors Matches!</option>
-            </optgroup>
-            <optgroup label="VGC">
-                <option value="VG FrLg">VG FrLg</option>
-                <option value="Liga Kanto">Liga Kanto</option>
-                <option value="VG Junior Matches!">VG Junior Matches!</option>
-            </optgroup>
-            <optgroup label="GO / POCKET">
-                <option value="Autorekt">Autorekt (GO)</option>
-                <option value="Pocket On Demand">Pocket On Demand</option>
-            </optgroup>
-        </select>
 
-        <button onclick="alert('Visual funcionando! Próximo passo: Conectar ao Banco.')">Registrar Jogador</button>
+<div class="container">
+    <h2>PLAYER REGISTRATION</h2>
+
+    <div class="card">
+        <div class="label-group">
+            <label>Select Event / Tournament</label>
+            <select id="tourSelect">
+                <option value="">Loading tournaments...</option>
+            </select>
+        </div>
+
+        <div class="label-group">
+            <label>Player Name</label>
+            <input type="text" id="playerName" placeholder="Full Name">
+        </div>
+
+        <div class="label-group">
+            <label>WhatsApp Number</label>
+            <input type="text" id="playerWA" placeholder="Ex: 5511999999999">
+        </div>
+
+        <button class="btn-register" onclick="registerPlayer()">REGISTER PLAYER</button>
     </div>
+
+    <div class="list-header">
+        <h3>RECENT REGISTRATIONS</h3>
+        <span id="regCount" style="font-size: 0.8rem; color: var(--gold);">0 total</span>
+    </div>
+    
+    <div id="registrationList">
+        </div>
+</div>
+
+<script>
+    const supabaseUrl = 'https://hocpoastnlcwgedvcyqs.supabase.co';
+    const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhvY3BvYXN0bmxjd2dlZHZjeXFzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQyODU0MTYsImV4cCI6MjA4OTg2MTQxNn0.1MvvcFsnGW4e0Bj7mzoUKs_3bGM-eHDJTOqsvgKe-pI';
+    const _supabase = supabase.createClient(supabaseUrl, supabaseKey);
+    const eventPrefix = new URLSearchParams(window.location.search).get('event');
+
+    window.onload = () => {
+        if(!eventPrefix) { alert("No event ID found!"); return; }
+        loadTournaments();
+        loadRegistrations();
+    };
+
+    // 1. Puxa os torneios cadastrados no Lead Setup (Catalog)
+    async function loadTournaments() {
+        const { data, error } = await _supabase
+            .from('tournament_catalog')
+            .select('*')
+            .eq('event_id', eventPrefix)
+            .eq('item_type', 'ODE');
+
+        const select = document.getElementById('tourSelect');
+        select.innerHTML = '<option value="">Choose a tournament...</option>';
+
+        if(data && data.length > 0) {
+            data.forEach(item => {
+                let opt = document.createElement('option');
+                opt.value = item.tname;
+                opt.innerText = `[${item.game}] ${item.tname}`;
+                select.appendChild(opt);
+            });
+        } else {
+            select.innerHTML = '<option value="">No ODE tournaments found</option>';
+        }
+    }
+
+    // 2. Registra o jogador no banco
+    async function registerPlayer() {
+        const tname = document.getElementById('tourSelect').value;
+        const pname = document.getElementById('playerName').value;
+        const pwa = document.getElementById('playerWA').value;
+
+        if(!tname || !pname || !pwa) {
+            alert("Please fill all fields!");
+            return;
+        }
+
+        const { error } = await _supabase.from('ode_registrations').insert([{
+            event_id: eventPrefix,
+            tname: tname,
+            player_name: pname,
+            whatsapp: pwa,
+            status: 'waiting'
+        }]);
+
+        if(!error) {
+            document.getElementById('playerName').value = "";
+            document.getElementById('playerWA').value = "";
+            loadRegistrations();
+        } else {
+            alert("Error: " + error.message);
+        }
+    }
+
+    // 3. Carrega a lista de inscritos para o Juiz ver
+    async function loadRegistrations() {
+        const { data, error } = await _supabase
+            .from('ode_registrations')
+            .select('*')
+            .eq('event_id', eventPrefix)
+            .order('created_at', { ascending: false });
+
+        const listDiv = document.getElementById('registrationList');
+        listDiv.innerHTML = "";
+        
+        if(data) {
+            document.getElementById('regCount').innerText = `${data.length} total`;
+            data.forEach(reg => {
+                listDiv.innerHTML += `
+                    <div class="reg-item">
+                        <div class="player-info">
+                            <span class="badge">${reg.tname}</span>
+                            <span class="player-name">${reg.player_name}</span>
+                            <span class="player-meta">WA: ${reg.whatsapp}</span>
+                        </div>
+                        <button class="btn-del" onclick="deleteReg('${reg.id}')">REMOVE</button>
+                    </div>
+                `;
+            });
+        }
+    }
+
+    async function deleteReg(id) {
+        if(confirm("Remove this registration?")) {
+            await _supabase.from('ode_registrations').delete().eq('id', id);
+            loadRegistrations();
+        }
+    }
+</script>
+
 </body>
 </html>
