@@ -7,62 +7,72 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         :root { 
-            --bg-blue: #1d3557; 
-            --card-white: #ffffff; 
+            --bg-dark-blue: #1d3557; 
+            --section-blue: #2a4a73; /* Azul um pouco mais claro para as seções */
             --gold: #ffb703; 
             --blue-action: #457b9d; 
             --red-action: #e63946; 
-            --text-dark: #333333;
+            --text-light: #ffffff;
         }
 
-        body { font-family: 'Segoe UI', sans-serif; background: var(--bg-blue); color: white; margin: 0; padding: 20px; }
+        body { font-family: 'Segoe UI', sans-serif; background: var(--bg-dark-blue); color: white; margin: 0; padding: 20px; }
         .container { max-width: 1000px; margin: 0 auto; padding-bottom: 100px; }
         
         h2 { text-align: center; letter-spacing: 3px; color: var(--gold); text-transform: uppercase; margin-bottom: 30px; }
 
+        /* Estilo das Seções Unificado */
         .sector { 
-            background: var(--card-white); 
+            background: var(--section-blue); 
             padding: 25px; 
             border-radius: 12px; 
-            box-shadow: 0 4px 15px rgba(0,0,0,0.2); 
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3); 
             margin-bottom: 25px; 
-            color: var(--text-dark); 
             border-left: 6px solid var(--gold);
         }
 
         .sector-title { 
-            color: var(--bg-blue); 
+            color: var(--gold); 
             font-weight: bold; 
             text-transform: uppercase; 
             font-size: 0.9rem; 
             margin-bottom: 20px; 
             display: block; 
-            border-bottom: 1px solid #eee; 
+            border-bottom: 1px solid rgba(255,255,255,0.1); 
             padding-bottom: 10px; 
         }
         
         .grid-row { display: grid; gap: 15px; align-items: end; }
         .input-group { display: flex; flex-direction: column; }
-        label { font-size: 0.7rem; font-weight: bold; color: #777; margin-bottom: 4px; text-transform: uppercase; }
-        input, select { padding: 12px; border-radius: 6px; border: 1px solid #ddd; background: #f9f9f9; color: var(--text-dark); font-size: 0.9rem; }
+        label { font-size: 0.7rem; font-weight: bold; color: rgba(255,255,255,0.7); margin-bottom: 6px; text-transform: uppercase; }
+        
+        input, select { 
+            padding: 12px; 
+            border-radius: 6px; 
+            border: 1px solid rgba(255,255,255,0.2); 
+            background: rgba(255,255,255,0.1); 
+            color: white; 
+            font-size: 0.9rem; 
+        }
+        input:focus { border-color: var(--gold); outline: none; background: rgba(255,255,255,0.2); }
         
         button { padding: 12px 20px; border-radius: 6px; font-weight: bold; cursor: pointer; border: none; text-transform: uppercase; transition: 0.3s; }
-        .btn-add { background: var(--gold); color: var(--bg-blue); }
+        .btn-add { background: var(--gold); color: var(--bg-dark-blue); }
         .btn-blue { background: var(--blue-action); color: white; width: 100%; }
         .btn-red { background: var(--red-action); color: white; width: 100%; }
         
-        table { width: 100%; border-collapse: collapse; margin-top: 20px; font-size: 0.85rem; color: var(--text-dark); }
-        th { text-align: left; color: #999; border-bottom: 2px solid #eee; padding: 12px; text-transform: uppercase; font-size: 0.7rem; }
-        td { padding: 12px; border-bottom: 1px solid #eee; }
+        /* Tabelas sem cabeçalho (Limpas) */
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 0.9rem; }
+        td { padding: 12px; border-bottom: 1px solid rgba(255,255,255,0.1); }
         
-        .btn-del { color: var(--red-action); background: none; border: none; font-size: 10px; cursor: pointer; font-weight: bold; }
+        .btn-del { color: var(--red-action); background: none; border: none; font-size: 11px; cursor: pointer; font-weight: bold; }
         
         .action-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; }
-        .footer-reset { position: fixed; bottom: 20px; right: 20px; opacity: 0.3; }
+
+        /* Reset System mais visível */
+        .footer-reset { position: fixed; bottom: 20px; right: 20px; opacity: 0.8; }
         .footer-reset:hover { opacity: 1; }
 
-        /* Divisor interno para a alocação de mesas dentro do ODE */
-        .sub-section { margin-top: 30px; padding-top: 20px; border-top: 2px dashed #eee; }
+        .sub-section-header { margin-top: 30px; margin-bottom: 15px; display: block; font-weight: bold; color: var(--gold); text-transform: uppercase; font-size: 0.85rem; }
     </style>
 </head>
 <body>
@@ -81,7 +91,7 @@
     <div class="sector">
         <span class="sector-title">SECTION 2: SCHEDULED TOURNAMENT CATALOG</span>
         <div class="grid-row" style="grid-template-columns: 2fr 1fr 1fr;">
-            <div class="input-group"><label>Name</label><input type="text" id="schName"></div>
+            <div class="input-group"><label>Tournament Name</label><input type="text" id="schName"></div>
             <div class="input-group"><label>Day</label><select id="schDay"><option>Day 1</option><option>Day 2</option><option>Day 3</option></select></div>
             <div class="input-group"><label>Hour</label><input type="text" id="schHour" placeholder="9:00 AM"></div>
         </div>
@@ -92,56 +102,44 @@
             <div class="input-group"><label>Spread</label><select id="schSpread"><option>2.0</option><option>1.75</option><option>1.5</option></select></div>
             <button class="btn-add" onclick="addItem('SCH')">+ ADD SCH</button>
         </div>
-        <table id="schList">
-            <thead><tr><th>Tournament Name</th><th>Schedule</th><th>Financials</th><th>Action</th></tr></thead>
-            <tbody></tbody>
-        </table>
+        <table id="schList"><tbody></tbody></table>
     </div>
 
     <div class="sector">
         <span class="sector-title">SECTION 3: ON-DEMAND CATALOG & TABLES</span>
         
         <div class="grid-row" style="grid-template-columns: 1fr 2fr auto;">
-            <div class="input-group"><label>Game</label><select id="odeGame"><option>TCG</option><option>VGC</option><option>GO</option><option>POCKET</option></select></div>
-            <div class="input-group"><label>Tournament Name</label><input type="text" id="odeName" placeholder="8-Player Single Elim"></div>
+            <div class="input-group"><label>Category</label><select id="odeGame"><option>TCG</option><option>VGC</option><option>GO</option><option>POCKET</option></select></div>
+            <div class="input-group"><label>Tournament Name</label><input type="text" id="odeName" placeholder="Ex: Systherhood"></div>
             <button class="btn-add" onclick="addItem('ODE')">+ ADD ODE</button>
         </div>
-        <table id="odeList">
-            <thead><tr><th>Game</th><th>Name</th><th>Action</th></tr></thead>
-            <tbody></tbody>
-        </table>
+        <table id="odeList"><tbody></tbody></table>
 
-        <div class="sub-section">
-            <span class="sector-title" style="border:none; font-size: 0.8rem; color: #777;">Table Allocation (ODE Only)</span>
-            <div class="grid-row" style="grid-template-columns: 2fr 1fr auto;">
-                <div class="input-group"><label>Tournament / Category</label><input type="text" id="tableName" placeholder="Ex: TCG RAID"></div>
-                <div class="input-group"><label>Table Range</label><input type="text" id="tableRange" placeholder="Ex: 1 TO 4"></div>
-                <button class="btn-add" onclick="addItem('TABLE')" style="background: #eee; border: 1px solid #ccc;">+ ALLOCATE</button>
-            </div>
-            <table id="tableRules">
-                <thead><tr><th>Target</th><th>Range</th><th>Action</th></tr></thead>
-                <tbody></tbody>
-            </table>
+        <span class="sub-section-header">Table Allocation</span>
+        <div class="grid-row" style="grid-template-columns: 2fr 1fr auto;">
+            <div class="input-group"><label>Tournament / Category</label><input type="text" id="tableName" placeholder="Ex: TCG RAID"></div>
+            <div class="input-group"><label>Table Range</label><input type="text" id="tableRange" placeholder="Ex: 1 TO 4"></div>
+            <button class="btn-add" onclick="addItem('TABLE')" style="background: rgba(255,255,255,0.2); color: white;">+ ALLOCATE</button>
         </div>
+        <table id="tableRules"><tbody></tbody></table>
     </div>
 
-    <div class="sector" style="background: rgba(255,255,255,0.05); border-left-color: var(--blue-action);">
-        <span class="sector-title" style="color:white;">SECTION 4: GLOBAL ACTIONS</span>
+    <div class="sector">
+        <span class="sector-title">SECTION 4: GLOBAL ACTIONS</span>
         <div class="action-grid">
-            <button class="btn-blue" onclick="navStaff('ode')">STAFF ODE AREA</button>
-            <button class="btn-blue" onclick="navStaff('sch')">STAFF SCH AREA</button>
+            <button class="btn-blue" onclick="navStaff('ode')">VISIT STAFF ODE AREA</button>
+            <button class="btn-blue" onclick="navStaff('sch')">VISIT STAFF SCH AREA</button>
             <button class="btn-red" onclick="alert('Generating Final Report...')">GENERATE FINAL REPORT</button>
             <button class="btn-red" onclick="alert('Exporting Spreadsheet...')">EXPORT SHEET</button>
         </div>
     </div>
 
     <div class="footer-reset">
-        <button class="btn-del" onclick="resetSystem()">RESET SYSTEM</button>
+        <button class="btn-red" style="padding: 8px 15px; font-size: 0.7rem;" onclick="resetSystem()">RESET SYSTEM</button>
     </div>
 </div>
 
 <script>
-    // Configurações Supabase
     const supabaseUrl = 'https://hocpoastnlcwgedvcyqs.supabase.co';
     const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhvY3BvYXN0bmxjd2dlZHZjeXFzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQyODU0MTYsImV4cCI6MjA4OTg2MTQxNn0.1MvvcFsnGW4e0Bj7mzoUKs_3bGM-eHDJTOqsvgKe-pI';
     const _supabase = supabase.createClient(supabaseUrl, supabaseKey);
@@ -184,13 +182,13 @@
         data.forEach(item => {
             let row = `<tr>`;
             if(item.item_type === 'TABLE') {
-                row += `<td>${item.name}</td><td>${item.value}</td><td><button onclick="del('${item.id}')" class="btn-del">REMOVE</button></td></tr>`;
+                row += `<td style="width:50%">${item.name}</td><td style="color:var(--gold)">${item.value}</td><td style="text-align:right"><button onclick="del('${item.id}')" class="btn-del">REMOVE</button></td></tr>`;
                 document.querySelector('#tableRules tbody').innerHTML += row;
             } else if(item.item_type === 'SCH') {
-                row += `<td>${item.name}</td><td>${item.day} | ${item.hour}</td><td>$${item.fee} Fee</td><td><button onclick="del('${item.id}')" class="btn-del">REMOVE</button></td></tr>`;
+                row += `<td><strong>${item.name}</strong></td><td>${item.day} | ${item.hour}</td><td style="color:var(--gold)">$${item.fee}</td><td style="text-align:right"><button onclick="del('${item.id}')" class="btn-del">REMOVE</button></td></tr>`;
                 document.querySelector('#schList tbody').innerHTML += row;
             } else if(item.item_type === 'ODE') {
-                row += `<td><strong>${item.game}</strong></td><td>${item.name}</td><td><button onclick="del('${item.id}')" class="btn-del">REMOVE</button></td></tr>`;
+                row += `<td style="width:20%; color:var(--gold)"><strong>${item.game}</strong></td><td>${item.name}</td><td style="text-align:right"><button onclick="del('${item.id}')" class="btn-del">REMOVE</button></td></tr>`;
                 document.querySelector('#odeList tbody').innerHTML += row;
             }
         });
