@@ -162,7 +162,8 @@
             document.getElementById('staffBadge').innerText = currentEventID;
 
             // Inicia direto no Admin Setup
-            document.getElementById('setupArea').style.display = 'block';
+            document.getElementById('staffArea').style.display = 'block';
+	    document.getElementById('setupArea').style.display = 'none';
             
             await syncEventConfig();
             await loadTournaments();
