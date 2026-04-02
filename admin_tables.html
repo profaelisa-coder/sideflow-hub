@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SideFlow - Table Map</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        :root { --bg: #0d1b2a; --sec: #1b263b; --gold: #ffb703; --blue: #457b9d; --red: #e63946; --green: #2ecc71; --white: #e0e1dd; }
+        body { font-family: 'Segoe UI', sans-serif; background: var(--bg); color: var(--white); margin: 0; padding: 20px; display: flex; flex-direction: column; height: 100vh; box-sizing: border-box; }
+        h2 { color: var(--gold); text-transform: uppercase; letter-spacing: 2px; text-align: center; margin: 0 0 20px 0; }
+        
+        .layout { display: flex; gap: 20px; flex: 1; overflow: hidden; }
+        
+        /* Sidebar: Ready Pods */
+        .sidebar { width: 300px; background: var(--sec); border-radius: 12px; padding: 15px; display: flex; flex-direction: column; border-top: 4px solid var(--gold); overflow-y: auto; }
+        .sidebar h3 { margin-top: 0; color: var(--gold); font-size: 1rem; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 10px; }
+        .pod-card { background: var(--bg); padding: 15px; border-radius: 8px; margin-bottom: 10px; border-left: 4px solid var(--green); }
+        .pod-card h4 { margin: 0 0 5px 0; color: white; }
+        .pod-card p { margin: 0 0 10px 0; font-size: 0.8rem; opacity: 0.7; }
+        .btn-alloc { width: 100%; background: var(--gold); color: var(--bg); border: none; padding: 10px; border-radius: 6px; font-weight: bold; cursor: pointer; text-transform: uppercase; }
+        .btn-wa { width: 100%; background: var(--green); color: white; border: none; padding: 10px; border-radius: 6px; font-weight: bold; cursor: pointer; text-transform: uppercase; margin-top: 10px; display: none; }
+
+        /* Main Map */
+        .map-area { flex: 1; background: var(--sec); border-radius: 12px; padding: 20px; overflow-y: auto; }
+        .grid-tables { display: grid; grid-template-columns: repeat(auto-fill, minmax(60px, 1fr)); gap: 10px; }
+        
+        .table-box { aspect-ratio: 1; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 1.2rem; cursor: pointer; transition: 0.2s; box-shadow: 0 4px 6px rgba(0,0,0,0.3); flex-direction: column; }
+        .table-box span { font-size: 0.6rem; margin-top: 5px; opacity: 0.8; text-align: center; }
+        
+        /* Status Colors */
+        .vacant { background: rgba(255,255,255,0.1); color: white; border: 1px solid rgba(255,255,255,0.2); }
+        .occupied { background: var(--red); color: white; border: 2px solid #a30000; }
+        
+        .nav-footer { margin-top: 20px; text-align: center; }
+        .nav-footer button { background: rgba(255,255,255,0.1); color: white; border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer; font-size: 0.8rem; }
+    </style>
+</head>
+<body>
+
+<h2>TOURNAMENT TABLE MAP</h2>
+
+<div class="layout">
+    <div class="sidebar">
+        <h3>🟢 READY TO ALLOCATE</h3>
+        <div id="readyPodsList">
+            <p style="opacity:0.5; font-size:0.8rem; text-align:center;">No pods ready yet.</p>
+        </div>
+    </div>
+
+    <div class="map-area">
+        <div class="grid-tables" id="tablesGrid">
+            </div>
+    </div>
+</div>
+
+<div class="nav-footer">
+    <button onclick="window.history.back()">⬅ BACK</button>
+</div>
+
+<script>
+    const supabaseUrl = 'https://hocpoastnlcwgedvcyqs.supabase.co';
+    const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhvY3BvYXN0bmxjd2dlZHZjeXFzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQyODU0MTYsImV4cCI6MjA4OTg2MTQxNn0.1MvvcFsnGW4e0Bj7mzoUKs_3bGM-eHDJTOqsvgKe-pI';
+    const _supabase = supabase.createClient(supabaseUrl, supabaseKey);
+    
+    const urlParams = new URLSearchParams(window.location.search);
+    let eventPrefix = urlParams.get('event') || localStorage.getItem('active_event_id');
+    let allTables = [];
+    let catalogSizes = {}; // Guarda o tamanho de cada torneio
+
+    window.onload = async () => {
+        if(!eventPrefix) return alert("MISSING EVENT ID");
+        await loadCatalog();
+        await loadTables();
+        await loadReadyPods();
+        
+        // Real-time: Atualiza tudo se alguém inscrever no ODE
+        _supabase.channel('public:ode_registrations').on('postgres_changes', { event: '*', schema: 'public', table: 'ode_registrations' }, loadReadyPods).subscribe();
+        _supabase.channel('public:event_tables').on('postgres_changes', { event: '*', schema: 'public', table: 'event_tables' }, loadTables).subscribe();
+    };
+
+    // Puxa o catálogo para saber quantos players fecham cada pod
+    async function loadCatalog() {
+        const { data } = await _supabase.from('tournament_catalog').select('tname, pod_size').eq('event_id', eventPrefix).eq('item_type', 'ODE');
+        if(data) data.forEach(t => catalogSizes[t.tname] = parseInt(t.pod_size));
+    }
+
+    // Puxa e desenha as mesas
+    async function loadTables() {
+        const { data } = await _supabase.from('event_tables').select('*').eq('event_id', eventPrefix).order('table_number', { ascending: true });
+        allTables = data || [];
+        
+        const grid = document.getElementById('tablesGrid');
+        grid.innerHTML = "";
+        
+        allTables.forEach(t => {
+            const isVacant = t.status === 'vacant';
+            grid.innerHTML += `
+                <div class="table-box ${isVacant ? 'vacant' : 'occupied'}" onclick="clearTable(${t.id}, '${isVacant}')">
+                    ${t.table_number}
+                    <span>${isVacant ? 'FREE' : t.tournament_name}</span>
+                </div>
+            `;
+        });
+    }
+
+    // Identifica Pods Cheios
+    async function loadReadyPods() {
+        const { data: regs } = await _supabase.from('ode_registrations').select('*').eq('event_id', eventPrefix).eq('status', 'waiting');
+        const listDiv = document.getElementById('readyPodsList');
+        
+        if(!regs || regs.length === 0) { listDiv.innerHTML = "<p style='opacity:0.5; font-size:0.8rem;'>No pods in queue.</p>"; return; }
+
+        // Agrupa por nome do torneio
+        const groups = {};
+        regs.forEach(r => { 
+            if(!groups[r.tname]) groups[r.tname] = { count: 0, players: [] };
+            groups[r.tname].count++;
+            groups[r.tname].players.push(r.id);
+        });
+
+        listDiv.innerHTML = "";
+        let hasReady = false;
+
+        for (const [tname, info] of Object.entries(groups)) {
+            const targetSize = catalogSizes[tname] || 4; // Default 4 se não achar
+            
+            // Só mostra se bateu a lotação
+            if(info.count >= targetSize) {
+                hasReady = true;
+                const mesasNecessarias = targetSize / 2; // 2 players por mesa
+                
+                listDiv.innerHTML += `
+                    <div class="pod-card" id="pod-${tname.replace(/\s/g, '')}">
+                        <h4>${tname}</h4>
+                        <p>Requires ${mesasNecessarias} tables.</p>
+                        <button class="btn-alloc" onclick="allocate('${tname}', ${mesasNecessarias}, '${info.players.slice(0, targetSize).join(',')}')">📍 ALLOCATE</button>
+                        <button class="btn-wa" id="wa-${tname.replace(/\s/g, '')}" onclick="sendWA('${tname}')">💬 NOTIFY (WA)</button>
+                    </div>
+                `;
+            }
+        }
+        if(!hasReady) listDiv.innerHTML = "<p style='opacity:0.5; font-size:0.8rem;'>Queue filling... no full pods yet.</p>";
+    }
+
+    // Algoritmo de Alocação
+    async function allocate(tname, tablesNeeded, playerIdsRaw) {
+        // 1. Acha mesas consecutivas
+        let startIndex = -1;
+        let consecutiveCount = 0;
+        
+        for(let i = 0; i < allTables.length; i++) {
+            if(allTables[i].status === 'vacant') {
+                if(consecutiveCount === 0) startIndex = i;
+                consecutiveCount++;
+                if(consecutiveCount === tablesNeeded) break; // Achou!
+            } else {
+                consecutiveCount = 0; // Quebrou a sequência
+            }
+        }
+
+        if(consecutiveCount < tablesNeeded) return alert("NO CONSECUTIVE TABLES AVAILABLE!");
+
+        // 2. Atualiza as mesas achadas
+        let tablesToUpdate = [];
+        let tableNumbers = [];
+        for(let i = startIndex; i < startIndex + tablesNeeded; i++) {
+            tablesToUpdate.push(allTables[i].id);
+            tableNumbers.push(allTables[i].table_number);
+        }
+
+        await _supabase.from('event_tables').update({ status: 'occupied', tournament_name: tname }).in('id', tablesToUpdate);
+
+        // 3. Tira os jogadores da fila (status 'allocated')
+        const playerIds = playerIdsRaw.split(',');
+        await _supabase.from('ode_registrations').update({ status: 'allocated' }).in('id', playerIds);
+
+        // 4. Mostra o botão de WhatsApp (Embrião)
+        const waBtn = document.getElementById(`wa-${tname.replace(/\s/g, '')}`);
+        waBtn.style.display = 'block';
+        waBtn.dataset.tables = `${tableNumbers[0]} to ${tableNumbers[tableNumbers.length-1]}`;
+        
+        // Esconde o botão de allocate
+        event.target.style.display = 'none';
+
+        loadTables();
+    }
+
+    // Simula o Disparo de WhatsApp
+    function sendWA(tname) {
+        const btn = document.getElementById(`wa-${tname.replace(/\s/g, '')}`);
+        const tables = btn.dataset.tables;
+        
+        const msg = encodeURIComponent(`🚨 SIDEFLOW ALERT: Your Pod [${tname}] is READY! Please proceed to Tables ${tables} immediately. Good luck!`);
+        // Abre o link do WhatsApp (Na vida real, seria via API)
+        window.open(`https://wa.me/?text=${msg}`, '_blank');
+        
+        // Remove da lista
+        btn.parentElement.style.display = 'none';
+        loadReadyPods();
+    }
+
+    // Limpar mesa manualmente
+    async function clearTable(id, isVacant) {
+        if(isVacant === 'true') return; // Se já tá livre, não faz nada
+        if(confirm("Free this table?")) {
+            await _supabase.from('event_tables').update({ status: 'vacant', tournament_name: null }).eq('id', id);
+            loadTables();
+        }
+    }
+</script>
+</body>
+</html>
