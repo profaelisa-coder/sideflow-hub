@@ -173,7 +173,11 @@
     }
 
     async function del(id) { if(confirm("Del?")) { await _supabase.from('tournament_catalog').delete().eq('id', id); loadAll(); } }
-    function navStaff(t) { window.location.href = `admin_${t}.html?event=${eventPrefix}`; }
+  function navStaff(t) { 
+        // Dá o crachá VIP para o Lead não ser barrado na tela do Staff
+        sessionStorage.setItem(`${t}_auth`, 'true');
+        window.location.href = `admin_${t}.html?event=${eventPrefix}`; 
+    }
     async function resetSystem() { 
         if(confirm("Deseja apagar TUDO?")) { 
             await _supabase.from('tournament_catalog').delete().eq('event_id', eventPrefix); 
