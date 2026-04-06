@@ -9,31 +9,22 @@
         :root { --bg: #0d1b2a; --sec: #1b263b; --gold: #ffb703; --blue: #457b9d; --white: #e0e1dd; --red: #e63946; }
         body { font-family: 'Segoe UI', sans-serif; background: var(--bg); color: var(--white); margin: 0; padding: 20px; padding-bottom: 100px; display: flex; flex-direction: column; align-items: center; }
         .container { width: 100%; max-width: 600px; }
-        
         h2 { color: var(--gold); text-transform: uppercase; letter-spacing: 2px; text-align: center; margin-bottom: 5px; }
         .sub-title { text-align: center; font-size: 0.8rem; opacity: 0.7; margin-bottom: 25px; letter-spacing: 1px; }
-        
         .box { background: var(--sec); padding: 25px; border-radius: 12px; box-shadow: 0 8px 25px rgba(0,0,0,0.4); margin-bottom: 25px; border-bottom: 4px solid var(--gold); }
-        
         label { display: block; font-size: 0.75rem; font-weight: bold; margin-bottom: 8px; color: var(--gold); text-transform: uppercase; }
         input, select { width: 100%; padding: 15px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.1); background: var(--bg); color: white; font-size: 1rem; margin-bottom: 20px; box-sizing: border-box; }
         select option { background: var(--sec); }
-
         button { width: 100%; padding: 16px; border-radius: 8px; border: none; font-weight: bold; text-transform: uppercase; cursor: pointer; transition: 0.3s; font-size: 0.9rem; }
         .btn-reg { background: var(--gold); color: var(--bg); margin-top: 10px; }
         .btn-reg:hover { background: #ffca3a; transform: translateY(-2px); }
-        
         .live-label { color: var(--gold); font-size: 0.9rem; font-weight: bold; margin-bottom: 15px; display: flex; align-items: center; gap: 8px; }
         .live-dot { width: 8px; height: 8px; background: var(--red); border-radius: 50%; animation: blink 1s infinite; }
         @keyframes blink { 0% { opacity: 1; } 50% { opacity: 0.3; } 100% { opacity: 1; } }
-
         .pod-row { background: var(--sec); padding: 15px; border-radius: 8px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; border-left: 4px solid var(--blue); box-shadow: 0 4px 10px rgba(0,0,0,0.2); }
         .pod-info b { color: var(--gold); font-size: 1rem; }
         .pod-count { background: var(--blue); padding: 6px 15px; border-radius: 20px; font-weight: bold; font-size: 0.9rem; }
-
-        /* Login Overlay */
         #loginOverlay { position: fixed; top:0; left:0; width:100%; height:100%; background: var(--bg); display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 1000; }
-        
         .nav-footer { position: fixed; bottom: 0; left: 0; width: 100%; background: #162a44; padding: 15px; display: flex; justify-content: center; gap: 15px; border-top: 1px solid rgba(255,255,255,0.1); }
         .nav-footer button { width: auto; padding: 10px 20px; font-size: 0.75rem; background: var(--blue); color: white; }
         .btn-back { background: rgba(255,255,255,0.1) !important; color: white !important; }
@@ -65,8 +56,7 @@
     </div>
 
     <div class="live-label"><div class="live-dot"></div> LIVE QUEUE STATUS</div>
-    <div id="waitingList">
-        </div>
+    <div id="waitingList"></div>
 </div>
 
 <div class="nav-footer">
@@ -93,14 +83,20 @@
     };
 
     function checkLogin() {
-        if(document.getElementById('passInput').value.toUpperCase() === 'ODE') {
+        const passInput = document.getElementById('passInput').value.toUpperCase();
+        const letters = (eventPrefix || "").slice(0, 3);
+        const firstNums = (eventPrefix || "").slice(3, 5);
+        const masterODEPas = (letters + firstNums + "ODE").toUpperCase(); 
+
+        if(passInput === masterODEPas) {
             sessionStorage.setItem('ode_auth', 'true');
             location.reload();
-        } else { alert("ACCESS DENIED"); }
+        } else {
+            alert("ACCESS DENIED.");
+        }
     }
 
     async function loadData() {
-        // Puxa apenas itens do tipo ODE
         const { data: catalog } = await _supabase.from('tournament_catalog')
             .select('*')
             .eq('event_id', eventPrefix)
@@ -128,7 +124,7 @@
 
         if(!regs || regs.length === 0) {
             listDiv.innerHTML = "<p style='opacity:0.5; text-align:center; font-size:0.9rem;'>No players in queue.</p>";
-            return;
+            return; // <-- AQUI FOI CORRIGIDO (O 'Group' foi removido)
         }
 
         const groups = {};
@@ -159,13 +155,13 @@
         if(!error) {
             document.getElementById('playerName').value = "";
             updateWaitingList();
-            // Som de sucesso opcional pode ser adicionado aqui
         }
     }
 
     function backToLead() {
-        const pass = prompt("ENTER LEAD PASSWORD TO GO BACK:");
-        if(pass && pass.toUpperCase() === 'LEAD') {
+        const pass = prompt("ENTER LEAD PASSWORD:");
+        const masterLeadPass = (eventPrefix || "").toUpperCase() + "_LEAD";
+        if(pass && pass.toUpperCase() === masterLeadPass) {
             window.location.href = `admin_lead.html?event=${eventPrefix}`;
         } else if(pass) {
             alert("WRONG PASSWORD!");
@@ -176,7 +172,6 @@
         window.location.href = `admin_tables.html?event=${eventPrefix}`;
     }
 
-    // Real-time sync: se outro tablet registrar, esse aqui atualiza sozinho
     _supabase.channel('any').on('postgres_changes', { event: '*', schema: 'public', table: 'ode_registrations' }, updateWaitingList).subscribe();
 </script>
 </body>
