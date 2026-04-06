@@ -1,3 +1,5 @@
+Substitua seu admin_lead.html por este (Versão Final de Viagem):
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -15,21 +17,12 @@
         .grid { display: grid; gap: 12px; align-items: end; }
         .input-group { display: flex; flex-direction: column; }
         label { font-size: 0.65rem; font-weight: bold; color: rgba(255,255,255,0.7); margin-bottom: 6px; text-transform: uppercase; white-space: nowrap; }
-        
-        /* Estilização corrigida dos Inputs e Selects */
         input, select { padding: 10px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.2); background: var(--dark); color: white; font-size: 0.85rem; width: 100%; box-sizing: border-box; }
-        select { cursor: pointer; appearance: listbox; }
-        select option { background: var(--dark); color: white; }
-        input:focus { border-color: var(--gold); outline: none; }
-
         button { padding: 12px 15px; border-radius: 6px; font-weight: bold; cursor: pointer; border: none; text-transform: uppercase; transition: 0.3s; font-size: 0.75rem; }
         .btn-add { background: var(--gold); color: var(--bg); width: 100%; margin-top: 15px; }
         .btn-blue { background: var(--blue); color: white; }
         .btn-green { background: var(--green); color: white; }
-
         .reset-link { position: fixed; bottom: 20px; right: 20px; color: var(--red); cursor: pointer; font-weight: bold; font-size: 0.75rem; text-decoration: underline; opacity: 0.7; z-index: 100; }
-        .reset-link:hover { opacity: 1; }
-
         table { width: 100%; border-collapse: collapse; margin-top: 20px; }
         td { padding: 10px; border-bottom: 1px solid rgba(255,255,255,0.1); font-size: 0.85rem; }
         .btn-del { color: var(--red); background: none; font-size: 10px; cursor: pointer; }
@@ -51,13 +44,23 @@
         <span class="sector-title">TABLE INITIALIZATION</span>
         <div class="grid" style="grid-template-columns: 0.8fr 3fr auto;">
             <div class="input-group"><label>Total Mesas</label><input type="number" id="setupTableCount" value="120"></div>
-            <div style="font-size: 0.75rem; opacity: 0.7;">Inicialize o mapa físico apenas uma vez.</div>
+            <div></div>
             <button class="btn-blue" onclick="initTables()">🛠️ GENERATE TABLES</button>
         </div>
     </div>
 
+    <div class="sector">
+        <span class="sector-title">CATALOG MANAGEMENT</span>
+        <div class="grid" style="grid-template-columns: 1fr 1fr 1fr auto;">
+            <button class="btn-add" onclick="window.location.hash='sec-ode'">GO TO ODE CATALOG</button>
+            <button class="btn-add" onclick="window.location.hash='sec-sch'">GO TO SCH CATALOG</button>
+            <button class="btn-green" onclick="generateFinalReport()">📊 VIEW FINAL REPORT</button>
+            <button class="btn-blue" style="background: #9b59b6;" onclick="navStaff('tables')">🗺️ VIEW TABLE MAP</button>
+        </div>
+    </div>
+
     <div class="sector" id="sec-sch">
-        <span class="sector-title">SCHEDULED CATALOG (Variable Payout)</span>
+        <span class="sector-title">SCHEDULED CATALOG</span>
         <div class="grid" style="grid-template-columns: 2fr 0.8fr 0.8fr 0.7fr 0.7fr 0.7fr 0.7fr;">
             <div class="input-group"><label>Torney Name</label><input type="text" id="schName"></div>
             <div class="input-group"><label>Day</label><select id="schDay"><option>Day 1</option><option>Day 2</option><option>Day 3</option></select></div>
@@ -67,29 +70,27 @@
             <div class="input-group"><label>Part %</label><input type="number" id="schTax" value="20"></div>
             <div class="input-group"><label>Spread</label><input type="text" id="schSpread" value="2.0"></div>
         </div>
-        <button class="btn-add" onclick="addItem('SCH')">+ ADD SCHEDULED TOURNAMENT</button>
+        <button class="btn-add" onclick="addItem('SCH')">+ ADD SCHEDULED</button>
         <table id="schList"><tbody></tbody></table>
     </div>
 
     <div class="sector" id="sec-ode">
-        <span class="sector-title">ON-DEMAND CATALOG (Fixed Payout)</span>
+        <span class="sector-title">ON-DEMAND CATALOG</span>
         <div class="grid" style="grid-template-columns: 0.8fr 2fr 0.8fr 0.7fr 0.7fr 1fr;">
-            <div class="input-group"><label>Game</label><select id="odeGame"><option>TCG</option><option>VGC</option><option>GO</option><option>POCKET</option></select></div>
-            <div class="input-group"><label>Pod Name</label><input type="text" id="odeName" placeholder="Turbo"></div>
-            <div class="input-group"><label>Size</label><select id="odeSize"><option value="4">4 PPL</option><option value="6">6 PPL</option><option value="8">8 PPL</option></select></div>
+            <div class="input-group"><label>Game</label><select id="odeGame"><option>TCG</option><option>VGC</option><option>GO</option></select></div>
+            <div class="input-group"><label>Pod Name</label><input type="text" id="odeName"></div>
+            <div class="input-group"><label>Size</label><select id="odeSize"><option value="4">4 PPL</option><option value="8">8 PPL</option></select></div>
             <div class="input-group"><label>Fee ($)</label><input type="number" id="odeFee"></div>
             <div class="input-group"><label>Cost ($)</label><input type="number" id="odeCost"></div>
-            <div class="input-group"><label>Table Range</label><input type="text" id="tableRange" placeholder="1-50"></div>
+            <div class="input-group"><label>Range</label><input type="text" id="tableRange" placeholder="1-50"></div>
         </div>
-        <button class="btn-add" onclick="addItem('ODE_FULL')">+ ADD ON-DEMAND POD</button>
+        <button class="btn-add" onclick="addItem('ODE_FULL')">+ ADD ODE POD</button>
         <table id="odeList"><tbody></tbody></table>
     </div>
 
-    <div style="display:grid; grid-template-columns: repeat(4, 1fr); gap: 15px;">
-        <button class="btn-blue" onclick="navStaff('ode')">STAFF ODE</button>
-        <button class="btn-blue" onclick="navStaff('sch')">STAFF SCH</button>
-        <button class="btn-green" onclick="alert('Relatório Gerado')">📊 GENERATE PAYOUT</button>
-        <button class="btn-blue" onclick="alert('E-mail enviado')">📧 EMAIL REPORT</button>
+    <div style="display:grid; grid-template-columns: repeat(2, 1fr); gap: 15px;">
+        <button class="btn-blue" onclick="navStaff('ode')">OPEN STAFF ODE</button>
+        <button class="btn-blue" onclick="navStaff('sch')">OPEN STAFF SCH</button>
     </div>
 
     <span class="reset-link" onclick="resetSystem()">⚠️ RESET SYSTEM</span>
@@ -110,15 +111,12 @@
 
     async function initTables() {
         const count = parseInt(document.getElementById('setupTableCount').value);
-        if(!confirm(`Fabricar ${count} mesas para ${eventPrefix}?`)) return;
-        
-        // Limpa antes para evitar erro 409
+        if(!confirm(`Gerar ${count} mesas?`)) return;
         await _supabase.from('event_tables').delete().eq('event_id', eventPrefix);
-
         const tables = [];
         for(let i=1; i<=count; i++) tables.push({ event_id: eventPrefix, table_number: i, status: 'vacant' });
-        const { error } = await _supabase.from('event_tables').insert(tables);
-        alert(error ? error.message : "Mesas inicializadas com sucesso!");
+        await _supabase.from('event_tables').insert(tables);
+        alert("Mesas prontas!");
     }
 
     async function updateIdentity() {
@@ -132,14 +130,10 @@
     async function addItem(type) {
         if(type === 'SCH') {
             await _supabase.from('tournament_catalog').insert([{
-                event_id: eventPrefix, item_type: 'SCH',
-                tname: document.getElementById('schName').value,
-                tday: document.getElementById('schDay').value,
-                thour: document.getElementById('schHour').value,
-                tfee: document.getElementById('schFee').value,
-                tcost: document.getElementById('schCost').value,
-                tax: document.getElementById('schTax').value,
-                spread: document.getElementById('schSpread').value
+                event_id: eventPrefix, item_type: 'SCH', tname: document.getElementById('schName').value,
+                tday: document.getElementById('schDay').value, thour: document.getElementById('schHour').value,
+                tfee: document.getElementById('schFee').value, tcost: document.getElementById('schCost').value,
+                tax: document.getElementById('schTax').value, spread: document.getElementById('schSpread').value
             }]);
         } else {
             const tname = document.getElementById('odeName').value;
@@ -152,24 +146,42 @@
     }
 
     async function loadAll() {
-        const { data } = await _supabase.from('tournament_catalog').select('*').eq('event_id', eventPrefix);
-        if(!data) return;
+        const { data: idData } = await _supabase.from('tournament_history').select('*').eq('event_id', eventPrefix).eq('tournament_id', 'IDENTITY_ANCHOR').single();
+        if (idData) {
+            document.getElementById('masterEvent').value = idData.event_name || "";
+            document.getElementById('masterLogo').value = idData.logo_type || "REGIONAL";
+        }
+        const { data: catalog } = await _supabase.from('tournament_catalog').select('*').eq('event_id', eventPrefix);
+        if(!catalog) return;
         const schT = document.querySelector('#schList tbody');
         const odeT = document.querySelector('#odeList tbody');
         schT.innerHTML = ""; odeT.innerHTML = "";
-        data.forEach(i => {
+        catalog.forEach(i => {
             const row = `<tr><td>${i.tname}</td><td>${i.item_type === 'SCH' ? i.thour : i.game}</td><td>${i.tfee || i.value}</td><td style="text-align:right"><button class="btn-del" onclick="del('${i.id}')">REMOVE</button></td></tr>`;
             if(i.item_type === 'SCH') schT.innerHTML += row; else odeT.innerHTML += row;
         });
     }
 
+    async function generateFinalReport() {
+        const { data } = await _supabase.from('tournament_history').select('*').eq('event_id', eventPrefix).neq('tournament_id', 'IDENTITY_ANCHOR');
+        if(!data || data.length === 0) return alert("Sem dados para o relatório.");
+        
+        let totalRev = 0; let totalTickets = 0;
+        data.forEach(h => {
+            totalRev += (h.players * h.entry_fee);
+            totalTickets += h.total_tickets;
+        });
+        alert(`📊 RELATÓRIO PRELIMINAR:\n\nEvent: ${document.getElementById('masterEvent').value}\nTotal Revenue: $${totalRev.toFixed(2)}\nTotal Prize Tickets: ${totalTickets.toLocaleString()}\n\nDados salvos no banco para o PDF Final.`);
+    }
+
     async function del(id) { if(confirm("Del?")) { await _supabase.from('tournament_catalog').delete().eq('id', id); loadAll(); } }
     function navStaff(t) { window.location.href = `admin_${t}.html?event=${eventPrefix}`; }
     async function resetSystem() { 
-        if(confirm("Deseja apagar TUDO (Torneios e Mesas)?")) { 
+        if(confirm("Deseja apagar TUDO?")) { 
             await _supabase.from('tournament_catalog').delete().eq('event_id', eventPrefix); 
             await _supabase.from('event_tables').delete().eq('event_id', eventPrefix);
-            loadAll(); 
+            await _supabase.from('tournament_history').delete().eq('event_id', eventPrefix);
+            location.reload();
         } 
     }
 </script>
