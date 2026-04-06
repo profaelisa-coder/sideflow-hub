@@ -30,8 +30,16 @@
             let code = document.getElementById('accessCode').value.toUpperCase().trim();
             if (!code) { alert("Please enter an access code!"); return; }
 
+            // 1. BYPASS DO LEAD (Seguro e direto)
+            // Se terminar com _LEAD, não depende do banco de dados para entrar.
+            if (code.endsWith("_LEAD")) {
+                let p = code.replace("_LEAD", "");
+                window.location.href = `admin_lead.html?event=${p}`;
+                return;
+            }
+
+            // 2. ODE e SCH (Busca o ID completo no banco)
             try {
-                // Puxa apenas a coluna 'prefix' dos eventos ativos (sem pedir colunas que não existem)
                 let resposta = await fetch(`${supabaseUrl}/rest/v1/active_events?select=prefix`, {
                     headers: { 'apikey': supabaseKey, 'Authorization': `Bearer ${supabaseKey}` }
                 });
@@ -42,37 +50,30 @@
                 let matchedEvent = null;
                 let targetPage = "";
 
-                // Verifica contra as senhas de todos os eventos ativos
                 for (let ev of eventos) {
                     let p = ev.prefix.toUpperCase();
+                    if(p.length < 5) continue; // Evita erro se o prefixo no banco estiver errado
 
-                    // Monta as 3 senhas possíveis para este evento
-                    let leadPass = p + "_LEAD";
-                    let odePass = p.slice(0, 5) + "ODE"; // 3 letras + 2 primeiros nums
-                    let schPass = p.slice(0, 3) + p.slice(-2) + "SCH"; // 3 letras + 2 últimos nums
+                    let odePass = p.slice(0, 5) + "ODE"; 
+                    let schPass = p.slice(0, 3) + p.slice(-2) + "SCH"; 
 
-                    if (code === leadPass) {
-                        matchedEvent = p;
-                        targetPage = "admin_lead.html";
-                        break;
-                    } else if (code === odePass) {
+                    if (code === odePass) {
                         matchedEvent = p;
                         targetPage = "admin_ode.html";
-                        sessionStorage.setItem('ode_auth', 'true'); // Libera o overlay do ODE direto
+                        sessionStorage.setItem('ode_auth', 'true');
                         break;
                     } else if (code === schPass) {
                         matchedEvent = p;
                         targetPage = "admin_sch.html";
-                        sessionStorage.setItem('sch_auth', 'true'); // Libera o overlay do SCH direto
+                        sessionStorage.setItem('sch_auth', 'true');
                         break;
                     }
                 }
 
                 if (matchedEvent) {
-                    // Manda para a página certa já com a URL completa do evento
                     window.location.href = `${targetPage}?event=${matchedEvent}`;
                 } else {
-                    alert("🚫 Access Denied. Invalid Code or Event not found.");
+                    alert("🚫 Access Denied. Verifique se o evento está na tabela 'active_events' do Supabase.");
                 }
 
             } catch (err) {
