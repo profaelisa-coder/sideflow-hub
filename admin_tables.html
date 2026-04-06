@@ -66,7 +66,8 @@
     const urlParams = new URLSearchParams(window.location.search);
     let eventPrefix = urlParams.get('event') || localStorage.getItem('active_event_id');
     let allTables = [];
-    let catalogSizes = {}; // Guarda o tamanho de cada torneio
+    let catalogSizes = {}; 
+    let pendingWA = {}; // Memória temporária para evitar que o card suma antes de enviar o WA
 
     window.onload = async () => {
         if(!eventPrefix) return alert("MISSING EVENT ID");
@@ -74,18 +75,15 @@
         await loadTables();
         await loadReadyPods();
         
-        // Real-time: Atualiza tudo se alguém inscrever no ODE
         _supabase.channel('public:ode_registrations').on('postgres_changes', { event: '*', schema: 'public', table: 'ode_registrations' }, loadReadyPods).subscribe();
         _supabase.channel('public:event_tables').on('postgres_changes', { event: '*', schema: 'public', table: 'event_tables' }, loadTables).subscribe();
     };
 
-    // Puxa o catálogo para saber quantos players fecham cada pod
     async function loadCatalog() {
         const { data } = await _supabase.from('tournament_catalog').select('tname, pod_size').eq('event_id', eventPrefix).eq('item_type', 'ODE');
         if(data) data.forEach(t => catalogSizes[t.tname] = parseInt(t.pod_size));
     }
 
-    // Puxa e desenha as mesas
     async function loadTables() {
         const { data } = await _supabase.from('event_tables').select('*').eq('event_id', eventPrefix).order('table_number', { ascending: true });
         allTables = data || [];
@@ -104,14 +102,12 @@
         });
     }
 
-    // Identifica Pods Cheios
     async function loadReadyPods() {
         const { data: regs } = await _supabase.from('ode_registrations').select('*').eq('event_id', eventPrefix).eq('status', 'waiting');
         const listDiv = document.getElementById('readyPodsList');
         
-        if(!regs || regs.length === 0) { listDiv.innerHTML = "<p style='opacity:0.5; font-size:0.8rem;'>No pods in queue.</p>"; return; }
+        if(!regs || regs.length === 0) { listDiv.innerHTML = "<p style='opacity:0.5; font-size:0.8rem; text-align:center;'>No pods in queue.</p>"; return; }
 
-        // Agrupa por nome do torneio
         const groups = {};
         regs.forEach(r => { 
             if(!groups[r.tname]) groups[r.tname] = { count: 0, players: [] };
@@ -123,29 +119,29 @@
         let hasReady = false;
 
         for (const [tname, info] of Object.entries(groups)) {
-            const targetSize = catalogSizes[tname] || 4; // Default 4 se não achar
+            const targetSize = catalogSizes[tname] || 4; 
             
-            // Só mostra se bateu a lotação
             if(info.count >= targetSize) {
                 hasReady = true;
-                const mesasNecessarias = targetSize / 2; // 2 players por mesa
+                const mesasNecessarias = targetSize / 2; 
+                const safeTname = tname.replace(/[^a-zA-Z0-9]/g, ''); // Cria ID seguro para o HTML
+                const isPending = pendingWA[tname]; // Verifica se já alocamos e estamos esperando o WA
+                const playerIdsRaw = info.players.slice(0, targetSize).join(',');
                 
                 listDiv.innerHTML += `
-                    <div class="pod-card" id="pod-${tname.replace(/\s/g, '')}">
+                    <div class="pod-card" id="pod-${safeTname}">
                         <h4>${tname}</h4>
                         <p>Requires ${mesasNecessarias} tables.</p>
-                        <button class="btn-alloc" onclick="allocate('${tname}', ${mesasNecessarias}, '${info.players.slice(0, targetSize).join(',')}')">📍 ALLOCATE</button>
-                        <button class="btn-wa" id="wa-${tname.replace(/\s/g, '')}" onclick="sendWA('${tname}')">💬 NOTIFY (WA)</button>
+                        <button class="btn-alloc" id="alloc-${safeTname}" style="display: ${isPending ? 'none' : 'block'}" onclick="allocate('${tname}', '${safeTname}', ${mesasNecessarias}, '${playerIdsRaw}')">📍 ALLOCATE</button>
+                        <button class="btn-wa" id="wa-${safeTname}" style="display: ${isPending ? 'block' : 'none'}" data-tables="${isPending ? isPending.tables : ''}" onclick="sendWA('${tname}', '${safeTname}', '${playerIdsRaw}')">💬 NOTIFY (WA)</button>
                     </div>
                 `;
             }
         }
-        if(!hasReady) listDiv.innerHTML = "<p style='opacity:0.5; font-size:0.8rem;'>Queue filling... no full pods yet.</p>";
+        if(!hasReady) listDiv.innerHTML = "<p style='opacity:0.5; font-size:0.8rem; text-align:center;'>Queue filling... no full pods yet.</p>";
     }
 
-    // Algoritmo de Alocação
-    async function allocate(tname, tablesNeeded, playerIdsRaw) {
-        // 1. Acha mesas consecutivas
+    async function allocate(tname, safeTname, tablesNeeded, playerIdsRaw) {
         let startIndex = -1;
         let consecutiveCount = 0;
         
@@ -153,15 +149,14 @@
             if(allTables[i].status === 'vacant') {
                 if(consecutiveCount === 0) startIndex = i;
                 consecutiveCount++;
-                if(consecutiveCount === tablesNeeded) break; // Achou!
+                if(consecutiveCount === tablesNeeded) break; 
             } else {
-                consecutiveCount = 0; // Quebrou a sequência
+                consecutiveCount = 0; 
             }
         }
 
         if(consecutiveCount < tablesNeeded) return alert("NO CONSECUTIVE TABLES AVAILABLE!");
 
-        // 2. Atualiza as mesas achadas
         let tablesToUpdate = [];
         let tableNumbers = [];
         for(let i = startIndex; i < startIndex + tablesNeeded; i++) {
@@ -169,40 +164,41 @@
             tableNumbers.push(allTables[i].table_number);
         }
 
+        // 1. Atualiza o mapa no banco (fica vermelho)
         await _supabase.from('event_tables').update({ status: 'occupied', tournament_name: tname }).in('id', tablesToUpdate);
 
-        // 3. Tira os jogadores da fila (status 'allocated')
-        const playerIds = playerIdsRaw.split(',');
-        await _supabase.from('ode_registrations').update({ status: 'allocated' }).in('id', playerIds);
+        // 2. Salva na memória para o botão WA não sumir
+        pendingWA[tname] = { tables: `${tableNumbers[0]} to ${tableNumbers[tableNumbers.length-1]}` };
 
-        // 4. Mostra o botão de WhatsApp (Embrião)
-        const waBtn = document.getElementById(`wa-${tname.replace(/\s/g, '')}`);
+        // 3. Troca os botões visualmente na mesma hora
+        document.getElementById(`alloc-${safeTname}`).style.display = 'none';
+        const waBtn = document.getElementById(`wa-${safeTname}`);
         waBtn.style.display = 'block';
-        waBtn.dataset.tables = `${tableNumbers[0]} to ${tableNumbers[tableNumbers.length-1]}`;
-        
-        // Esconde o botão de allocate
-        event.target.style.display = 'none';
+        waBtn.dataset.tables = pendingWA[tname].tables;
 
         loadTables();
     }
 
-    // Simula o Disparo de WhatsApp
-    function sendWA(tname) {
-        const btn = document.getElementById(`wa-${tname.replace(/\s/g, '')}`);
+    async function sendWA(tname, safeTname, playerIdsRaw) {
+        const btn = document.getElementById(`wa-${safeTname}`);
         const tables = btn.dataset.tables;
         
+        // AGORA SIM tira os jogadores da fila
+        const playerIds = playerIdsRaw.split(',');
+        await _supabase.from('ode_registrations').update({ status: 'allocated' }).in('id', playerIds);
+        
+        // Limpa a memória
+        delete pendingWA[tname];
+        
+        // Dispara o WhatsApp
         const msg = encodeURIComponent(`🚨 SIDEFLOW ALERT: Your Pod [${tname}] is READY! Please proceed to Tables ${tables} immediately. Good luck!`);
-        // Abre o link do WhatsApp (Na vida real, seria via API)
         window.open(`https://wa.me/?text=${msg}`, '_blank');
         
-        // Remove da lista
-        btn.parentElement.style.display = 'none';
-        loadReadyPods();
+        // O card vai sumir automaticamente por causa da atualização em tempo real do banco.
     }
 
-    // Limpar mesa manualmente
     async function clearTable(id, isVacant) {
-        if(isVacant === 'true') return; // Se já tá livre, não faz nada
+        if(isVacant === 'true') return; 
         if(confirm("Free this table?")) {
             await _supabase.from('event_tables').update({ status: 'vacant', tournament_name: null }).eq('id', id);
             loadTables();
