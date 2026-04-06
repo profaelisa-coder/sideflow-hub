@@ -17,7 +17,7 @@
 <body>
     <div class="login-card">
         <h1>SideFlow Hub</h1>
-        <p>LOGIN</p>
+        <p>SYSTEM LOGIN</p>
         <input type="password" id="accessCode" placeholder="ACCESS CODE">
         <button onclick="verificarAcesso()">ENTER</button>
     </div>
@@ -30,14 +30,10 @@
             let code = document.getElementById('accessCode').value.toUpperCase().trim();
             if (!code) { alert("Please enter an access code!"); return; }
 
-            // 1. LEAD LOGIN
             if (code.endsWith("_LEAD")) {
                 let prefix = code.replace("_LEAD", "");
-                // Redireciona para a nova página do Lead (que faremos no passo 2)
                 window.location.href = "admin_lead.html?event=" + prefix;
             }
-            
-            // 2. ODE STAFF LOGIN
             else if (code.endsWith("ODE")) {
                 let base = code.replace("ODE", ""); 
                 let num_ode = base.slice(-2); 
@@ -58,8 +54,6 @@
                     alert("Connection error: " + err.message);
                 }
             }
-
-            // 3. SCH STAFF LOGIN
             else if (code.endsWith("SCH")) {
                 let base = code.replace("SCH", ""); 
                 let num_sch = base.slice(-2); 
