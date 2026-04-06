@@ -30,51 +30,53 @@
             let code = document.getElementById('accessCode').value.toUpperCase().trim();
             if (!code) { alert("Please enter an access code!"); return; }
 
-            if (code.endsWith("_LEAD")) {
-                let prefix = code.replace("_LEAD", "");
-                window.location.href = "admin_lead.html?event=" + prefix;
-            }
-            else if (code.endsWith("ODE")) {
-                let base = code.replace("ODE", ""); 
-                let num_ode = base.slice(-2); 
-                let prefix = base.slice(0, -2); 
+            try {
+                // Puxa apenas a coluna 'prefix' dos eventos ativos (sem pedir colunas que não existem)
+                let resposta = await fetch(`${supabaseUrl}/rest/v1/active_events?select=prefix`, {
+                    headers: { 'apikey': supabaseKey, 'Authorization': `Bearer ${supabaseKey}` }
+                });
+                
+                if (!resposta.ok) throw new Error("Falha ao conectar no banco.");
+                
+                let eventos = await resposta.json();
+                let matchedEvent = null;
+                let targetPage = "";
 
-                try {
-                    let resposta = await fetch(`${supabaseUrl}/rest/v1/active_events?prefix=eq.${prefix}&num_ode=eq.${num_ode}&select=*`, {
-                        headers: { 'apikey': supabaseKey, 'Authorization': `Bearer ${supabaseKey}` }
-                    });
-                    let dados = await resposta.json();
+                // Verifica contra as senhas de todos os eventos ativos
+                for (let ev of eventos) {
+                    let p = ev.prefix.toUpperCase();
 
-                    if (dados.length > 0) {
-                        window.location.href = "admin_ode.html?event=" + prefix;
-                    } else {
-                        alert("🚫 Access Denied. Event not found.");
+                    // Monta as 3 senhas possíveis para este evento
+                    let leadPass = p + "_LEAD";
+                    let odePass = p.slice(0, 5) + "ODE"; // 3 letras + 2 primeiros nums
+                    let schPass = p.slice(0, 3) + p.slice(-2) + "SCH"; // 3 letras + 2 últimos nums
+
+                    if (code === leadPass) {
+                        matchedEvent = p;
+                        targetPage = "admin_lead.html";
+                        break;
+                    } else if (code === odePass) {
+                        matchedEvent = p;
+                        targetPage = "admin_ode.html";
+                        sessionStorage.setItem('ode_auth', 'true'); // Libera o overlay do ODE direto
+                        break;
+                    } else if (code === schPass) {
+                        matchedEvent = p;
+                        targetPage = "admin_sch.html";
+                        sessionStorage.setItem('sch_auth', 'true'); // Libera o overlay do SCH direto
+                        break;
                     }
-                } catch (err) {
-                    alert("Connection error: " + err.message);
                 }
-            }
-            else if (code.endsWith("SCH")) {
-                let base = code.replace("SCH", ""); 
-                let num_sch = base.slice(-2); 
-                let prefix = base.slice(0, -2);
 
-                try {
-                    let resposta = await fetch(`${supabaseUrl}/rest/v1/active_events?prefix=eq.${prefix}&num_sch=eq.${num_sch}&select=*`, {
-                        headers: { 'apikey': supabaseKey, 'Authorization': `Bearer ${supabaseKey}` }
-                    });
-                    let dados = await resposta.json();
-
-                    if (dados.length > 0) {
-                        window.location.href = "admin_sch.html?event=" + prefix;
-                    } else {
-                        alert("🚫 Access Denied. Event not found.");
-                    }
-                } catch (err) {
-                    alert("Connection error: " + err.message);
+                if (matchedEvent) {
+                    // Manda para a página certa já com a URL completa do evento
+                    window.location.href = `${targetPage}?event=${matchedEvent}`;
+                } else {
+                    alert("🚫 Access Denied. Invalid Code or Event not found.");
                 }
-            } else {
-                alert("🚫 Invalid Code.");
+
+            } catch (err) {
+                alert("Connection error: " + err.message);
             }
         }
     </script>
