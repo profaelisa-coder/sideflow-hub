@@ -6,35 +6,34 @@
     <title>SideFlow - ODE Registration</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
-        :root { --bg: #0d1b2a; --sec: #1b263b; --gold: #ffb703; --blue: #457b9d; --white: #e0e1dd; --red: #e63946; }
-        body { font-family: 'Segoe UI', sans-serif; background: var(--bg); color: var(--white); margin: 0; padding: 20px; padding-bottom: 100px; display: flex; flex-direction: column; align-items: center; }
+        :root { --bg: #0d1b2a; --sec: #1b263b; --gold: #ffb703; --blue: #457b9d; --white: #e0e1dd; --red: #e63946; --green: #2ecc71; }
+        body { font-family: 'Segoe UI', sans-serif; background: var(--bg); color: var(--white); margin: 0; padding: 20px; padding-bottom: 120px; display: flex; flex-direction: column; align-items: center; }
         .container { width: 100%; max-width: 600px; }
         h2 { color: var(--gold); text-transform: uppercase; letter-spacing: 2px; text-align: center; margin-bottom: 5px; }
         .sub-title { text-align: center; font-size: 0.8rem; opacity: 0.7; margin-bottom: 25px; letter-spacing: 1px; }
         .box { background: var(--sec); padding: 25px; border-radius: 12px; box-shadow: 0 8px 25px rgba(0,0,0,0.4); margin-bottom: 25px; border-bottom: 4px solid var(--gold); }
         label { display: block; font-size: 0.75rem; font-weight: bold; margin-bottom: 8px; color: var(--gold); text-transform: uppercase; }
         input, select { width: 100%; padding: 15px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.1); background: var(--bg); color: white; font-size: 1rem; margin-bottom: 20px; box-sizing: border-box; }
-        select option { background: var(--sec); }
         button { width: 100%; padding: 16px; border-radius: 8px; border: none; font-weight: bold; text-transform: uppercase; cursor: pointer; transition: 0.3s; font-size: 0.9rem; }
         .btn-reg { background: var(--gold); color: var(--bg); margin-top: 10px; }
-        .btn-reg:hover { background: #ffca3a; transform: translateY(-2px); }
-        .live-label { color: var(--gold); font-size: 0.9rem; font-weight: bold; margin-bottom: 15px; display: flex; align-items: center; gap: 8px; }
+        .live-label { color: var(--gold); font-size: 0.9rem; font-weight: bold; margin: 20px 0 10px 0; display: flex; align-items: center; gap: 8px; }
         .live-dot { width: 8px; height: 8px; background: var(--red); border-radius: 50%; animation: blink 1s infinite; }
+        .live-dot.green { background: var(--green); }
         @keyframes blink { 0% { opacity: 1; } 50% { opacity: 0.3; } 100% { opacity: 1; } }
-        .pod-row { background: var(--sec); padding: 15px; border-radius: 8px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; border-left: 4px solid var(--blue); box-shadow: 0 4px 10px rgba(0,0,0,0.2); }
-        .pod-info b { color: var(--gold); font-size: 1rem; }
-        .pod-count { background: var(--blue); padding: 6px 15px; border-radius: 20px; font-weight: bold; font-size: 0.9rem; }
+        .pod-row { background: var(--sec); padding: 15px; border-radius: 8px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; border-left: 4px solid var(--blue); }
+        .active-row { background: #1e2a38; padding: 15px; border-radius: 8px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; border-left: 4px solid var(--green); border: 1px solid rgba(46, 204, 113, 0.2); }
+        .pod-info b { color: var(--gold); }
+        .pod-count { background: var(--blue); padding: 6px 15px; border-radius: 20px; font-weight: bold; font-size: 0.8rem; }
+        .table-badge { background: var(--green); color: var(--bg); padding: 4px 10px; border-radius: 4px; font-weight: bold; font-size: 0.8rem; }
         #loginOverlay { position: fixed; top:0; left:0; width:100%; height:100%; background: var(--bg); display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 1000; }
         .nav-footer { position: fixed; bottom: 0; left: 0; width: 100%; background: #162a44; padding: 15px; display: flex; justify-content: center; gap: 15px; border-top: 1px solid rgba(255,255,255,0.1); }
         .nav-footer button { width: auto; padding: 10px 20px; font-size: 0.75rem; background: var(--blue); color: white; }
-        .btn-back { background: rgba(255,255,255,0.1) !important; color: white !important; }
     </style>
 </head>
 <body>
 
 <div id="loginOverlay">
     <h2>STAFF ACCESS</h2>
-    <p style="font-size: 0.8rem; opacity: 0.6; margin-bottom: 20px;">ENTER ODE PASSWORD TO CONTINUE</p>
     <input type="password" id="passInput" placeholder="PASSWORD" style="width: 250px; text-align: center;">
     <button onclick="checkLogin()" style="width: 250px;" class="btn-reg">UNLOCK</button>
 </div>
@@ -47,21 +46,24 @@
         <label>Player Full Name</label>
         <input type="text" id="playerName" placeholder="EX: ASH KETCHUM" autocomplete="off">
         
+        <label>WhatsApp (with area code)</label>
+        <input type="text" id="playerPhone" placeholder="EX: 5511999998888" autocomplete="off">
+
         <label>Tournament Pod</label>
-        <select id="tourSelect">
-            <option value="">LOADING CATALOG...</option>
-        </select>
+        <select id="tourSelect"><option value="">LOADING...</option></select>
         
         <button class="btn-reg" onclick="registerPlayer()">REGISTER PLAYER</button>
-        <button class="btn-reg" onclick="registerFullPod()" style="background: var(--blue); margin-top: 15px;">🚀 REGISTER FULL POD (FAST TRACK)</button>
+        <button class="btn-reg" onclick="registerFullPod()" style="background: var(--blue); margin-top: 15px;">🚀 REGISTER FULL POD</button>
     </div>
 
-    <div class="live-label"><div class="live-dot"></div> LIVE QUEUE STATUS</div>
+    <div class="live-label"><div class="live-dot"></div> WAITING QUEUE</div>
     <div id="waitingList"></div>
+
+    <div class="live-label"><div class="live-dot green"></div> ACTIVE PODS ON TABLES</div>
+    <div id="activePodsList"></div>
 </div>
 
 <div class="nav-footer">
-    <button class="btn-back" onclick="backToLead()">⬅ BACK TO LEAD SETUP</button>
     <button onclick="navToTables()">🗺 VIEW TABLE MAP</button>
 </div>
 
@@ -69,14 +71,11 @@
     const supabaseUrl = 'https://hocpoastnlcwgedvcyqs.supabase.co';
     const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhvY3BvYXN0bmxjd2dlZHZjeXFzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQyODU0MTYsImV4cCI6MjA4OTg2MTQxNn0.1MvvcFsnGW4e0Bj7mzoUKs_3bGM-eHDJTOqsvgKe-pI';
     const _supabase = supabase.createClient(supabaseUrl, supabaseKey);
-    
     const urlParams = new URLSearchParams(window.location.search);
     let eventPrefix = urlParams.get('event') || localStorage.getItem('active_event_id');
 
     window.onload = () => {
-        if(!eventPrefix) { document.body.innerHTML="<h2 style='margin-top:50px'>ERROR: MISSING EVENT ID</h2>"; return; }
-        localStorage.setItem('active_event_id', eventPrefix);
-        
+        if(!eventPrefix) return;
         if(sessionStorage.getItem('ode_auth') === 'true') {
             document.getElementById('loginOverlay').style.display = 'none';
             loadData();
@@ -85,146 +84,100 @@
 
     function checkLogin() {
         const passInput = document.getElementById('passInput').value.toUpperCase();
-        const letters = (eventPrefix || "").slice(0, 3);
-        const firstNums = (eventPrefix || "").slice(3, 5);
-        const masterODEPas = (letters + firstNums + "ODE").toUpperCase(); 
-
-        if(passInput === masterODEPas) {
-            sessionStorage.setItem('ode_auth', 'true');
-            location.reload();
-        } else {
-            alert("ACCESS DENIED.");
-        }
+        const masterODEPas = (eventPrefix.slice(0, 3) + eventPrefix.slice(3, 5) + "ODE").toUpperCase(); 
+        if(passInput === masterODEPas) { sessionStorage.setItem('ode_auth', 'true'); location.reload(); }
+        else { alert("ACCESS DENIED."); }
     }
 
     async function loadData() {
         const { data: catalog } = await _supabase.from('tournament_catalog').select('*').eq('event_id', eventPrefix).eq('item_type', 'ODE');
         const select = document.getElementById('tourSelect');
         select.innerHTML = '<option value="">-- SELECT TOURNAMENT --</option>';
-        if(catalog) {
-            catalog.forEach(t => {
-                const size = t.pod_size || 4; 
-                select.innerHTML += `<option value="${t.tname}" data-size="${size}">[${t.game}] ${t.tname}</option>`;
-            });
-        }
+        if(catalog) catalog.forEach(t => select.innerHTML += `<option value="${t.tname}" data-size="${t.pod_size || 4}">${t.tname}</option>`);
         updateWaitingList();
+        updateActivePods();
     }
 
     async function updateWaitingList() {
         const { data: regs } = await _supabase.from('ode_registrations').select('*').eq('event_id', eventPrefix).eq('status', 'waiting').order('pod_number', { ascending: true });
         const listDiv = document.getElementById('waitingList');
         listDiv.innerHTML = "";
-        if(!regs || regs.length === 0) {
-            listDiv.innerHTML = "<p style='opacity:0.5; text-align:center; font-size:0.9rem;'>No players in queue.</p>";
-            return;
-        }
+        if(!regs || regs.length === 0) { listDiv.innerHTML = "<p style='opacity:0.5; text-align:center;'>No players in queue.</p>"; return; }
         const groups = {};
-        regs.forEach(r => { 
-            const key = `${r.tname}|${r.pod_number}`;
-            groups[key] = (groups[key] || 0) + 1; 
-        });
+        regs.forEach(r => { const key = `${r.tname}|${r.pod_number}`; groups[key] = (groups[key] || 0) + 1; });
         for (const [key, count] of Object.entries(groups)) {
             const [tname, podNum] = key.split('|');
-            const option = document.querySelector(`#tourSelect option[value="${tname}"]`);
-            const targetSize = option ? option.dataset.size : 4;
-            listDiv.innerHTML += `
-                <div class="pod-row">
-                    <div class="pod-info">
-                        <b>${tname}</b><br>
-                        <span style="font-size: 0.8rem; color: var(--blue);">POD #${podNum}</span>
-                    </div>
-                    <div class="pod-count">${count} / ${targetSize}</div>
-                </div>
-            `;
+            const targetSize = document.querySelector(`#tourSelect option[value="${tname}"]`)?.dataset.size || 4;
+            listDiv.innerHTML += `<div class="pod-row"><div class="pod-info"><b>${tname}</b><br><small>POD #${podNum}</small></div><div class="pod-count">${count} / ${targetSize}</div></div>`;
+        }
+    }
+
+    async function updateActivePods() {
+        const { data: active } = await _supabase.from('ode_registrations').select('*').eq('event_id', eventPrefix).eq('status', 'allocated').order('assigned_table', { ascending: true });
+        const listDiv = document.getElementById('activePodsList');
+        listDiv.innerHTML = "";
+        if(!active || active.length === 0) { listDiv.innerHTML = "<p style='opacity:0.5; text-align:center;'>No active pods on tables.</p>"; return; }
+        const uniquePods = {};
+        active.forEach(r => {
+            const key = `${r.tname}|${r.pod_number}`;
+            if(!uniquePods[key]) uniquePods[key] = { tname: r.tname, pod_number: r.pod_number, table: r.assigned_table };
+        });
+        for (const info of Object.values(uniquePods)) {
+            listDiv.innerHTML += `<div class="active-row"><div class="pod-info"><b>${info.tname}</b><br><small>POD #${info.pod_number}</small></div><div class="table-badge">TABLE ${info.table}</div></div>`;
         }
     }
 
     async function registerPlayer() {
         const name = document.getElementById('playerName').value.trim();
+        const phone = document.getElementById('playerPhone').value.trim();
         const tname = document.getElementById('tourSelect').value;
-        if(!name || !tname) { alert("Please enter player name and select a tournament."); return; }
-
-        const option = document.querySelector(`#tourSelect option[value="${tname}"]`);
-        const podLimit = option ? parseInt(option.dataset.size) : 4;
-
-        const { data: podNum, error: rpcError } = await _supabase.rpc('get_next_pod_number', {
-            target_tname: tname, target_event_id: eventPrefix, pod_limit: podLimit
-        });
-
-        if (rpcError) { alert("Error generating Pod Number."); return; }
-
-        const { error } = await _supabase.from('ode_registrations').insert([
-            { event_id: eventPrefix, player_name: name, tname: tname, status: 'waiting', pod_number: podNum }
-        ]);
-
-        if(!error) {
-            document.getElementById('playerName').value = "";
-            alert(`✅ PLAYER REGISTERED!\n\nTournament: ${tname}\nPOD NUMBER: #${podNum}`);
-            updateWaitingList();
-        } else {
-            alert("Error registering player.");
+        if(!name || !tname) return alert("Fill Name and Tournament.");
+        const podLimit = parseInt(document.querySelector(`#tourSelect option[value="${tname}"]`).dataset.size);
+        const { data: podNum } = await _supabase.rpc('get_next_pod_number', { target_tname: tname, target_event_id: eventPrefix, pod_limit: podLimit });
+        const { error } = await _supabase.from('ode_registrations').insert([{ 
+            event_id: eventPrefix, 
+            player_name: name, 
+            player_phone: phone, 
+            tname: tname, 
+            status: 'waiting', 
+            pod_number: podNum 
+        }]);
+        if(!error) { 
+            document.getElementById('playerName').value = ""; 
+            document.getElementById('playerPhone').value = ""; 
+            updateWaitingList(); 
         }
     }
 
     async function registerFullPod() {
         const tname = document.getElementById('tourSelect').value;
-        if(!tname) { alert("Please select a tournament first."); return; }
-
-        const option = document.querySelector(`#tourSelect option[value="${tname}"]`);
-        const podLimit = option ? parseInt(option.dataset.size) : 4;
-
-        const confirmCheck = confirm(`Register a FULL POD of ${podLimit} players for ${tname}?\nThis will automatically assign a table.`);
-        if(!confirmCheck) return;
-
-        const { data: tableData, error: tableError } = await _supabase.rpc('assign_table_to_full_pod', { 
-            target_event_id: eventPrefix,
-            target_tname: tname
-        });
-
-        if (tableError || !tableData || tableData.length === 0) {
-            alert("❌ NO FREE TABLES AVAILABLE IN THIS SECTION! Please clear a table first.");
-            return;
-        }
-
+        if(!tname) return alert("Select tournament.");
+        const podLimit = parseInt(document.querySelector(`#tourSelect option[value="${tname}"]`).dataset.size);
+        if(!confirm(`Register FULL POD for ${tname}?`)) return;
+        const { data: tableData } = await _supabase.rpc('assign_table_to_full_pod', { target_event_id: eventPrefix, target_tname: tname });
+        if (!tableData || tableData.length === 0) return alert("NO FREE TABLES IN THIS SECTION!");
         const assignedTable = tableData[0].table_number;
-
-        const { data: podNum, error: rpcError } = await _supabase.rpc('get_next_pod_number', {
-            target_tname: tname, target_event_id: eventPrefix, pod_limit: podLimit
+        const { data: podNum } = await _supabase.rpc('get_next_pod_number', { target_tname: tname, target_event_id: eventPrefix, pod_limit: podLimit });
+        const players = [];
+        for(let i = 1; i <= podLimit; i++) players.push({ 
+            event_id: eventPrefix, 
+            player_name: `Group Pod #${podNum} - P${i}`, 
+            player_phone: null, 
+            tname: tname, 
+            status: 'allocated', 
+            pod_number: podNum, 
+            assigned_table: assignedTable 
         });
-
-        if (rpcError) { alert("Error generating Pod Number."); return; }
-
-        const playersToInsert = [];
-        for(let i = 1; i <= podLimit; i++) {
-            playersToInsert.push({
-                event_id: eventPrefix, player_name: `Group Pod #${podNum} - P${i}`, tname: tname, status: 'allocated', pod_number: podNum, assigned_table: assignedTable 
-            });
-        }
-
-        const { error: insertError } = await _supabase.from('ode_registrations').insert(playersToInsert);
-
-        if(!insertError) {
-            await _supabase.from('event_tables').update({ tournament_name: tname }).eq('event_id', eventPrefix).eq('table_number', assignedTable);
-            alert(`✅ SUCCESS!\n\nPOD: #${podNum}\nTABLE: ${assignedTable}`);
-            updateWaitingList();
-        }
-    }
-   
-    function backToLead() {
-        const pass = prompt("ENTER LEAD PASSWORD:");
-        const masterLeadPass = (eventPrefix || "").toUpperCase() + "_LEAD";
-        if(pass && pass.toUpperCase() === masterLeadPass) {
-            window.location.href = `admin_lead.html?event=${eventPrefix}`;
-        } else if(pass) {
-            alert("WRONG PASSWORD!");
+        const { error } = await _supabase.from('ode_registrations').insert(players);
+        if(!error) { 
+            await _supabase.from('event_tables').update({ tournament_name: tname, status: 'OCCUPIED' }).eq('event_id', eventPrefix).eq('table_number', assignedTable);
+            updateActivePods(); 
         }
     }
 
-    function navToTables() {
-        window.location.href = `admin_tables.html?event=${eventPrefix}`;
-    }
+    function navToTables() { window.location.href = `admin_tables.html?event=${eventPrefix}`; }
 
-    _supabase.channel('any').on('postgres_changes', { event: '*', schema: 'public', table: 'ode_registrations' }, updateWaitingList).subscribe();
+    _supabase.channel('any').on('postgres_changes', { event: '*', schema: 'public', table: 'ode_registrations' }, () => { updateWaitingList(); updateActivePods(); }).subscribe();
 </script>
 </body>
 </html>
