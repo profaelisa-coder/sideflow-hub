@@ -176,10 +176,13 @@
         const confirmCheck = confirm(`Register a FULL POD of ${podLimit} players for ${tname}?\nThis will automatically assign a table.`);
         if(!confirmCheck) return;
 
-        const { data: tableData, error: tableError } = await _supabase.rpc('assign_table_to_full_pod', { target_event_id: eventPrefix });
+        const { data: tableData, error: tableError } = await _supabase.rpc('assign_table_to_full_pod', { 
+            target_event_id: eventPrefix,
+            target_tname: tname
+        });
 
         if (tableError || !tableData || tableData.length === 0) {
-            alert("❌ NO FREE TABLES AVAILABLE! Please clear a table first.");
+            alert("❌ NO FREE TABLES AVAILABLE IN THIS SECTION! Please clear a table first.");
             return;
         }
 
