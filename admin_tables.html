@@ -108,7 +108,7 @@
 
     async function allocate(tname, safeKey, groupKey) {
         const { data: tableData } = await _supabase.rpc('assign_table_to_full_pod', { target_event_id: eventPrefix, target_tname: tname });
-        if (!tableData || tableData.length === 0) return alert("NO FREE TABLES!");
+        if (!tableData || tableData.length === 0) return alert("NO FREE TABLES IN THIS SECTION!");
         const tableNum = tableData[0].table_number;
         pendingWA[groupKey] = { table: tableNum };
         document.getElementById(`alloc-${safeKey}`).style.display = 'none';
@@ -119,17 +119,30 @@
     async function sendBulkWA(groupKey, safeKey) {
         const info = pendingWA[groupKey];
         const [tname, podNum] = groupKey.split('|');
-        const { data: players } = await _supabase.from('ode_registrations').select('id, player_phone').eq('event_id', eventPrefix).eq('tname', tname).eq('pod_number', podNum).eq('status', 'waiting');
         
-        if(players) {
-            players.forEach(p => {
+        const { data: players } = await _supabase
+            .from('ode_registrations')
+            .select('id, player_name, player_phone')
+            .eq('event_id', eventPrefix)
+            .eq('tname', tname)
+            .eq('pod_number', podNum)
+            .eq('status', 'waiting');
+
+        if(players && players.length > 0) {
+            for (const p of players) {
                 if(p.player_phone) {
-                    const msg = encodeURIComponent(`🚨 SIDEFLOW: Your Pod ${tname} #${podNum} is READY! Please go to Table ${info.table}.`);
-                    window.open(`https://wa.me/${p.player_phone}?text=${msg}`, '_blank');
+                    const msg = encodeURIComponent(`🚨 SIDEFLOW: Your Pod ${tname} #${podNum} is READY! Please proceed to Table ${info.table}.`);
+                    if(confirm(`Send WhatsApp to ${p.player_name} (${p.player_phone})?`)) {
+                        window.open(`https://wa.me/${p.player_phone}?text=${msg}`, '_blank');
+                    }
                 }
-            });
-            await _supabase.from('ode_registrations').update({ status: 'allocated', assigned_table: info.table }).in('id', players.map(p => p.id));
+            }
+
+            await _supabase.from('ode_registrations')
+                .update({ status: 'allocated', assigned_table: info.table })
+                .in('id', players.map(p => p.id));
         }
+
         delete pendingWA[groupKey];
         loadReadyPods();
     }
