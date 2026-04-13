@@ -34,11 +34,8 @@
 <div class="layout">
     <div class="sidebar">
         <h3>🟢 READY TO ALLOCATE</h3>
-        <div id="readyPodsList">
-            <p style="opacity:0.5; font-size:0.8rem; text-align:center;">No pods ready yet.</p>
-        </div>
+        <div id="readyPodsList"></div>
     </div>
-
     <div class="map-area">
         <div class="grid-tables" id="tablesGrid"></div>
     </div>
@@ -52,7 +49,6 @@
     const supabaseUrl = 'https://hocpoastnlcwgedvcyqs.supabase.co';
     const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhvY3BvYXN0bmxjd2dlZHZjeXFzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQyODU0MTYsImV4cCI6MjA4OTg2MTQxNn0.1MvvcFsnGW4e0Bj7mzoUKs_3bGM-eHDJTOqsvgKe-pI';
     const _supabase = supabase.createClient(supabaseUrl, supabaseKey);
-    
     const urlParams = new URLSearchParams(window.location.search);
     let eventPrefix = urlParams.get('event') || localStorage.getItem('active_event_id');
     let allTables = [];
@@ -60,17 +56,16 @@
     let pendingWA = {};
 
     window.onload = async () => {
-        if(!eventPrefix) return alert("MISSING EVENT ID");
+        if(!eventPrefix) return;
         await loadCatalog();
         await loadTables();
         await loadReadyPods();
-        
-        _supabase.channel('public:ode_registrations').on('postgres_changes', { event: '*', schema: 'public', table: 'ode_registrations' }, loadReadyPods).subscribe();
-        _supabase.channel('public:event_tables').on('postgres_changes', { event: '*', schema: 'public', table: 'event_tables' }, loadTables).subscribe();
+        _supabase.channel('any').on('postgres_changes', { event: '*', schema: 'public', table: 'ode_registrations' }, loadReadyPods).subscribe();
+        _supabase.channel('any').on('postgres_changes', { event: '*', schema: 'public', table: 'event_tables' }, loadTables).subscribe();
     };
 
     async function loadCatalog() {
-        const { data } = await _supabase.from('tournament_catalog').select('tname, pod_size').eq('event_id', eventPrefix).eq('item_type', 'ODE');
+        const { data } = await _supabase.from('tournament_catalog').select('tname, pod_size').eq('event_id', eventPrefix);
         if(data) data.forEach(t => catalogSizes[t.tname] = parseInt(t.pod_size));
     }
 
@@ -81,87 +76,67 @@
         grid.innerHTML = "";
         allTables.forEach(t => {
             const isFree = t.status === 'FREE';
-            grid.innerHTML += `
-                <div class="table-box ${isFree ? 'free-state' : 'occupied-state'}" onclick="clearTable('${t.id}', ${isFree}, ${t.table_number})">
-                    ${t.table_number}
-                    <span>${isFree ? 'FREE' : t.tournament_name}</span>
-                </div>
-            `;
+            grid.innerHTML += `<div class="table-box ${isFree ? 'free-state' : 'occupied-state'}" onclick="clearTable('${t.id}', ${isFree}, ${t.table_number})">${t.table_number}<span>${isFree ? 'FREE' : t.tournament_name}</span></div>`;
         });
     }
 
     async function loadReadyPods() {
         const { data: regs } = await _supabase.from('ode_registrations').select('*').eq('event_id', eventPrefix).eq('status', 'waiting');
         const listDiv = document.getElementById('readyPodsList');
-        if(!regs || regs.length === 0) { listDiv.innerHTML = "<p style='opacity:0.5; font-size:0.8rem; text-align:center;'>No pods in queue.</p>"; return; }
+        if(!regs || regs.length === 0) { listDiv.innerHTML = "<p style='opacity:0.5; font-size:0.8rem; text-align:center;'>No pods ready.</p>"; return; }
         const groups = {};
         regs.forEach(r => { 
             const key = `${r.tname}|${r.pod_number}`;
             if(!groups[key]) groups[key] = { tname: r.tname, pod_number: r.pod_number, players: [] };
-            groups[key].players.push(r.id);
+            groups[key].players.push({id: r.id, phone: r.player_phone});
         });
         listDiv.innerHTML = "";
-        let hasReady = false;
         for (const [key, info] of Object.entries(groups)) {
             const targetSize = catalogSizes[info.tname] || 4; 
             if(info.players.length >= targetSize) {
-                hasReady = true;
-                const mesasNecessarias = targetSize / 2; 
-                const safeTname = key.replace(/[^a-zA-Z0-9]/g, ''); 
-                const isPending = pendingWA[key]; 
-                const playerIdsRaw = info.players.slice(0, targetSize).join(',');
+                const safeKey = key.replace(/[^a-zA-Z0-9]/g, '');
+                const isPending = pendingWA[key];
                 listDiv.innerHTML += `
-                    <div class="pod-card" id="pod-${safeTname}">
-                        <h4>${info.tname} <span style="color:var(--gold)">#${info.pod_number}</span></h4>
-                        <p>Full Pod! Requires ${mesasNecessarias} tables.</p>
-                        <button class="btn-alloc" id="alloc-${safeTname}" style="display: ${isPending ? 'none' : 'block'}" onclick="allocate('${info.tname}', '${safeTname}', ${mesasNecessarias}, '${playerIdsRaw}', '${key}')">📍 ALLOCATE</button>
-                        <button class="btn-wa" id="wa-${safeTname}" style="display: ${isPending ? 'block' : 'none'}" data-tables="${isPending ? isPending.tables : ''}" onclick="sendWA('${key}', '${safeTname}', '${playerIdsRaw}')">💬 NOTIFY (WA)</button>
-                    </div>
-                `;
+                    <div class="pod-card">
+                        <h4>${info.tname} #${info.pod_number}</h4>
+                        <button class="btn-alloc" id="alloc-${safeKey}" style="display:${isPending?'none':'block'}" onclick="allocate('${info.tname}', '${safeKey}', '${key}')">📍 ALLOCATE</button>
+                        <button class="btn-wa" id="wa-${safeKey}" style="display:${isPending?'block':'none'}" onclick="sendBulkWA('${key}', '${safeKey}')">💬 SEND WHATSAPP</button>
+                    </div>`;
             }
         }
-        if(!hasReady) listDiv.innerHTML = "<p style='opacity:0.5; font-size:0.8rem; text-align:center;'>Queue filling... no full pods yet.</p>";
     }
 
-    async function allocate(tname, safeTname, tablesNeeded, playerIdsRaw, groupKey) {
-        let startIndex = -1;
-        let consecutiveCount = 0;
-        for(let i = 0; i < allTables.length; i++) {
-            if(allTables[i].status === 'FREE') {
-                if(consecutiveCount === 0) startIndex = i;
-                consecutiveCount++;
-                if(consecutiveCount === tablesNeeded) break; 
-            } else { consecutiveCount = 0; }
-        }
-        if(consecutiveCount < tablesNeeded) return alert("NO CONSECUTIVE TABLES AVAILABLE!");
-        let tablesToUpdate = [];
-        let tableNumbers = [];
-        for(let i = startIndex; i < startIndex + tablesNeeded; i++) {
-            tablesToUpdate.push(allTables[i].id);
-            tableNumbers.push(allTables[i].table_number);
-        }
-        await _supabase.from('event_tables').update({ status: 'OCCUPIED', tournament_name: tname }).in('id', tablesToUpdate);
-        pendingWA[groupKey] = { tables: `${tableNumbers[0]} to ${tableNumbers[tableNumbers.length-1]}` };
-        document.getElementById(`alloc-${safeTname}`).style.display = 'none';
-        const waBtn = document.getElementById(`wa-${safeTname}`);
-        waBtn.style.display = 'block';
-        waBtn.dataset.tables = pendingWA[groupKey].tables;
+    async function allocate(tname, safeKey, groupKey) {
+        const { data: tableData } = await _supabase.rpc('assign_table_to_full_pod', { target_event_id: eventPrefix, target_tname: tname });
+        if (!tableData || tableData.length === 0) return alert("NO FREE TABLES!");
+        const tableNum = tableData[0].table_number;
+        pendingWA[groupKey] = { table: tableNum };
+        document.getElementById(`alloc-${safeKey}`).style.display = 'none';
+        document.getElementById(`wa-${safeKey}`).style.display = 'block';
         loadTables();
     }
 
-    async function sendWA(groupKey, safeTname, playerIdsRaw) {
-        const btn = document.getElementById(`wa-${safeTname}`);
-        const tables = btn.dataset.tables;
-        const playerIds = playerIdsRaw.split(',');
-        await _supabase.from('ode_registrations').update({ status: 'allocated' }).in('id', playerIds);
+    async function sendBulkWA(groupKey, safeKey) {
+        const info = pendingWA[groupKey];
+        const [tname, podNum] = groupKey.split('|');
+        const { data: players } = await _supabase.from('ode_registrations').select('id, player_phone').eq('event_id', eventPrefix).eq('tname', tname).eq('pod_number', podNum).eq('status', 'waiting');
+        
+        if(players) {
+            players.forEach(p => {
+                if(p.player_phone) {
+                    const msg = encodeURIComponent(`🚨 SIDEFLOW: Your Pod ${tname} #${podNum} is READY! Please go to Table ${info.table}.`);
+                    window.open(`https://wa.me/${p.player_phone}?text=${msg}`, '_blank');
+                }
+            });
+            await _supabase.from('ode_registrations').update({ status: 'allocated', assigned_table: info.table }).in('id', players.map(p => p.id));
+        }
         delete pendingWA[groupKey];
-        const msg = encodeURIComponent(`🚨 SIDEFLOW ALERT: Your Pod is READY! Please proceed to Tables ${tables} immediately. Good luck!`);
-        window.open(`https://wa.me/?text=${msg}`, '_blank');
+        loadReadyPods();
     }
 
     async function clearTable(id, isFree, num) {
         if(isFree) return; 
-        if(confirm(`Finish match and free Table ${num}?`)) {
+        if(confirm(`Free Table ${num}?`)) {
             await _supabase.from('event_tables').update({ status: 'FREE', tournament_name: null }).eq('id', id);
             loadTables();
         }
