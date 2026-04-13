@@ -9,10 +9,7 @@
         :root { --bg: #0d1b2a; --sec: #1b263b; --gold: #ffb703; --blue: #457b9d; --red: #e63946; --green: #2ecc71; --white: #e0e1dd; }
         body { font-family: 'Segoe UI', sans-serif; background: var(--bg); color: var(--white); margin: 0; padding: 20px; display: flex; flex-direction: column; height: 100vh; box-sizing: border-box; }
         h2 { color: var(--gold); text-transform: uppercase; letter-spacing: 2px; text-align: center; margin: 0 0 20px 0; }
-        
         .layout { display: flex; gap: 20px; flex: 1; overflow: hidden; }
-        
-        /* Sidebar: Ready Pods */
         .sidebar { width: 300px; background: var(--sec); border-radius: 12px; padding: 15px; display: flex; flex-direction: column; border-top: 4px solid var(--gold); overflow-y: auto; }
         .sidebar h3 { margin-top: 0; color: var(--gold); font-size: 1rem; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 10px; }
         .pod-card { background: var(--bg); padding: 15px; border-radius: 8px; margin-bottom: 10px; border-left: 4px solid var(--green); }
@@ -20,18 +17,12 @@
         .pod-card p { margin: 0 0 10px 0; font-size: 0.8rem; opacity: 0.7; }
         .btn-alloc { width: 100%; background: var(--gold); color: var(--bg); border: none; padding: 10px; border-radius: 6px; font-weight: bold; cursor: pointer; text-transform: uppercase; }
         .btn-wa { width: 100%; background: var(--green); color: white; border: none; padding: 10px; border-radius: 6px; font-weight: bold; cursor: pointer; text-transform: uppercase; margin-top: 10px; display: none; }
-
-        /* Main Map */
         .map-area { flex: 1; background: var(--sec); border-radius: 12px; padding: 20px; overflow-y: auto; }
         .grid-tables { display: grid; grid-template-columns: repeat(auto-fill, minmax(60px, 1fr)); gap: 10px; }
-        
         .table-box { aspect-ratio: 1; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 1.2rem; cursor: pointer; transition: 0.2s; box-shadow: 0 4px 6px rgba(0,0,0,0.3); flex-direction: column; }
         .table-box span { font-size: 0.6rem; margin-top: 5px; opacity: 0.8; text-align: center; }
-        
-        /* Status Colors */
         .vacant { background: rgba(255,255,255,0.1); color: white; border: 1px solid rgba(255,255,255,0.2); }
         .occupied { background: var(--red); color: white; border: 2px solid #a30000; }
-        
         .nav-footer { margin-top: 20px; text-align: center; }
         .nav-footer button { background: rgba(255,255,255,0.1); color: white; border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer; font-size: 0.8rem; }
     </style>
@@ -49,8 +40,7 @@
     </div>
 
     <div class="map-area">
-        <div class="grid-tables" id="tablesGrid">
-            </div>
+        <div class="grid-tables" id="tablesGrid"></div>
     </div>
 </div>
 
@@ -67,7 +57,7 @@
     let eventPrefix = urlParams.get('event') || localStorage.getItem('active_event_id');
     let allTables = [];
     let catalogSizes = {}; 
-    let pendingWA = {}; // Memória temporária para evitar que o card suma antes de enviar o WA
+    let pendingWA = {};
 
     window.onload = async () => {
         if(!eventPrefix) return alert("MISSING EVENT ID");
@@ -87,10 +77,8 @@
     async function loadTables() {
         const { data } = await _supabase.from('event_tables').select('*').eq('event_id', eventPrefix).order('table_number', { ascending: true });
         allTables = data || [];
-        
         const grid = document.getElementById('tablesGrid');
         grid.innerHTML = "";
-        
         allTables.forEach(t => {
             const isVacant = t.status === 'vacant';
             grid.innerHTML += `
@@ -105,35 +93,29 @@
     async function loadReadyPods() {
         const { data: regs } = await _supabase.from('ode_registrations').select('*').eq('event_id', eventPrefix).eq('status', 'waiting');
         const listDiv = document.getElementById('readyPodsList');
-        
         if(!regs || regs.length === 0) { listDiv.innerHTML = "<p style='opacity:0.5; font-size:0.8rem; text-align:center;'>No pods in queue.</p>"; return; }
-
         const groups = {};
         regs.forEach(r => { 
-            if(!groups[r.tname]) groups[r.tname] = { count: 0, players: [] };
-            groups[r.tname].count++;
-            groups[r.tname].players.push(r.id);
+            const key = `${r.tname}|${r.pod_number}`;
+            if(!groups[key]) groups[key] = { tname: r.tname, pod_number: r.pod_number, players: [] };
+            groups[key].players.push(r.id);
         });
-
         listDiv.innerHTML = "";
         let hasReady = false;
-
-        for (const [tname, info] of Object.entries(groups)) {
-            const targetSize = catalogSizes[tname] || 4; 
-            
-            if(info.count >= targetSize) {
+        for (const [key, info] of Object.entries(groups)) {
+            const targetSize = catalogSizes[info.tname] || 4; 
+            if(info.players.length >= targetSize) {
                 hasReady = true;
                 const mesasNecessarias = targetSize / 2; 
-                const safeTname = tname.replace(/[^a-zA-Z0-9]/g, ''); // Cria ID seguro para o HTML
-                const isPending = pendingWA[tname]; // Verifica se já alocamos e estamos esperando o WA
+                const safeTname = key.replace(/[^a-zA-Z0-9]/g, ''); 
+                const isPending = pendingWA[key]; 
                 const playerIdsRaw = info.players.slice(0, targetSize).join(',');
-                
                 listDiv.innerHTML += `
                     <div class="pod-card" id="pod-${safeTname}">
-                        <h4>${tname}</h4>
-                        <p>Requires ${mesasNecessarias} tables.</p>
-                        <button class="btn-alloc" id="alloc-${safeTname}" style="display: ${isPending ? 'none' : 'block'}" onclick="allocate('${tname}', '${safeTname}', ${mesasNecessarias}, '${playerIdsRaw}')">📍 ALLOCATE</button>
-                        <button class="btn-wa" id="wa-${safeTname}" style="display: ${isPending ? 'block' : 'none'}" data-tables="${isPending ? isPending.tables : ''}" onclick="sendWA('${tname}', '${safeTname}', '${playerIdsRaw}')">💬 NOTIFY (WA)</button>
+                        <h4>${info.tname} <span style="color:var(--gold)">#${info.pod_number}</span></h4>
+                        <p>Full Pod! Requires ${mesasNecessarias} tables.</p>
+                        <button class="btn-alloc" id="alloc-${safeTname}" style="display: ${isPending ? 'none' : 'block'}" onclick="allocate('${info.tname}', '${safeTname}', ${mesasNecessarias}, '${playerIdsRaw}', '${key}')">📍 ALLOCATE</button>
+                        <button class="btn-wa" id="wa-${safeTname}" style="display: ${isPending ? 'block' : 'none'}" data-tables="${isPending ? isPending.tables : ''}" onclick="sendWA('${key}', '${safeTname}', '${playerIdsRaw}')">💬 NOTIFY (WA)</button>
                     </div>
                 `;
             }
@@ -141,60 +123,40 @@
         if(!hasReady) listDiv.innerHTML = "<p style='opacity:0.5; font-size:0.8rem; text-align:center;'>Queue filling... no full pods yet.</p>";
     }
 
-    async function allocate(tname, safeTname, tablesNeeded, playerIdsRaw) {
+    async function allocate(tname, safeTname, tablesNeeded, playerIdsRaw, groupKey) {
         let startIndex = -1;
         let consecutiveCount = 0;
-        
         for(let i = 0; i < allTables.length; i++) {
             if(allTables[i].status === 'vacant') {
                 if(consecutiveCount === 0) startIndex = i;
                 consecutiveCount++;
                 if(consecutiveCount === tablesNeeded) break; 
-            } else {
-                consecutiveCount = 0; 
-            }
+            } else { consecutiveCount = 0; }
         }
-
         if(consecutiveCount < tablesNeeded) return alert("NO CONSECUTIVE TABLES AVAILABLE!");
-
         let tablesToUpdate = [];
         let tableNumbers = [];
         for(let i = startIndex; i < startIndex + tablesNeeded; i++) {
             tablesToUpdate.push(allTables[i].id);
             tableNumbers.push(allTables[i].table_number);
         }
-
-        // 1. Atualiza o mapa no banco (fica vermelho)
         await _supabase.from('event_tables').update({ status: 'occupied', tournament_name: tname }).in('id', tablesToUpdate);
-
-        // 2. Salva na memória para o botão WA não sumir
-        pendingWA[tname] = { tables: `${tableNumbers[0]} to ${tableNumbers[tableNumbers.length-1]}` };
-
-        // 3. Troca os botões visualmente na mesma hora
+        pendingWA[groupKey] = { tables: `${tableNumbers[0]} to ${tableNumbers[tableNumbers.length-1]}` };
         document.getElementById(`alloc-${safeTname}`).style.display = 'none';
         const waBtn = document.getElementById(`wa-${safeTname}`);
         waBtn.style.display = 'block';
-        waBtn.dataset.tables = pendingWA[tname].tables;
-
+        waBtn.dataset.tables = pendingWA[groupKey].tables;
         loadTables();
     }
 
-    async function sendWA(tname, safeTname, playerIdsRaw) {
+    async function sendWA(groupKey, safeTname, playerIdsRaw) {
         const btn = document.getElementById(`wa-${safeTname}`);
         const tables = btn.dataset.tables;
-        
-        // AGORA SIM tira os jogadores da fila
         const playerIds = playerIdsRaw.split(',');
         await _supabase.from('ode_registrations').update({ status: 'allocated' }).in('id', playerIds);
-        
-        // Limpa a memória
-        delete pendingWA[tname];
-        
-        // Dispara o WhatsApp
-        const msg = encodeURIComponent(`🚨 SIDEFLOW ALERT: Your Pod [${tname}] is READY! Please proceed to Tables ${tables} immediately. Good luck!`);
+        delete pendingWA[groupKey];
+        const msg = encodeURIComponent(`🚨 SIDEFLOW ALERT: Your Pod is READY! Please proceed to Tables ${tables} immediately. Good luck!`);
         window.open(`https://wa.me/?text=${msg}`, '_blank');
-        
-        // O card vai sumir automaticamente por causa da atualização em tempo real do banco.
     }
 
     async function clearTable(id, isVacant) {
