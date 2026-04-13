@@ -13,7 +13,7 @@
         .main-layout { display: flex; flex: 1; overflow: hidden; }
         .hype-container { flex: 7; display: grid; grid-template-columns: repeat(auto-fit, minmax(350px, 1fr)); gap: 20px; padding: 30px; align-content: start; overflow-y: auto; }
         .calls-sidebar { flex: 3; background: rgba(0,0,0,0.3); border-left: 2px solid rgba(255,255,255,0.1); display: flex; flex-direction: column; padding: 20px; }
-        .calls-title { color: var(--gold); font-weight: 900; text-align: center; font-size: 1.5rem; margin-bottom: 20px; border-bottom: 2px solid var(--gold); padding-bottom: 10px; }
+        .calls-title { color: var(--gold); font-weight: 900; text-align: center; font-size: 1.5rem; margin-bottom: 20px; border-bottom: 2px solid var(--gold); padding-bottom: 10px; text-transform: uppercase; }
         .call-card { background: var(--sec); padding: 20px; border-radius: 15px; margin-bottom: 15px; border-left: 8px solid var(--blue); animation: slideIn 0.5s ease-out; }
         .call-card.new { border-left-color: var(--gold); animation: pulse-new 2s infinite; }
         @keyframes slideIn { from { transform: translateX(50px); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
@@ -27,7 +27,6 @@
         .progress-container { background: rgba(255,255,255,0.05); height: 35px; border-radius: 18px; margin-top: 20px; overflow: hidden; position: relative; border: 1px solid rgba(255,255,255,0.1); }
         .progress-bar { height: 100%; background: linear-gradient(90deg, #1d3557, var(--blue), #a8dadc); width: 0%; transition: width 0.8s ease-in-out; }
         .pod-status { position: absolute; width: 100%; text-align: center; top: 50%; transform: translateY(-50%); font-weight: 900; font-size: 1rem; text-shadow: 1px 1px 2px rgba(0,0,0,0.8); }
-        footer { padding: 15px; text-align: center; font-size: 1.2rem; background: var(--gold); color: var(--bg); font-weight: 900; text-transform: uppercase; letter-spacing: 4px; }
     </style>
 </head>
 <body>
@@ -46,10 +45,6 @@
         </div>
     </div>
 </div>
-
-<footer>
-    JOIN THE ON-DEMAND PODS AT THE STAFF DESK!
-</footer>
 
 <script>
     const supabaseUrl = 'https://hocpoastnlcwgedvcyqs.supabase.co';
@@ -71,7 +66,8 @@
         updateDisplay();
         updateCalls();
         
-        _supabase.channel('any')
+        // Canal de Real-Time exclusivo para a TV
+        _supabase.channel('public:ode_registrations_tv')
             .on('postgres_changes', { event: '*', schema: 'public', table: 'ode_registrations' }, () => {
                 updateDisplay();
                 updateCalls();
@@ -87,21 +83,28 @@
             displayArea.innerHTML = `<h2 style='color:red; width:100%; text-align:center;'>DATABASE ERROR: ${errTours.message}</h2>`;
             return;
         }
-        if(!tours || tours.length === 0) {
-            displayArea.innerHTML = `<div style='text-align:center; width:100%; font-size:1.5rem; opacity:0.5;'>No ODE tournaments found for: ${eventPrefix}</div>`;
-            return;
-        }
+        if(!tours || tours.length === 0) return;
 
         const { data: regs } = await _supabase.from('ode_registrations').select('*').eq('event_id', eventPrefix).in('status', ['waiting', 'allocated']);
         displayArea.innerHTML = "";
 
         tours.forEach(t => {
             const relevantRegs = regs ? regs.filter(r => r.tname === t.tname) : [];
-            const maxPod = Math.max(...relevantRegs.map(r => r.pod_number), 1);
-            const currentPodPlayers = relevantRegs.filter(r => r.pod_number === maxPod);
-            const count = currentPodPlayers.length;
+            
+            // Qual é o maior número de pod sendo formado?
+            let maxPod = relevantRegs.length > 0 ? Math.max(...relevantRegs.map(r => r.pod_number)) : 1;
+            let currentPodPlayers = relevantRegs.filter(r => r.pod_number === maxPod);
+            let count = currentPodPlayers.length;
             const target = t.pod_size || 4;
-            const percentage = (count >= target) ? 100 : (count / target) * 100;
+
+            // A LÓGICA NOVA: Se esse pod máximo já foi todo pra mesa (allocated), mostramos o próximo vazio!
+            const isAllocated = count > 0 && currentPodPlayers.every(p => p.status === 'allocated');
+            if (isAllocated) {
+                maxPod++; // Pula pro próximo número
+                count = 0; // Zera a barra
+            }
+
+            const percentage = Math.min((count / target) * 100, 100);
 
             const card = document.createElement('div');
             card.className = `pod-card ${count === (target - 1) ? 'pulse-gold' : ''}`;
