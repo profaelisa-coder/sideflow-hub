@@ -132,8 +132,10 @@
         const phone = document.getElementById('playerPhone').value.trim();
         const tname = document.getElementById('tourSelect').value;
         if(!name || !tname) return alert("Fill Name and Tournament.");
+        
         const podLimit = parseInt(document.querySelector(`#tourSelect option[value="${tname}"]`).dataset.size);
         const { data: podNum } = await _supabase.rpc('get_next_pod_number', { target_tname: tname, target_event_id: eventPrefix, pod_limit: podLimit });
+        
         const { error } = await _supabase.from('ode_registrations').insert([{ 
             event_id: eventPrefix, 
             player_name: name, 
@@ -142,9 +144,12 @@
             status: 'waiting', 
             pod_number: podNum 
         }]);
+        
         if(!error) { 
+            // Limpando os 3 campos para o próximo jogador
             document.getElementById('playerName').value = ""; 
             document.getElementById('playerPhone').value = ""; 
+            document.getElementById('tourSelect').value = ""; // <-- LINHA ADICIONADA AQUI
             updateWaitingList(); 
         }
     }
