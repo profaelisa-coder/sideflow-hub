@@ -82,7 +82,7 @@
         allTables.forEach(t => {
             const isFree = t.status === 'FREE';
             grid.innerHTML += `
-                <div class="table-box ${isFree ? 'free-state' : 'occupied-state'}" onclick="clearTable(${t.id}, ${isFree}, ${t.table_number})">
+                <div class="table-box ${isFree ? 'free-state' : 'occupied-state'}" onclick="clearTable('${t.id}', ${isFree}, ${t.table_number})">
                     ${t.table_number}
                     <span>${isFree ? 'FREE' : t.tournament_name}</span>
                 </div>
