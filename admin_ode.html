@@ -202,7 +202,7 @@ async function registerFullPod() {
     });
 
     if (tableError || !tableData || tableData.length === 0) {
-        alert("❌ NO EMPTY TABLES AVAILABLE! Please free a table first.");
+        alert("❌ NO VACANT TABLES AVAILABLE! Please free a table first.");
         return;
     }
 
@@ -222,7 +222,7 @@ async function registerFullPod() {
             event_id: eventPrefix,
             player_name: `Group Pod #${podNum} - P${i}`,
             tname: tname,
-            status: 'playing', 
+            status: 'allocated', 
             pod_number: podNum,
             assigned_table: assignedTable 
         });
@@ -231,11 +231,15 @@ async function registerFullPod() {
     const { error: insertError } = await _supabase.from('ode_registrations').insert(playersToInsert);
 
     if(!insertError) {
-        alert(`✅ SUCCESS!\n\nPOD: #${podNum}\nTABLE: ${assignedTable}\n\nGo to table now!`);
+        await _supabase.from('event_tables')
+            .update({ tournament_name: tname })
+            .eq('event_id', eventPrefix)
+            .eq('table_number', assignedTable);
+        
+        alert(`✅ SUCCESS!\n\nPOD: #${podNum}\nTABLE: ${assignedTable}`);
         updateWaitingList();
     } else {
         alert("Error inserting players.");
-        console.error(insertError);
     }
 }
    
