@@ -98,21 +98,22 @@
     }
 
     async function loadData() {
-        const { data: catalog } = await _supabase.from('tournament_catalog')
-            .select('*')
-            .eq('event_id', eventPrefix)
-            .eq('item_type', 'ODE');
+    const { data: catalog } = await _supabase.from('tournament_catalog')
+        .select('*')
+        .eq('event_id', eventPrefix)
+        .eq('item_type', 'ODE');
 
-        const select = document.getElementById('tourSelect');
-        select.innerHTML = '<option value="">-- SELECT TOURNAMENT --</option>';
-        
-        if(catalog) {
-            catalog.forEach(t => {
-                select.innerHTML += `<option value="${t.tname}" data-size="${t.pod_size}">[${t.game}] ${t.tname}</option>`;
-            });
-        }
-        updateWaitingList();
+    const select = document.getElementById('tourSelect');
+    select.innerHTML = '<option value="">-- SELECT TOURNAMENT --</option>';
+    
+    if(catalog) {
+        catalog.forEach(t => {
+            const size = t.pod_size || 4; 
+            select.innerHTML += `<option value="${t.tname}" data-size="${size}">[${t.game}] ${t.tname}</option>`;
+        });
     }
+    updateWaitingList();
+}
 
     async function updateWaitingList() {
         const { data: regs } = await _supabase.from('ode_registrations')
