@@ -83,8 +83,8 @@
     };
 
     function checkLogin() {
-        const passInput = document.getElementById('passInput').value.toUpperCase();
-        const masterODEPas = (eventPrefix.slice(0, 3) + eventPrefix.slice(3, 5) + "ODE").toUpperCase(); 
+        const passInput = document.getElementById('passInput').value.toUpperCase().trim();
+        const masterODEPas = (eventPrefix.slice(0, 5) + "ODE").toUpperCase(); 
         if(passInput === masterODEPas) { sessionStorage.setItem('ode_auth', 'true'); location.reload(); }
         else { alert("ACCESS DENIED."); }
     }
@@ -128,29 +128,45 @@
     }
 
     async function registerPlayer() {
-        const name = document.getElementById('playerName').value.trim();
-        const phone = document.getElementById('playerPhone').value.trim();
-        const tname = document.getElementById('tourSelect').value;
+        const nameInput = document.getElementById('playerName');
+        const phoneInput = document.getElementById('playerPhone');
+        const tourSelect = document.getElementById('tourSelect');
+
+        const name = nameInput.value.trim();
+        const phone = phoneInput.value.trim();
+        const tname = tourSelect.value;
+
         if(!name || !tname) return alert("Fill Name and Tournament.");
-        
-        const podLimit = parseInt(document.querySelector(`#tourSelect option[value="${tname}"]`).dataset.size);
-        const { data: podNum } = await _supabase.rpc('get_next_pod_number', { target_tname: tname, target_event_id: eventPrefix, pod_limit: podLimit });
-        
-        const { error } = await _supabase.from('ode_registrations').insert([{ 
-            event_id: eventPrefix, 
-            player_name: name, 
-            player_phone: phone, 
-            tname: tname, 
-            status: 'waiting', 
-            pod_number: podNum 
-        }]);
-        
-        if(!error) { 
-            // Limpando os 3 campos para o próximo jogador
-            document.getElementById('playerName').value = ""; 
-            document.getElementById('playerPhone').value = ""; 
-            document.getElementById('tourSelect').value = ""; // <-- LINHA ADICIONADA AQUI
-            updateWaitingList(); 
+
+        try {
+            const podLimit = parseInt(tourSelect.options[tourSelect.selectedIndex].dataset.size);
+            
+            const { data: podNum } = await _supabase.rpc('get_next_pod_number', { 
+                target_tname: tname, 
+                target_event_id: eventPrefix, 
+                pod_limit: podLimit 
+            });
+
+            const { error } = await _supabase.from('ode_registrations').insert([{ 
+                event_id: eventPrefix, 
+                player_name: name, 
+                player_phone: phone, 
+                tname: tname, 
+                status: 'waiting', 
+                pod_number: podNum 
+            }]);
+
+            if (error) throw error;
+
+        } catch (err) {
+            console.error(err);
+            alert("Error registering player.");
+        } finally {
+            nameInput.value = ""; 
+            phoneInput.value = ""; 
+            tourSelect.selectedIndex = 0; 
+            nameInput.focus(); 
+            updateWaitingList();
         }
     }
 
