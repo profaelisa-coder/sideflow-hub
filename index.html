@@ -30,15 +30,6 @@
             let code = document.getElementById('accessCode').value.toUpperCase().trim();
             if (!code) { alert("Please enter an access code!"); return; }
 
-            // 1. BYPASS DO LEAD (Seguro e direto)
-            // Se terminar com _LEAD, não depende do banco de dados para entrar.
-            if (code.endsWith("_LEAD")) {
-                let p = code.replace("_LEAD", "");
-                window.location.href = `admin_lead.html?event=${p}`;
-                return;
-            }
-
-            // 2. ODE e SCH (Busca o ID completo no banco)
             try {
                 let resposta = await fetch(`${supabaseUrl}/rest/v1/active_events?select=prefix`, {
                     headers: { 'apikey': supabaseKey, 'Authorization': `Bearer ${supabaseKey}` }
@@ -52,12 +43,16 @@
 
                 for (let ev of eventos) {
                     let p = ev.prefix.toUpperCase();
-                    if(p.length < 5) continue; // Evita erro se o prefixo no banco estiver errado
 
-                    let odePass = p.slice(0, 5) + "ODE"; 
-                    let schPass = p.slice(0, 3) + p.slice(-2) + "SCH"; 
+                    let leadPass = p + "_LEAD";
+                    let odePass = p.slice(0, 5) + "ODE";
+                    let schPass = p.slice(0, 3) + p.slice(-2) + "SCH";
 
-                    if (code === odePass) {
+                    if (code === leadPass) {
+                        matchedEvent = p;
+                        targetPage = "admin_lead.html";
+                        break;
+                    } else if (code === odePass) {
                         matchedEvent = p;
                         targetPage = "admin_ode.html";
                         sessionStorage.setItem('ode_auth', 'true');
@@ -73,7 +68,7 @@
                 if (matchedEvent) {
                     window.location.href = `${targetPage}?event=${matchedEvent}`;
                 } else {
-                    alert("🚫 Access Denied. Verifique se o evento está na tabela 'active_events' do Supabase.");
+                    alert("🚫 Access Denied. Invalid Code or Event not found.");
                 }
 
             } catch (err) {
