@@ -6,7 +6,7 @@
     <title>SideFlow Hub - HYPE DISPLAY</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
-        :root { --bg: #0d1b2a; --sec: #1b263b; --gold: #ffb703; --blue: #457b9d; --white: #e0e1dd; }
+        :root { --bg: #0d1b2a; --sec: #1b263b; --gold: #ffb703; --blue: #457b9d; --white: #e0e1dd; --red: #e63946; }
         
         body { 
             font-family: 'Segoe UI', sans-serif; 
@@ -20,90 +20,103 @@
         }
 
         header { 
-            padding: 25px; 
+            padding: 15px; 
             text-align: center; 
             background: rgba(0,0,0,0.4); 
             border-bottom: 3px solid var(--gold);
-            box-shadow: 0 4px 20px rgba(0,0,0,0.5);
         }
         
-        h1 { margin: 0; letter-spacing: 8px; text-transform: uppercase; color: var(--gold); font-size: 3rem; text-shadow: 2px 2px 10px rgba(255,183,3,0.3); }
+        h1 { margin: 0; letter-spacing: 8px; text-transform: uppercase; color: var(--gold); font-size: 2.5rem; }
 
-        .hype-container { 
-            display: grid; 
-            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr)); 
-            gap: 30px; 
-            padding: 50px; 
-            flex-grow: 1;
-            align-content: start;
+        .main-layout {
+            display: flex;
+            flex: 1;
+            overflow: hidden;
         }
 
+        /* Área das Barras (70%) */
+        .hype-container { 
+            flex: 7;
+            display: grid; 
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr)); 
+            gap: 20px; 
+            padding: 30px; 
+            align-content: start;
+            overflow-y: auto;
+        }
+
+        /* Área das Chamadas (30%) */
+        .calls-sidebar {
+            flex: 3;
+            background: rgba(0,0,0,0.3);
+            border-left: 2px solid rgba(255,255,255,0.1);
+            display: flex;
+            flex-direction: column;
+            padding: 20px;
+        }
+
+        .calls-title {
+            color: var(--gold);
+            font-weight: 900;
+            text-align: center;
+            font-size: 1.5rem;
+            margin-bottom: 20px;
+            border-bottom: 2px solid var(--gold);
+            padding-bottom: 10px;
+        }
+
+        .call-card {
+            background: var(--sec);
+            padding: 20px;
+            border-radius: 15px;
+            margin-bottom: 15px;
+            border-left: 8px solid var(--blue);
+            animation: slideIn 0.5s ease-out;
+        }
+
+        .call-card.new {
+            border-left-color: var(--gold);
+            animation: pulse-new 2s infinite;
+        }
+
+        @keyframes slideIn {
+            from { transform: translateX(50px); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        @keyframes pulse-new {
+            0% { box-shadow: 0 0 0px var(--gold); }
+            50% { box-shadow: 0 0 20px var(--gold); }
+            100% { box-shadow: 0 0 0px var(--gold); }
+        }
+
+        .call-pod { font-size: 0.9rem; opacity: 0.7; text-transform: uppercase; }
+        .call-name { font-size: 1.4rem; font-weight: 800; margin: 5px 0; color: white; }
+        .call-table { font-size: 2rem; color: var(--gold); font-weight: 900; }
+
+        /* Estilos originais das barras */
         .pod-card { 
             background: linear-gradient(145deg, var(--sec), #0d1b2a);
-            border-radius: 25px; 
-            padding: 35px; 
-            position: relative; 
-            box-shadow: 0 15px 35px rgba(0,0,0,0.6);
-            transition: 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-            border: 2px solid rgba(255,255,255,0.05);
+            border-radius: 20px; padding: 25px; border: 2px solid rgba(255,255,255,0.05);
         }
-
-        .pod-category { font-size: 1.1rem; color: var(--gold); font-weight: bold; text-transform: uppercase; letter-spacing: 2px; }
-        .pod-name { font-size: 2.4rem; margin: 12px 0; font-weight: 800; color: white; }
-        
-        /* Progress Bar Wrapper */
+        .pod-category { font-size: 0.9rem; color: var(--gold); font-weight: bold; text-transform: uppercase; }
+        .pod-name { font-size: 1.8rem; margin: 10px 0; font-weight: 800; color: white; }
         .progress-container { 
-            background: rgba(255,255,255,0.05); 
-            height: 45px; 
-            border-radius: 22px; 
-            margin-top: 25px; 
-            overflow: hidden;
-            position: relative;
-            border: 1px solid rgba(255,255,255,0.1);
+            background: rgba(255,255,255,0.05); height: 35px; border-radius: 18px; 
+            margin-top: 20px; overflow: hidden; position: relative; border: 1px solid rgba(255,255,255,0.1);
         }
-        
         .progress-bar { 
-            height: 100%; 
-            background: linear-gradient(90deg, #1d3557, var(--blue), #a8dadc); 
-            width: 0%; 
-            transition: width 0.8s ease-in-out;
-            box-shadow: 0 0 20px rgba(69, 123, 157, 0.5);
+            height: 100%; background: linear-gradient(90deg, #1d3557, var(--blue), #a8dadc); 
+            width: 0%; transition: width 0.8s ease-in-out;
         }
-
         .pod-status { 
-            position: absolute; 
-            width: 100%;
-            text-align: center;
-            top: 50%; 
-            transform: translateY(-50%); 
-            font-weight: 900; 
-            font-size: 1.2rem;
-            text-shadow: 2px 2px 4px rgba(0,0,0,0.8);
-            letter-spacing: 3px;
-        }
-
-        /* Efeito Golden Pulse (Ativa no 3/4) */
-        .pulse-gold { 
-            border-color: var(--gold) !important;
-            box-shadow: 0 0 50px rgba(255, 183, 3, 0.3);
-            animation: pulse-animation 1.2s infinite;
-        }
-
-        @keyframes pulse-animation {
-            0% { transform: scale(1); }
-            50% { transform: scale(1.02); box-shadow: 0 0 70px rgba(255, 183, 3, 0.6); }
-            100% { transform: scale(1); }
+            position: absolute; width: 100%; text-align: center; top: 50%; transform: translateY(-50%); 
+            font-weight: 900; font-size: 1rem; text-shadow: 1px 1px 2px rgba(0,0,0,0.8);
         }
 
         footer { 
-            padding: 20px; 
-            text-align: center; 
-            font-size: 1.4rem; 
-            background: var(--gold); 
-            color: var(--bg); 
-            font-weight: 900; 
-            text-transform: uppercase;
-            letter-spacing: 4px;
+            padding: 15px; text-align: center; font-size: 1.2rem; background: var(--gold); 
+            color: var(--bg); font-weight: 900; text-transform: uppercase; letter-spacing: 4px;
         }
     </style>
 </head>
@@ -113,8 +126,16 @@
     <h1 id="eventName">SIDEFLOW HUB</h1>
 </header>
 
-<div class="hype-container" id="displayArea">
+<div class="main-layout">
+    <div class="hype-container" id="displayArea"></div>
+
+    <div class="calls-sidebar">
+        <div class="calls-title">TABLE ASSIGNMENTS</div>
+        <div id="callsArea">
+            <p style="text-align:center; opacity:0.5;">No assignments yet...</p>
+        </div>
     </div>
+</div>
 
 <footer>
     JOIN THE ON-DEMAND PODS AT THE STAFF DESK!
@@ -129,54 +150,33 @@
     async function initDisplay() {
         if(!eventPrefix) return;
         
-        // Carrega identidade do evento
-        const { data: info } = await _supabase.from('tournament_history').select('*').eq('event_id', eventPrefix).single();
-        if(info) document.getElementById('eventName').innerText = info.event_name;
-
         updateDisplay();
+        updateCalls();
         
-        // ESCUTA REAL-TIME (Tanto novos registros quanto mudanças de status)
-        _supabase
-            .channel('any')
+        _supabase.channel('any')
             .on('postgres_changes', { event: '*', schema: 'public', table: 'ode_registrations' }, () => {
                 updateDisplay();
-            })
-            .on('postgres_changes', { event: '*', schema: 'public', table: 'tournament_catalog' }, () => {
-                updateDisplay();
+                updateCalls();
             })
             .subscribe();
     }
 
     async function updateDisplay() {
-        // 1. Puxa os torneios ODE ativos
-        const { data: tours } = await _supabase.from('tournament_catalog')
-            .select('*')
-            .eq('event_id', eventPrefix)
-            .eq('item_type', 'ODE');
-
-        // 2. Puxa apenas players 'waiting'
-        const { data: regs } = await _supabase.from('ode_registrations')
-            .select('*')
-            .eq('event_id', eventPrefix)
-            .eq('status', 'waiting');
+        const { data: tours } = await _supabase.from('tournament_catalog').select('*').eq('event_id', eventPrefix).eq('item_type', 'ODE');
+        const { data: regs } = await _supabase.from('ode_registrations').select('*').eq('event_id', eventPrefix).eq('status', 'waiting');
 
         const displayArea = document.getElementById('displayArea');
         displayArea.innerHTML = "";
 
-        if(!tours || tours.length === 0) {
-            displayArea.innerHTML = "<div style='text-align:center; width:100%; font-size:1.5rem; opacity:0.5;'>Waiting for On-Demand setups...</div>";
-            return;
-        }
+        if(!tours) return;
 
         tours.forEach(t => {
             const count = regs ? regs.filter(r => r.tname === t.tname).length : 0;
-            const target = 4; // Target padrão
+            const target = t.pod_size || 4;
             const percentage = Math.min((count / target) * 100, 100);
-            const isPulsing = count === 3; // Brilha no 3/4
 
             const card = document.createElement('div');
-            card.className = `pod-card ${isPulsing ? 'pulse-gold' : ''}`;
-            
+            card.className = `pod-card`;
             card.innerHTML = `
                 <div class="pod-category">${t.game}</div>
                 <div class="pod-name">${t.tname}</div>
@@ -186,6 +186,49 @@
                 </div>
             `;
             displayArea.appendChild(card);
+        });
+    }
+
+    async function updateCalls() {
+        // Pega os últimos 4 pods alocados (status 'allocated')
+        // Usamos um truque: pegamos os registros únicos de tname + pod_number mais recentes
+        const { data: calls } = await _supabase
+            .from('ode_registrations')
+            .select('tname, pod_number, assigned_table, created_at')
+            .eq('event_id', eventPrefix)
+            .eq('status', 'allocated')
+            .order('created_at', { ascending: false });
+
+        const callsArea = document.getElementById('callsArea');
+        callsArea.innerHTML = "";
+
+        if(!calls || calls.length === 0) {
+            callsArea.innerHTML = "<p style='text-align:center; opacity:0.5;'>No assignments yet...</p>";
+            return;
+        }
+
+        // Filtra para mostrar apenas registros únicos de cada Pod
+        const uniqueCalls = [];
+        const seen = new Set();
+        for (const c of calls) {
+            const id = `${c.tname}-${c.pod_number}`;
+            if (!seen.has(id)) {
+                uniqueCalls.push(c);
+                seen.add(id);
+            }
+            if (uniqueCalls.length >= 4) break; // Mostra apenas os 4 últimos
+        }
+
+        uniqueCalls.forEach((c, index) => {
+            const card = document.createElement('div');
+            // O primeiro da lista (mais recente) ganha um brilho especial
+            card.className = `call-card ${index === 0 ? 'new' : ''}`;
+            card.innerHTML = `
+                <div class="call-pod">${c.tname} - POD #${c.pod_number}</div>
+                <div class="call-name">PROCEED TO:</div>
+                <div class="call-table">TABLE ${c.assigned_table}</div>
+            `;
+            callsArea.appendChild(card);
         });
     }
 
