@@ -20,7 +20,7 @@
         .map-area { flex: 1; background: var(--sec); border-radius: 12px; padding: 20px; overflow-y: auto; }
         .grid-tables { display: grid; grid-template-columns: repeat(auto-fill, minmax(60px, 1fr)); gap: 10px; }
         .table-box { aspect-ratio: 1; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 1.2rem; cursor: pointer; transition: 0.2s; box-shadow: 0 4px 6px rgba(0,0,0,0.3); flex-direction: column; }
-        .table-box span { font-size: 0.6rem; margin-top: 5px; opacity: 0.8; text-align: center; }
+        .table-box span { font-size: 0.6rem; margin-top: 5px; opacity: 0.8; text-align: center; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; width: 100%; }
         .free-state { background: rgba(255,255,255,0.1); color: white; border: 1px solid rgba(255,255,255,0.2); }
         .occupied-state { background: var(--red); color: white; border: 2px solid #a30000; }
         .nav-footer { margin-top: 20px; text-align: center; }
@@ -82,7 +82,7 @@
         allTables.forEach(t => {
             const isFree = t.status === 'FREE';
             grid.innerHTML += `
-                <div class="table-box ${isFree ? 'free-state' : 'occupied-state'}" onclick="clearTable(${t.id}, '${isFree}')">
+                <div class="table-box ${isFree ? 'free-state' : 'occupied-state'}" onclick="clearTable(${t.id}, ${isFree}, ${t.table_number})">
                     ${t.table_number}
                     <span>${isFree ? 'FREE' : t.tournament_name}</span>
                 </div>
@@ -159,9 +159,9 @@
         window.open(`https://wa.me/?text=${msg}`, '_blank');
     }
 
-    async function clearTable(id, isFree) {
-        if(isFree === 'true') return; 
-        if(confirm("Free this table?")) {
+    async function clearTable(id, isFree, num) {
+        if(isFree) return; 
+        if(confirm(`Finish match and free Table ${num}?`)) {
             await _supabase.from('event_tables').update({ status: 'FREE', tournament_name: null }).eq('id', id);
             loadTables();
         }
