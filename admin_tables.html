@@ -21,8 +21,8 @@
         .grid-tables { display: grid; grid-template-columns: repeat(auto-fill, minmax(60px, 1fr)); gap: 10px; }
         .table-box { aspect-ratio: 1; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 1.2rem; cursor: pointer; transition: 0.2s; box-shadow: 0 4px 6px rgba(0,0,0,0.3); flex-direction: column; }
         .table-box span { font-size: 0.6rem; margin-top: 5px; opacity: 0.8; text-align: center; }
-        .vacant { background: rgba(255,255,255,0.1); color: white; border: 1px solid rgba(255,255,255,0.2); }
-        .occupied { background: var(--red); color: white; border: 2px solid #a30000; }
+        .free-state { background: rgba(255,255,255,0.1); color: white; border: 1px solid rgba(255,255,255,0.2); }
+        .occupied-state { background: var(--red); color: white; border: 2px solid #a30000; }
         .nav-footer { margin-top: 20px; text-align: center; }
         .nav-footer button { background: rgba(255,255,255,0.1); color: white; border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer; font-size: 0.8rem; }
     </style>
@@ -80,11 +80,11 @@
         const grid = document.getElementById('tablesGrid');
         grid.innerHTML = "";
         allTables.forEach(t => {
-            const isVacant = t.status === 'vacant';
+            const isFree = t.status === 'FREE';
             grid.innerHTML += `
-                <div class="table-box ${isVacant ? 'vacant' : 'occupied'}" onclick="clearTable(${t.id}, '${isVacant}')">
+                <div class="table-box ${isFree ? 'free-state' : 'occupied-state'}" onclick="clearTable(${t.id}, '${isFree}')">
                     ${t.table_number}
-                    <span>${isVacant ? 'FREE' : t.tournament_name}</span>
+                    <span>${isFree ? 'FREE' : t.tournament_name}</span>
                 </div>
             `;
         });
@@ -127,7 +127,7 @@
         let startIndex = -1;
         let consecutiveCount = 0;
         for(let i = 0; i < allTables.length; i++) {
-            if(allTables[i].status === 'vacant') {
+            if(allTables[i].status === 'FREE') {
                 if(consecutiveCount === 0) startIndex = i;
                 consecutiveCount++;
                 if(consecutiveCount === tablesNeeded) break; 
@@ -140,7 +140,7 @@
             tablesToUpdate.push(allTables[i].id);
             tableNumbers.push(allTables[i].table_number);
         }
-        await _supabase.from('event_tables').update({ status: 'occupied', tournament_name: tname }).in('id', tablesToUpdate);
+        await _supabase.from('event_tables').update({ status: 'OCCUPIED', tournament_name: tname }).in('id', tablesToUpdate);
         pendingWA[groupKey] = { tables: `${tableNumbers[0]} to ${tableNumbers[tableNumbers.length-1]}` };
         document.getElementById(`alloc-${safeTname}`).style.display = 'none';
         const waBtn = document.getElementById(`wa-${safeTname}`);
@@ -159,10 +159,10 @@
         window.open(`https://wa.me/?text=${msg}`, '_blank');
     }
 
-    async function clearTable(id, isVacant) {
-        if(isVacant === 'true') return; 
+    async function clearTable(id, isFree) {
+        if(isFree === 'true') return; 
         if(confirm("Free this table?")) {
-            await _supabase.from('event_tables').update({ status: 'vacant', tournament_name: null }).eq('id', id);
+            await _supabase.from('event_tables').update({ status: 'FREE', tournament_name: null }).eq('id', id);
             loadTables();
         }
     }
