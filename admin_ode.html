@@ -53,6 +53,7 @@
         </select>
         
         <button class="btn-reg" onclick="registerPlayer()">REGISTER PLAYER</button>
+	<button class="btn-reg" onclick="registerFullPod()" style="background: var(--blue); margin-top: 15px;">🚀 REGISTER FULL POD (FAST TRACK)</button>
     </div>
 
     <div class="live-label"><div class="live-dot"></div> LIVE QUEUE STATUS</div>
@@ -117,48 +118,127 @@
         const { data: regs } = await _supabase.from('ode_registrations')
             .select('*')
             .eq('event_id', eventPrefix)
-            .eq('status', 'waiting');
+            .eq('status', 'waiting')
+            .order('pod_number', { ascending: true });
 
         const listDiv = document.getElementById('waitingList');
         listDiv.innerHTML = "";
 
         if(!regs || regs.length === 0) {
             listDiv.innerHTML = "<p style='opacity:0.5; text-align:center; font-size:0.9rem;'>No players in queue.</p>";
-            return; // <-- AQUI FOI CORRIGIDO (O 'Group' foi removido)
+            return;
         }
 
         const groups = {};
-        regs.forEach(r => { groups[r.tname] = (groups[r.tname] || 0) + 1; });
+        regs.forEach(r => { 
+            const key = `${r.tname}|${r.pod_number}`;
+            groups[key] = (groups[key] || 0) + 1; 
+        });
 
-        for (const [name, count] of Object.entries(groups)) {
-            const option = document.querySelector(`#tourSelect option[value="${name}"]`);
+        for (const [key, count] of Object.entries(groups)) {
+            const [tname, podNum] = key.split('|');
+            const option = document.querySelector(`#tourSelect option[value="${tname}"]`);
             const targetSize = option ? option.dataset.size : 4;
 
             listDiv.innerHTML += `
                 <div class="pod-row">
-                    <div class="pod-info"><b>${name}</b></div>
+                    <div class="pod-info">
+                        <b>${tname}</b><br>
+                        <span style="font-size: 0.8rem; color: var(--blue);">POD #${podNum}</span>
+                    </div>
                     <div class="pod-count">${count} / ${targetSize}</div>
                 </div>
             `;
         }
     }
 
-    async function registerPlayer() {
+   async function registerPlayer() {
         const name = document.getElementById('playerName').value.trim();
         const tname = document.getElementById('tourSelect').value;
         if(!name || !tname) { alert("Please enter player name and select a tournament."); return; }
 
+        const option = document.querySelector(`#tourSelect option[value="${tname}"]`);
+        const podLimit = option ? parseInt(option.dataset.size) : 4;
+
+        const { data: podNum, error: rpcError } = await _supabase.rpc('get_next_pod_number', {
+            target_tname: tname,
+            target_event_id: eventPrefix,
+            pod_limit: podLimit
+        });
+
+        if (rpcError) {
+            alert("Error generating Pod Number. Try again.");
+            console.error(rpcError);
+            return;
+        }
+
         const { error } = await _supabase.from('ode_registrations').insert([
-            { event_id: eventPrefix, player_name: name, tname: tname, status: 'waiting' }
+            { event_id: eventPrefix, player_name: name, tname: tname, status: 'waiting', pod_number: podNum }
         ]);
 
         if(!error) {
             document.getElementById('playerName').value = "";
+            alert(`✅ PLAYER REGISTERED!\n\nTournament: ${tname}\nPOD NUMBER: #${podNum}`);
+            
             updateWaitingList();
+        } else {
+            alert("Error registering player.");
         }
     }
 
-    function backToLead() {
+async function registerFullPod() {
+    const tname = document.getElementById('tourSelect').value;
+    if(!tname) { alert("Please select a tournament first."); return; }
+
+    const option = document.querySelector(`#tourSelect option[value="${tname}"]`);
+    const podLimit = option ? parseInt(option.dataset.size) : 4;
+
+    const confirmCheck = confirm(`Register a FULL POD of ${podLimit} players for ${tname}?\nThis will automatically assign a table.`);
+    if(!confirmCheck) return;
+
+    const { data: tableData, error: tableError } = await _supabase.rpc('assign_table_to_full_pod', {
+        target_event_id: eventPrefix
+    });
+
+    if (tableError || !tableData || tableData.length === 0) {
+        alert("❌ NO EMPTY TABLES AVAILABLE! Please free a table first.");
+        return;
+    }
+
+    const assignedTable = tableData[0].table_number;
+
+    const { data: podNum, error: rpcError } = await _supabase.rpc('get_next_pod_number', {
+        target_tname: tname,
+        target_event_id: eventPrefix,
+        pod_limit: podLimit
+    });
+
+    if (rpcError) { alert("Error generating Pod Number."); return; }
+
+    const playersToInsert = [];
+    for(let i = 1; i <= podLimit; i++) {
+        playersToInsert.push({
+            event_id: eventPrefix,
+            player_name: `Group Pod #${podNum} - P${i}`,
+            tname: tname,
+            status: 'playing', 
+            pod_number: podNum,
+            assigned_table: assignedTable 
+        });
+    }
+
+    const { error: insertError } = await _supabase.from('ode_registrations').insert(playersToInsert);
+
+    if(!insertError) {
+        alert(`✅ SUCCESS!\n\nPOD: #${podNum}\nTABLE: ${assignedTable}\n\nGo to table now!`);
+        updateWaitingList();
+    } else {
+        alert("Error inserting players.");
+        console.error(insertError);
+    }
+}
+   
+function backToLead() {
         const pass = prompt("ENTER LEAD PASSWORD:");
         const masterLeadPass = (eventPrefix || "").toUpperCase() + "_LEAD";
         if(pass && pass.toUpperCase() === masterLeadPass) {
