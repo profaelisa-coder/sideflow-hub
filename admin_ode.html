@@ -27,11 +27,16 @@
         .live-dot { width: 8px; height: 8px; background: var(--red); border-radius: 50%; animation: blink 1s infinite; }
         .live-dot.green { background: var(--green); }
         @keyframes blink { 0% { opacity: 1; } 50% { opacity: 0.3; } 100% { opacity: 1; } }
-        .pod-row { background: var(--dark); padding: 15px; border-radius: 8px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; border-left: 4px solid var(--blue); width: 100%; box-sizing: border-box; }
-        .active-row { background: var(--dark); padding: 15px; border-radius: 8px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; border-left: 4px solid var(--green); border: 1px solid rgba(46, 204, 113, 0.2); width: 100%; box-sizing: border-box; }
-        .pod-info b { color: var(--gold); }
-        .pod-count { background: var(--blue); color: var(--dark); padding: 6px 15px; border-radius: 20px; font-weight: bold; font-size: 0.8rem; }
-        .table-badge { background: var(--green); color: var(--dark); padding: 4px 10px; border-radius: 4px; font-weight: bold; font-size: 0.8rem; }
+        
+        /* Grid de cards horizontais ocupando largura total conforme Imagem 3 */
+        .card-container { display: grid; grid-template-columns: 1fr; gap: 10px; width: 100%; }
+        .pod-row { background: var(--dark); padding: 15px; border-radius: 8px; display: flex; justify-content: space-between; align-items: center; border-left: 4px solid var(--blue); width: 100%; box-sizing: border-box; }
+        .active-row { background: var(--dark); padding: 15px; border-radius: 8px; display: flex; justify-content: space-between; align-items: center; border-left: 4px solid var(--green); border: 1px solid rgba(46, 204, 113, 0.2); width: 100%; box-sizing: border-box; }
+        
+        .pod-info b { color: var(--gold); font-size: 1.1rem; }
+        .pod-info small { color: var(--white); opacity: 0.8; }
+        .pod-count { background: var(--blue); color: var(--dark); padding: 8px 18px; border-radius: 6px; font-weight: bold; font-size: 0.9rem; }
+        .table-badge { background: var(--green); color: var(--dark); padding: 8px 18px; border-radius: 6px; font-weight: bold; font-size: 0.9rem; }
         
         .modal { position: fixed; top:0; left:0; width:100%; height:100%; background: rgba(0,0,0,0.85); display: none; align-items: center; justify-content: center; z-index: 2000; }
         .modal-content { background: var(--sec); padding: 30px; border-radius: 12px; border-top: 4px solid var(--gold); width: 90%; max-width: 450px; text-align: center; }
@@ -106,9 +111,9 @@
         </div>
     </div>
     <div class="live-label"><div class="live-dot"></div> WAITING QUEUE</div>
-    <div id="waitingList"></div>
+    <div id="waitingList" class="card-container"></div>
     <div class="live-label"><div class="live-dot green"></div> ACTIVE PODS ON TABLES</div>
-    <div id="activePodsList"></div>
+    <div id="activePodsList" class="card-container"></div>
 </div>
 
 <div class="nav-footer">
@@ -225,30 +230,23 @@
         const ids = document.querySelectorAll('.fp-id');
         const names = document.querySelectorAll('.fp-name');
         const players = [];
-        
         for(let i=0; i<ids.length; i++) {
             if(!ids[i].value || !names[i].value) return alert("Fill all player data.");
             players.push({ id: ids[i].value, name: names[i].value });
         }
-
         const tour = currentCatalog.find(c => c.tname === tname);
-        
-        // Lógica Inteligente de Mesas: Respeita Min/Max e evita as ocupadas por Scheduled no final
         const { data: tableData } = await _supabase.rpc('assign_table_smart', { 
             target_event_id: eventPrefix, 
             min_t: tour.table_min, 
             max_t: tour.table_max 
         });
-
         if(!tableData || tableData.length === 0) return alert("NO FREE TABLES IN RANGE!");
         const tableNum = tableData[0].table_number;
         const { data: podNum } = await _supabase.rpc('get_next_pod_number', { target_tname: tname, target_event_id: eventPrefix, pod_limit: players.length });
-
         const inserts = players.map(p => ({
             event_id: eventPrefix, player_id: p.id, player_name: p.name,
             tname: tname, status: 'allocated', pod_number: podNum, assigned_table: tableNum
         }));
-
         const { error } = await _supabase.from('ode_registrations').insert(inserts);
         if(!error) {
             await _supabase.from('event_tables').update({ tournament_name: tname, status: 'OCCUPIED' }).eq('event_id', eventPrefix).eq('table_number', tableNum);
