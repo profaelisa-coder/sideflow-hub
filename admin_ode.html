@@ -3,163 +3,210 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SideFlow - LEAD SETUP</title>
+    <title>SideFlow - ODE Registration</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
-        :root { --bg: #0d1b2a; --sec: #1b263b; --gold: #ffb703; --white: #e0e1dd; --blue: #457b9d; }
-        body { font-family: 'Segoe UI', sans-serif; background: var(--bg); color: var(--white); margin: 0; padding: 20px; display: flex; flex-direction: column; align-items: center; }
+        :root { --bg: #0d1b2a; --sec: #1b263b; --gold: #ffb703; --blue: #457b9d; --white: #e0e1dd; --red: #e63946; --green: #2ecc71; }
+        body { font-family: 'Segoe UI', sans-serif; background: var(--bg); color: var(--white); margin: 0; padding: 20px; padding-bottom: 120px; display: flex; flex-direction: column; align-items: center; }
         .container { width: 100%; max-width: 600px; }
-        .box { background: var(--sec); padding: 25px; border-radius: 12px; margin-bottom: 25px; border-bottom: 4px solid var(--gold); }
-        h2 { color: var(--gold); text-align: center; }
-        h3 { border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 10px; margin-top: 0; }
-        label { display: block; font-size: 0.8rem; font-weight: bold; margin-bottom: 8px; color: var(--gold); }
-        input, select { width: 100%; padding: 15px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.1); background: var(--bg); color: white; margin-bottom: 20px; box-sizing: border-box; }
-        button { width: 100%; padding: 16px; border-radius: 8px; border: none; font-weight: bold; text-transform: uppercase; cursor: pointer; background: var(--gold); color: var(--bg); transition: 0.3s; }
-        button:hover { filter: brightness(1.1); }
-        .btn-blue { background: var(--blue); color: white; }
+        h2 { color: var(--gold); text-transform: uppercase; letter-spacing: 2px; text-align: center; margin-bottom: 5px; }
+        .sub-title { text-align: center; font-size: 0.8rem; opacity: 0.7; margin-bottom: 25px; letter-spacing: 1px; }
+        .box { background: var(--sec); padding: 25px; border-radius: 12px; box-shadow: 0 8px 25px rgba(0,0,0,0.4); margin-bottom: 25px; border-bottom: 4px solid var(--gold); }
+        label { display: block; font-size: 0.75rem; font-weight: bold; margin-bottom: 8px; color: var(--gold); text-transform: uppercase; }
+        input, select { width: 100%; padding: 15px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.1); background: var(--bg); color: white; font-size: 1rem; margin-bottom: 20px; box-sizing: border-box; }
+        button { width: 100%; padding: 16px; border-radius: 8px; border: none; font-weight: bold; text-transform: uppercase; cursor: pointer; transition: 0.3s; font-size: 0.9rem; }
+        .btn-reg { background: var(--gold); color: var(--bg); margin-top: 10px; }
+        .live-label { color: var(--gold); font-size: 0.9rem; font-weight: bold; margin: 20px 0 10px 0; display: flex; align-items: center; gap: 8px; }
+        .live-dot { width: 8px; height: 8px; background: var(--red); border-radius: 50%; animation: blink 1s infinite; }
+        .live-dot.green { background: var(--green); }
+        @keyframes blink { 0% { opacity: 1; } 50% { opacity: 0.3; } 100% { opacity: 1; } }
+        .pod-row { background: var(--sec); padding: 15px; border-radius: 8px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; border-left: 4px solid var(--blue); }
+        .active-row { background: #1e2a38; padding: 15px; border-radius: 8px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; border-left: 4px solid var(--green); border: 1px solid rgba(46, 204, 113, 0.2); }
+        .pod-info b { color: var(--gold); }
+        .pod-count { background: var(--blue); padding: 6px 15px; border-radius: 20px; font-weight: bold; font-size: 0.8rem; }
+        .table-badge { background: var(--green); color: var(--bg); padding: 4px 10px; border-radius: 4px; font-weight: bold; font-size: 0.8rem; }
+        #loginOverlay { position: fixed; top:0; left:0; width:100%; height:100%; background: var(--bg); display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 1000; }
+        .nav-footer { position: fixed; bottom: 0; left: 0; width: 100%; background: #162a44; padding: 15px; display: flex; justify-content: center; gap: 15px; border-top: 1px solid rgba(255,255,255,0.1); }
+        .nav-footer button { width: auto; padding: 10px 20px; font-size: 0.75rem; background: var(--blue); color: white; }
     </style>
 </head>
 <body>
 
+<div id="loginOverlay">
+    <h2>STAFF ACCESS</h2>
+    <input type="password" id="passInput" placeholder="PASSWORD" style="width: 250px; text-align: center;">
+    <button onclick="checkLogin()" style="width: 250px;" class="btn-reg">UNLOCK</button>
+</div>
+
 <div class="container">
-    <h2>LEAD COMMAND CENTER</h2>
+    <h2>TOURNAMENT REGISTRATION ODE</h2>
+    <div class="sub-title">ON-DEMAND EVENT MANAGEMENT</div>
     
     <div class="box">
-        <h3>1. INITIALIZE EVENT</h3>
-        <label>Event ID (Prefix)</label>
-        <input type="text" id="eventId" disabled>
+        <label>Player ID (DCI / Play! ID)</label>
+        <input type="number" id="playerId" placeholder="EX: 1234567" autocomplete="off">
+
+        <label>Player Full Name</label>
+        <input type="text" id="playerName" placeholder="EX: ASH KETCHUM" autocomplete="off">
         
-        <label>Official Event Name</label>
-        <input type="text" id="eventName" placeholder="EX: SAO PAULO REGIONAL 2026">
+        <label>WhatsApp (with area code)</label>
+        <input type="number" id="playerPhone" placeholder="EX: 5511999998888" autocomplete="off">
+
+        <label>Tournament Pod</label>
+        <select id="tourSelect"><option value="">LOADING...</option></select>
         
-        <label>Logo Type</label>
-        <select id="logoType">
-            <option value="REGIONAL">Regional Logo</option>
-            <option value="PREMIER">Premier Logo</option>
-        </select>
-        
-        <button onclick="saveEventAnchor()">🚀 SAVE & ACTIVATE EVENT</button>
+        <button class="btn-reg" onclick="registerPlayer()">REGISTER PLAYER</button>
+        <button class="btn-reg" onclick="registerFullPod()" style="background: var(--blue); margin-top: 15px;">🚀 REGISTER FULL POD</button>
     </div>
 
-    <div class="box">
-        <h3>2. TOURNAMENT CATALOG SETUP</h3>
-        
-        <label>Event Type</label>
-        <select id="catType" onchange="toggleCatFields()">
-            <option value="ODE">On-Demand Event (ODE)</option>
-            <option value="SCH">Scheduled Event (SCH)</option>
-        </select>
+    <div class="live-label"><div class="live-dot"></div> WAITING QUEUE</div>
+    <div id="waitingList"></div>
 
-        <label>Game & Tournament Name</label>
-        <input type="text" id="catGame" placeholder="GAME (EX: POKEMON)">
-        <input type="text" id="catName" placeholder="TOURNAMENT NAME (EX: 8-PLAYER POD)">
-        
-        <label>Financials</label>
-        <div style="display: flex; gap: 10px;">
-            <input type="number" id="catFee" placeholder="ENTRY FEE ($)">
-            <input type="number" id="catCost" placeholder="COST ($)">
-        </div>
+    <div class="live-label"><div class="live-dot green"></div> ACTIVE PODS ON TABLES</div>
+    <div id="activePodsList"></div>
+</div>
 
-        <div id="odeFields">
-            <label>ODE Settings</label>
-            <div style="display: flex; gap: 10px;">
-                <input type="number" id="catPodSize" placeholder="POD SIZE (EX: 4)">
-                <input type="number" id="catTickets" placeholder="TICKETS PER POD (EX: 500)">
-            </div>
-        </div>
-
-        <div id="schFields" style="display:none;">
-            <label>SCH Schedule</label>
-            <div style="display: flex; gap: 10px;">
-                <input type="text" id="catDay" placeholder="DAY (EX: FRIDAY)">
-                <input type="text" id="catHour" placeholder="HOUR (EX: 14:00)">
-            </div>
-            <label>SCH Payout Rules</label>
-            <div style="display: flex; gap: 10px;">
-                <input type="number" id="catTax" placeholder="TAX % (EX: 20)">
-                <input type="number" step="0.1" id="catSpread" placeholder="SPREAD (EX: 2.0)">
-            </div>
-        </div>
-        
-        <button class="btn-blue" onclick="saveCatalog()">💾 ADD TO CATALOG</button>
-    </div>
+<div class="nav-footer">
+    <button onclick="navToTables()">🗺 VIEW TABLE MAP</button>
 </div>
 
 <script>
     const supabaseUrl = 'https://hocpoastnlcwgedvcyqs.supabase.co';
     const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhvY3BvYXN0bmxjd2dlZHZjeXFzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQyODU0MTYsImV4cCI6MjA4OTg2MTQxNn0.1MvvcFsnGW4e0Bj7mzoUKs_3bGM-eHDJTOqsvgKe-pI';
     const _supabase = supabase.createClient(supabaseUrl, supabaseKey);
-    const eventPrefix = new URLSearchParams(window.location.search).get('event');
+    const urlParams = new URLSearchParams(window.location.search);
+    let eventPrefix = urlParams.get('event') || localStorage.getItem('active_event_id');
 
     window.onload = () => {
-        if(!eventPrefix) return document.body.innerHTML = "<h2 style='color:red; text-align:center;'>ACCESS DENIED</h2>";
-        document.getElementById('eventId').value = eventPrefix;
+        if(!eventPrefix) return;
+        if(sessionStorage.getItem('ode_auth') === 'true') {
+            document.getElementById('loginOverlay').style.display = 'none';
+            loadData();
+        }
     };
 
-    async function saveEventAnchor() {
-        const eName = document.getElementById('eventName').value.trim();
-        const lType = document.getElementById('logoType').value;
-        if(!eName) return alert("Fill the Event Name!");
+    function checkLogin() {
+        const passInput = document.getElementById('passInput').value.toUpperCase().trim();
+        const masterODEPas = (eventPrefix.slice(0, 5) + "ODE").toUpperCase(); 
+        if(passInput === masterODEPas) { sessionStorage.setItem('ode_auth', 'true'); location.reload(); }
+        else { alert("ACCESS DENIED."); }
+    }
 
-        const payload = {
-            event_id: eventPrefix,
-            tournament_id: 'IDENTITY_ANCHOR',
-            event_name: eName,
-            logo_type: lType,
-            tournament_name: 'SYSTEM_ANCHOR',
-            players: 0, entry_fee: 0, costs: 0, total_tickets: 0
-        };
+    async function loadData() {
+        const { data: catalog } = await _supabase.from('tournament_catalog').select('*').eq('event_id', eventPrefix).eq('item_type', 'ODE');
+        const select = document.getElementById('tourSelect');
+        select.innerHTML = '<option value="">-- SELECT TOURNAMENT --</option>';
+        if(catalog) catalog.forEach(t => select.innerHTML += `<option value="${t.tname}" data-size="${t.pod_size || 4}">${t.tname}</option>`);
+        updateWaitingList();
+        updateActivePods();
+    }
 
-        const { error } = await _supabase.from('tournament_history').upsert(payload, { onConflict: 'event_id, tournament_id' });
-        
-        if(!error) {
-            alert(`Event ${eventPrefix} activated successfully! Staff can now log in.`);
-        } else {
-            alert("Error activating event: " + error.message);
+    async function updateWaitingList() {
+        const { data: regs } = await _supabase.from('ode_registrations').select('*').eq('event_id', eventPrefix).eq('status', 'waiting').order('pod_number', { ascending: true });
+        const listDiv = document.getElementById('waitingList');
+        listDiv.innerHTML = "";
+        if(!regs || regs.length === 0) { listDiv.innerHTML = "<p style='opacity:0.5; text-align:center;'>No players in queue.</p>"; return; }
+        const groups = {};
+        regs.forEach(r => { const key = `${r.tname}|${r.pod_number}`; groups[key] = (groups[key] || 0) + 1; });
+        for (const [key, count] of Object.entries(groups)) {
+            const [tname, podNum] = key.split('|');
+            const targetSize = document.querySelector(`#tourSelect option[value="${tname}"]`)?.dataset.size || 4;
+            listDiv.innerHTML += `<div class="pod-row"><div class="pod-info"><b>${tname}</b><br><small>POD #${podNum}</small></div><div class="pod-count">${count} / ${targetSize}</div></div>`;
         }
     }
 
-    function toggleCatFields() {
-        const type = document.getElementById('catType').value;
-        document.getElementById('odeFields').style.display = type === 'ODE' ? 'block' : 'none';
-        document.getElementById('schFields').style.display = type === 'SCH' ? 'block' : 'none';
-    }
-
-    async function saveCatalog() {
-        const type = document.getElementById('catType').value;
-        const payload = {
-            event_id: eventPrefix,
-            item_type: type,
-            game: document.getElementById('catGame').value.trim(),
-            tname: document.getElementById('catName').value.trim(),
-            tfee: parseFloat(document.getElementById('catFee').value) || 0,
-            tcost: parseFloat(document.getElementById('catCost').value) || 0
-        };
-
-        if(!payload.game || !payload.tname) return alert("Fill Game and Tournament Name.");
-
-        if(type === 'ODE') {
-            payload.pod_size = parseInt(document.getElementById('catPodSize').value) || 4;
-            payload.tickets_per_pod = parseInt(document.getElementById('catTickets').value) || 0;
-        } else {
-            payload.tday = document.getElementById('catDay').value.trim();
-            payload.thour = document.getElementById('catHour').value.trim();
-            payload.tax = parseFloat(document.getElementById('catTax').value) || 0;
-            payload.spread = parseFloat(document.getElementById('catSpread').value) || 2.0;
-        }
-
-        const { error } = await _supabase.from('tournament_catalog').insert([payload]);
-        
-        if(!error) {
-            alert(payload.tname + " added to catalog!");
-            document.getElementById('catName').value = "";
-            document.getElementById('catFee').value = "";
-            document.getElementById('catCost').value = "";
-            if(type === 'ODE') document.getElementById('catTickets').value = "";
-        } else {
-            alert("Error: " + error.message);
+    async function updateActivePods() {
+        const { data: active } = await _supabase.from('ode_registrations').select('*').eq('event_id', eventPrefix).eq('status', 'allocated').order('assigned_table', { ascending: true });
+        const listDiv = document.getElementById('activePodsList');
+        listDiv.innerHTML = "";
+        if(!active || active.length === 0) { listDiv.innerHTML = "<p style='opacity:0.5; text-align:center;'>No active pods on tables.</p>"; return; }
+        const uniquePods = {};
+        active.forEach(r => {
+            const key = `${r.tname}|${r.pod_number}`;
+            if(!uniquePods[key]) uniquePods[key] = { tname: r.tname, pod_number: r.pod_number, table: r.assigned_table };
+        });
+        for (const info of Object.values(uniquePods)) {
+            listDiv.innerHTML += `<div class="active-row"><div class="pod-info"><b>${info.tname}</b><br><small>POD #${info.pod_number}</small></div><div class="table-badge">TABLE ${info.table}</div></div>`;
         }
     }
+
+    async function registerPlayer() {
+        const idInput = document.getElementById('playerId');
+        const nameInput = document.getElementById('playerName');
+        const phoneInput = document.getElementById('playerPhone');
+        const tourSelect = document.getElementById('tourSelect');
+
+        const pId = idInput.value.trim();
+        const name = nameInput.value.trim();
+        const phone = phoneInput.value.trim();
+        const tname = tourSelect.value;
+
+        if(!pId || !name || !tname) return alert("Fill Player ID, Name and Tournament.");
+
+        try {
+            const podLimit = parseInt(tourSelect.options[tourSelect.selectedIndex].dataset.size);
+            
+            const { data: podNum } = await _supabase.rpc('get_next_pod_number', { 
+                target_tname: tname, 
+                target_event_id: eventPrefix, 
+                pod_limit: podLimit 
+            });
+
+            const { error } = await _supabase.from('ode_registrations').insert([{ 
+                event_id: eventPrefix, 
+                player_id: pId,
+                player_name: name, 
+                player_phone: phone, 
+                tname: tname, 
+                status: 'waiting', 
+                pod_number: podNum 
+            }]);
+
+            if (error) throw error;
+
+        } catch (err) {
+            console.error(err);
+            alert("Error registering player.");
+        } finally {
+            idInput.value = "";
+            nameInput.value = ""; 
+            phoneInput.value = ""; 
+            tourSelect.selectedIndex = 0; 
+            idInput.focus(); 
+            updateWaitingList();
+        }
+    }
+
+    async function registerFullPod() {
+        const tname = document.getElementById('tourSelect').value;
+        if(!tname) return alert("Select tournament.");
+        const podLimit = parseInt(document.querySelector(`#tourSelect option[value="${tname}"]`).dataset.size);
+        if(!confirm(`Register FULL POD for ${tname}?`)) return;
+        const { data: tableData } = await _supabase.rpc('assign_table_to_full_pod', { target_event_id: eventPrefix, target_tname: tname });
+        if (!tableData || tableData.length === 0) return alert("NO FREE TABLES IN THIS SECTION!");
+        const assignedTable = tableData[0].table_number;
+        const { data: podNum } = await _supabase.rpc('get_next_pod_number', { target_tname: tname, target_event_id: eventPrefix, pod_limit: podLimit });
+        const players = [];
+        for(let i = 1; i <= podLimit; i++) players.push({ 
+            event_id: eventPrefix, 
+            player_id: `POD-${podNum}-P${i}`,
+            player_name: `Group Pod #${podNum} - P${i}`, 
+            player_phone: null, 
+            tname: tname, 
+            status: 'allocated', 
+            pod_number: podNum, 
+            assigned_table: assignedTable 
+        });
+        const { error } = await _supabase.from('ode_registrations').insert(players);
+        if(!error) { 
+            await _supabase.from('event_tables').update({ tournament_name: tname, status: 'OCCUPIED' }).eq('event_id', eventPrefix).eq('table_number', assignedTable);
+            updateActivePods(); 
+        }
+    }
+
+    function navToTables() { window.location.href = `admin_tables.html?event=${eventPrefix}`; }
+
+    _supabase.channel('any').on('postgres_changes', { event: '*', schema: 'public', table: 'ode_registrations' }, () => { updateWaitingList(); updateActivePods(); }).subscribe();
 </script>
 </body>
 </html>
