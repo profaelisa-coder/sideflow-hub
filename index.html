@@ -22,7 +22,6 @@
 <div class="login-box">
     <h1>SideFlow Hub</h1>
     <h2>SYSTEM LOGIN</h2>
-    
     <input type="password" id="accessCode" placeholder="ACCESS CODE" onkeypress="handleEnter(event)">
     <button onclick="processLogin()">ENTER</button>
 </div>
@@ -40,48 +39,40 @@
         const pass = document.getElementById('accessCode').value.toUpperCase().trim();
         if(!pass) return;
 
-        let targetPage = "";
-        let authType = "";
-        let searchPattern = "";
-
-        
         if (pass.endsWith("_LEAD")) {
             const eventId = pass.replace("_LEAD", "");
             const regexLead = /^[A-Z]{3}\d{4}$/;
             if (!regexLead.test(eventId)) {
-                return alert("INVALID LEAD FORMAT");
+                return alert("INVALID LEAD FORMAT. MUST BE 3 LETTERS + 4 NUMBERS + _LEAD (EX: TST1234_LEAD)");
             }
-            
             window.location.href = `admin_lead.html?event=${eventId}`;
-            return;
+            return; 
         } 
-        
-        else if (pass.endsWith("ODE") && pass.length === 8) {
+
+        let targetPage = "";
+        let authType = "";
+        let searchPattern = "";
+
+        if (pass.endsWith("ODE") && pass.length === 8) {
             const letters = pass.substring(0, 3);
             const nums = pass.substring(3, 5);
-            
-            if (!/^[A-Z]{3}\d{2}$/.test(letters + nums)) return alert("INVALID ODE FORMAT");
-            
-            searchPattern = `${letters}${nums}%`; // Procura no banco TST12...
+            if (!/^[A-Z]{3}\d{2}$/.test(letters + nums)) return alert("INVALID ODE FORMAT.");
+            searchPattern = `${letters}${nums}%`;
             targetPage = "admin_ode.html";
             authType = "ode_auth";
         } 
-        
         else if (pass.endsWith("SCH") && pass.length === 8) {
             const letters = pass.substring(0, 3);
             const nums = pass.substring(3, 5);
-            
-            if (!/^[A-Z]{3}\d{2}$/.test(letters + nums)) return alert("INVALID SCH FORMAT");
-            
-            searchPattern = `${letters}%${nums}`; // Procura no banco TST...34
+            if (!/^[A-Z]{3}\d{2}$/.test(letters + nums)) return alert("INVALID SCH FORMAT.");
+            searchPattern = `${letters}%${nums}`;
             targetPage = "admin_sch.html";
             authType = "sch_auth";
         } 
         else {
-            return alert("INVALID FORMAT");
+            return alert("EVENT NOT FOUND WITH THIS ACCESS CODE.");
         }
 
-        
         const { data, error } = await _supabase.from('tournament_history')
             .select('event_id')
             .ilike('event_id', searchPattern)
@@ -93,7 +84,7 @@
             sessionStorage.setItem(authType, 'true');
             window.location.href = `${targetPage}?event=${data.event_id}`;
         } else {
-            alert("EVENT NOT FOUND");
+            alert("EVENT NOT FOUND.");
         }
     }
 </script>
