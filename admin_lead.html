@@ -37,7 +37,8 @@
 <body>
 <div class="container">
     <h2>LEAD COMMAND CENTER</h2>
-    <div class="box">
+    
+    <div class="box" id="setupSection">
         <h3>1. INITIALIZE EVENT</h3>
         <div class="row">
             <div class="col">
@@ -47,6 +48,12 @@
             <div class="col col-2">
                 <label>Official Event Name</label>
                 <input type="text" id="eventName">
+            </div>
+        </div>
+        <div class="row">
+            <div class="col">
+                <label>Event Dates</label>
+                <input type="text" id="eventDates">
             </div>
             <div class="col">
                 <label>Logo Type</label>
@@ -58,6 +65,7 @@
         </div>
         <button class="btn-gold" onclick="saveEventAnchor()">🚀 SAVE & ACTIVATE EVENT</button>
     </div>
+
     <div class="box">
         <h3>2. TABLE INFRASTRUCTURE</h3>
         <div class="row">
@@ -71,12 +79,14 @@
             </div>
         </div>
     </div>
+
     <div class="box">
         <h3>3. TOURNAMENT CATALOG SETUP</h3>
         <div class="row">
             <div class="col">
                 <label>Event Type</label>
                 <select id="catType" onchange="toggleCatFields()">
+                    <option value="">-- SELECT --</option>
                     <option value="ODE">On-Demand Event (ODE)</option>
                     <option value="SCH">Scheduled Event (SCH)</option>
                 </select>
@@ -84,6 +94,7 @@
             <div class="col">
                 <label>Game</label>
                 <select id="catGame">
+                    <option value="">-- SELECT --</option>
                     <option value="TCG">TCG</option>
                     <option value="VGC">VGC</option>
                     <option value="GO">GO</option>
@@ -139,26 +150,50 @@
                 </select>
             </div>
         </div>
+        <div class="row">
+            <div class="col">
+                <label>Min Table (Optional)</label>
+                <input type="number" id="catMinTable">
+            </div>
+            <div class="col">
+                <label>Max Table (Optional)</label>
+                <input type="number" id="catMaxTable">
+            </div>
+        </div>
         <button class="btn-blue" onclick="saveCatalog()">💾 ADD TO CATALOG</button>
     </div>
+
     <div class="nav-buttons">
         <button class="btn-nav" onclick="navTo('admin_ode.html')">🎫 STAFF ODE</button>
         <button class="btn-nav" onclick="navTo('admin_sch.html')">🏆 STAFF SCH</button>
         <button class="btn-nav" style="background: var(--gold); color: var(--dark); border: none;" onclick="navTo('final_report.html')">📊 VIEW FINAL REPORT</button>
     </div>
+
     <div class="catalog-list" id="catalogList"></div>
+
     <a href="#" class="reset-link" onclick="resetEvent()">⚠️ DANGER: WIPE ALL EVENT DATA</a>
 </div>
+
 <script>
     const supabaseUrl = 'https://hocpoastnlcwgedvcyqs.supabase.co';
     const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhvY3BvYXN0bmxjd2dlZHZjeXFzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQyODU0MTYsImV4cCI6MjA4OTg2MTQxNn0.1MvvcFsnGW4e0Bj7mzoUKs_3bGM-eHDJTOqsvgKe-pI';
     const _supabase = supabase.createClient(supabaseUrl, supabaseKey);
     const eventPrefix = new URLSearchParams(window.location.search).get('event');
-    window.onload = () => {
+
+    window.onload = async () => {
         if(!eventPrefix) return document.body.innerHTML = "<h2 style='color:red; text-align:center;'>ACCESS DENIED</h2>";
         document.getElementById('eventId').value = eventPrefix;
+        
+        const { data: identity } = await _supabase.from('tournament_history').select('*').eq('event_id', eventPrefix).eq('tournament_id', 0).single();
+        if(identity) {
+            document.getElementById('eventName').value = identity.event_name || "";
+            document.getElementById('eventDates').value = identity.event_dates || "";
+            document.getElementById('logoType').value = identity.logo_type || "REGIONAL";
+            if(identity.event_name) document.getElementById('setupSection').style.display = 'none';
+        }
         loadCatalog();
     };
+
     function toggleCatFields() {
         const type = document.getElementById('catType').value;
         const odeFields = document.querySelectorAll('.ode-field');
@@ -166,54 +201,37 @@
         if(type === 'ODE') {
             odeFields.forEach(el => el.style.display = 'flex');
             schFields.forEach(el => el.style.display = 'none');
-        } else {
+        } else if (type === 'SCH') {
             odeFields.forEach(el => el.style.display = 'none');
             schFields.forEach(el => el.style.display = 'flex');
         }
     }
+
     async function setupTables() {
         const targetQty = parseInt(document.getElementById('totalTables').value);
         if(!targetQty || targetQty <= 0) return alert("Digite uma quantidade válida!");
-        const { data: existingTables } = await _supabase
-            .from('event_tables')
-            .select('table_number')
-            .eq('event_id', eventPrefix)
-            .order('table_number', { ascending: false });
+        const { data: existingTables } = await _supabase.from('event_tables').select('table_number').eq('event_id', eventPrefix).order('table_number', { ascending: false });
         const lastTable = existingTables && existingTables.length > 0 ? existingTables[0].table_number : 0;
-        if (targetQty <= lastTable) {
-            return alert(`Você já tem ${lastTable} mesas. Digite um número maior para expandir.`);
-        }
+        if (targetQty <= lastTable) return alert(`Você já tem ${lastTable} mesas.`);
         if(!confirm(`Adicionar mesas da ${lastTable + 1} até a ${targetQty}?`)) return;
         const newTables = [];
         for(let i = lastTable + 1; i <= targetQty; i++) {
-            newTables.push({
-                event_id: eventPrefix,
-                table_number: i,
-                status: 'FREE',
-                tournament_name: null
-            });
+            newTables.push({ event_id: eventPrefix, table_number: i, status: 'FREE', tournament_name: null });
         }
         const { error } = await _supabase.from('event_tables').insert(newTables);
-        if(!error) {
-            alert(`${targetQty - lastTable} mesas adicionadas! Total: ${targetQty}`);
-            document.getElementById('totalTables').value = "";
-        } else {
-            alert("Erro: " + error.message);
-        }
+        if(!error) { alert("Mesas adicionadas!"); loadCatalog(); }
     }
+
     async function saveEventAnchor() {
         const eName = document.getElementById('eventName').value.trim();
+        const eDates = document.getElementById('eventDates').value.trim();
         const lType = document.getElementById('logoType').value;
-        if(!eName) return alert("Fill the Event Name!");
-        const payload = {
-            event_id: eventPrefix, tournament_id: 0, event_name: eName,
-            logo_type: lType, tournament_name: 'SYSTEM_ANCHOR',
-            players: 0, entry_fee: 0, costs: 0, total_tickets: 0
-        };
+        if(!eName) return alert("Fill Event Name");
+        const payload = { event_id: eventPrefix, tournament_id: 0, event_name: eName, event_dates: eDates, logo_type: lType, tournament_name: 'SYSTEM_ANCHOR' };
         const { error } = await _supabase.from('tournament_history').upsert(payload, { onConflict: 'event_id, tournament_id' });
-        if(!error) alert(`Event ${eventPrefix} activated!`);
-        else alert("Error: " + error.message);
+        if(!error) { alert("Event Activated!"); location.reload(); }
     }
+
     async function saveCatalog() {
         const type = document.getElementById('catType').value;
         const payload = {
@@ -221,9 +239,11 @@
             game: document.getElementById('catGame').value,
             tname: document.getElementById('catName').value.trim(),
             tfee: parseFloat(document.getElementById('catFee').value) || 0,
-            tcost: parseFloat(document.getElementById('catCost').value) || 0
+            tcost: parseFloat(document.getElementById('catCost').value) || 0,
+            table_min: parseInt(document.getElementById('catMinTable').value) || null,
+            table_max: parseInt(document.getElementById('catMaxTable').value) || null
         };
-        if(!payload.tname) return alert("Fill Tournament Name.");
+        if(!type || !payload.game || !payload.tname) return alert("Fill mandatory fields");
         if(type === 'ODE') {
             payload.pod_size = parseInt(document.getElementById('catPodSize').value) || 4;
             payload.tickets_per_pod = parseInt(document.getElementById('catTickets').value) || 0;
@@ -236,55 +256,45 @@
         const { error } = await _supabase.from('tournament_catalog').insert([payload]);
         if(!error) {
             document.getElementById('catName').value = "";
-            document.getElementById('catFee').value = "";
-            document.getElementById('catCost').value = "";
-            document.getElementById('catTickets').value = "";
+            document.getElementById('catType').selectedIndex = 0;
+            document.getElementById('catGame').selectedIndex = 0;
+            document.getElementById('catMinTable').value = "";
+            document.getElementById('catMaxTable').value = "";
             loadCatalog();
-        } else alert("Error: " + error.message);
+        }
     }
+
     async function loadCatalog() {
         const { data } = await _supabase.from('tournament_catalog').select('*').eq('event_id', eventPrefix).order('id', { ascending: false });
         const listDiv = document.getElementById('catalogList');
         listDiv.innerHTML = "";
         if (data) {
             data.forEach(item => {
-                const info = item.item_type === 'ODE' 
-                    ? `[${item.game}] Pod Size: ${item.pod_size} | Entry: $${item.tfee}`
-                    : `[${item.game}] ${item.tday} - ${item.thour} | Entry: $${item.tfee}`;
-                listDiv.innerHTML += `
-                    <div class="catalog-item">
-                        <div class="catalog-info">
-                            <strong>${item.item_type}</strong> ${item.tname} <br>
-                            <span style="color: #aaa; font-size: 0.8rem;">${info}</span>
-                        </div>
-                        <button class="btn-del" onclick="deleteCatalogItem(${item.id}, '${item.tname}')">🗑️ DEL</button>
-                    </div>`;
+                const range = (item.table_min) ? ` | Tables: ${item.table_min}-${item.table_max}` : "";
+                listDiv.innerHTML += `<div class="catalog-item"><div class="catalog-info"><strong>${item.item_type}</strong> ${item.tname}${range}</div><button class="btn-del" onclick="deleteCatalogItem(${item.id})">🗑️ DEL</button></div>`;
             });
         }
     }
-    async function deleteCatalogItem(id, name) {
-        if(confirm(`Delete ${name}?`)) {
-            await _supabase.from('tournament_catalog').delete().eq('id', id);
-            loadCatalog();
-        }
+
+    async function deleteCatalogItem(id) {
+        if(confirm("Delete item?")) { await _supabase.from('tournament_catalog').delete().eq('id', id); loadCatalog(); }
     }
+
     function navTo(page) {
         sessionStorage.setItem('ode_auth', 'true');
         sessionStorage.setItem('sch_auth', 'true');
         window.location.href = `${page}?event=${eventPrefix}`;
     }
+
     async function resetEvent() {
-        const check = prompt(`DANGER ZONE!\nType the LEAD password to wipe all records for ${eventPrefix}.`);
+        const check = prompt(`DANGER ZONE!\nType the LEAD password to wipe all records`);
         if (check && check.toUpperCase() === eventPrefix.toUpperCase() + "_LEAD") {
-            try {
-                await _supabase.from('tournament_history').delete().eq('event_id', eventPrefix);
-                await _supabase.from('tournament_catalog').delete().eq('event_id', eventPrefix);
-                await _supabase.from('ode_registrations').delete().eq('event_id', eventPrefix);
-                await _supabase.from('event_tables').delete().eq('event_id', eventPrefix); 
-                alert("Wiped. Redirecting.");
-                window.location.href = "index.html";
-            } catch (err) { alert("Error: " + err.message); }
-        } else if (check) alert("Incorrect password.");
+            await _supabase.from('tournament_history').delete().eq('event_id', eventPrefix);
+            await _supabase.from('tournament_catalog').delete().eq('event_id', eventPrefix);
+            await _supabase.from('ode_registrations').delete().eq('event_id', eventPrefix);
+            await _supabase.from('event_tables').delete().eq('event_id', eventPrefix);
+            alert("Wiped."); location.reload();
+        }
     }
 </script>
 </body>
