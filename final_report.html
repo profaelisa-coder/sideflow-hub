@@ -6,12 +6,13 @@
     <title>SideFlow - Final Report</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
-        :root { --bg: #0d1b2a; --sec: #1b263b; --gold: #ffb703; --white: #f8f9fa; --red: #e63946; }
+        :root { --bg: #1A4B84; --sec: #2B6CB0; --gold: #ffb703; --blue: #63B3ED; --white: #e0e1dd; --red: #e63946; --green: #2ecc71; --dark: #0A2540; }
         body { font-family: 'Segoe UI', sans-serif; background: var(--bg); color: #333; margin: 0; padding: 20px; display: flex; flex-direction: column; align-items: center; }
         .no-print { display: flex; gap: 10px; margin-bottom: 20px; width: 100%; max-width: 900px; justify-content: center; }
         button { padding: 12px 20px; border-radius: 6px; border: none; font-weight: bold; cursor: pointer; text-transform: uppercase; transition: 0.3s; }
-        .btn-print { background: #333; color: white; }
-        .btn-mail { background: #0078d4; color: white; display: none; }
+        .btn-print { background: var(--dark); color: white; }
+        .btn-mail { background: var(--sec); color: white; display: none; }
+        .btn-print:hover, .btn-mail:hover { filter: brightness(1.2); }
         .report-paper { background: white; width: 100%; max-width: 900px; padding: 40px; box-sizing: border-box; border-radius: 4px; box-shadow: 0 0 20px rgba(0,0,0,0.5); }
         .header { text-align: center; border-bottom: 2px solid #333; padding-bottom: 20px; margin-bottom: 30px; }
         .header img { height: 80px; margin-bottom: 10px; }
