@@ -41,7 +41,7 @@
             try {
                 const { data: ativos } = await _supabase.from('tournament_history')
                     .select('event_id')
-                    .eq('tournament_id', 'IDENTITY_ANCHOR');
+                    .eq('tournament_id', 0);
 
                 let matchedEvent = null;
                 let targetPage = "";
