@@ -3,183 +3,161 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SideFlow - SCH Registration & Payout</title>
+    <title>SideFlow - LEAD SETUP</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
-        :root { --bg: #0d1b2a; --sec: #1b263b; --gold: #ffb703; --blue: #457b9d; --white: #e0e1dd; --red: #e63946; --dark: #0a141f; }
-        body { font-family: 'Segoe UI', sans-serif; background: var(--bg); color: var(--white); margin: 0; padding: 20px; padding-bottom: 100px; display: flex; flex-direction: column; align-items: center; }
-        .container { width: 100%; max-width: 700px; }
-        h2 { color: var(--gold); text-transform: uppercase; letter-spacing: 2px; text-align: center; margin-bottom: 5px; }
-        .sub-title { text-align: center; font-size: 0.8rem; opacity: 0.7; margin-bottom: 25px; letter-spacing: 1px; }
-        .box { background: var(--sec); padding: 25px; border-radius: 12px; box-shadow: 0 8px 25px rgba(0,0,0,0.4); margin-bottom: 25px; border-bottom: 4px solid var(--gold); }
-        label { display: block; font-size: 0.75rem; font-weight: bold; margin-bottom: 8px; color: var(--gold); text-transform: uppercase; }
-        input, select { width: 100%; padding: 15px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.1); background: var(--bg); color: white; font-size: 1rem; margin-bottom: 20px; box-sizing: border-box; }
-        button { width: 100%; padding: 16px; border-radius: 8px; border: none; font-weight: bold; text-transform: uppercase; cursor: pointer; transition: 0.3s; font-size: 0.9rem; }
-        .btn-calc { background: var(--gold); color: var(--bg); margin-top: 10px; }
-        #loginOverlay { position: fixed; top:0; left:0; width:100%; height:100%; background: var(--bg); display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 1000; }
-        .nav-footer { position: fixed; bottom: 0; left: 0; width: 100%; background: #162a44; padding: 15px; display: flex; justify-content: center; gap: 15px; border-top: 1px solid rgba(255,255,255,0.1); }
-        .nav-footer button { width: auto; padding: 10px 20px; font-size: 0.75rem; background: var(--blue); color: white; }
-        
-        #printArea { background: white; color: black; padding: 40px; width: 100%; max-width: 800px; display: none; margin-top: 20px; border-radius: 8px; }
-        .pdf-header { text-align: center; border-bottom: 2px solid #333; padding-bottom: 15px; margin-bottom: 20px; }
-        .pdf-header img { height: 60px; margin-bottom: 10px; }
-        .payout-table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-        .payout-table th, .payout-table td { border: 1px solid #ddd; padding: 12px; text-align: center; }
-        .payout-table th { background: #f4f4f4; text-transform: uppercase; font-size: 0.8rem; }
-        
-        @media print {
-            body * { visibility: hidden; background: white !important; }
-            #printArea, #printArea * { visibility: visible; }
-            #printArea { position: absolute; left: 0; top: 0; width: 100%; display: block !important; box-shadow: none; }
-            .no-print { display: none !important; }
-        }
+        :root { --bg: #0d1b2a; --sec: #1b263b; --gold: #ffb703; --white: #e0e1dd; --blue: #457b9d; }
+        body { font-family: 'Segoe UI', sans-serif; background: var(--bg); color: var(--white); margin: 0; padding: 20px; display: flex; flex-direction: column; align-items: center; }
+        .container { width: 100%; max-width: 600px; }
+        .box { background: var(--sec); padding: 25px; border-radius: 12px; margin-bottom: 25px; border-bottom: 4px solid var(--gold); }
+        h2 { color: var(--gold); text-align: center; }
+        h3 { border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 10px; margin-top: 0; }
+        label { display: block; font-size: 0.8rem; font-weight: bold; margin-bottom: 8px; color: var(--gold); }
+        input, select { width: 100%; padding: 15px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.1); background: var(--bg); color: white; margin-bottom: 20px; box-sizing: border-box; }
+        button { width: 100%; padding: 16px; border-radius: 8px; border: none; font-weight: bold; text-transform: uppercase; cursor: pointer; background: var(--gold); color: var(--bg); transition: 0.3s; }
+        button:hover { filter: brightness(1.1); }
+        .btn-blue { background: var(--blue); color: white; }
     </style>
 </head>
 <body>
 
-<div id="loginOverlay">
-    <h2>STAFF ACCESS - SCH</h2>
-    <input type="password" id="passInput" placeholder="PASSWORD" style="width: 250px; text-align: center;">
-    <button onclick="checkLogin()" style="width: 250px;" class="btn-calc">UNLOCK</button>
-</div>
-
-<div class="container no-print">
-    <h2>TOURNAMENT PAYOUT SCH</h2>
-    <div class="sub-title">SCHEDULED EVENT MANAGEMENT</div>
+<div class="container">
+    <h2>LEAD COMMAND CENTER</h2>
     
     <div class="box">
-        <label>Select Tournament</label>
-        <select id="tourSelect"></select>
+        <h3>1. INITIALIZE EVENT</h3>
+        <label>Event ID (Prefix)</label>
+        <input type="text" id="eventId" disabled>
         
-        <label>Total Players</label>
-        <input type="number" id="numPlayers" placeholder="0"> <button class="btn-calc" onclick="generateAndSave()">GENERATE PAYOUT & SAVE</button>
+        <label>Official Event Name</label>
+        <input type="text" id="eventName" placeholder="EX: SAO PAULO REGIONAL 2026">
+        
+        <label>Logo Type</label>
+        <select id="logoType">
+            <option value="REGIONAL">Regional Logo</option>
+            <option value="PREMIER">Premier Logo</option>
+        </select>
+        
+        <button onclick="saveEventAnchor()">🚀 SAVE & ACTIVATE EVENT</button>
     </div>
-</div>
 
-<div id="printArea">
-    <div class="pdf-header">
-        <img id="pdfLogo" src="">
-        <h1 id="pdfEventName" style="margin:0; font-size: 1.5rem;"></h1>
-        <h2 id="pdfTourName" style="margin:5px 0; color: #e63946;"></h2>
-        <p id="pdfDetails" style="font-size: 0.9rem; font-weight: bold;"></p>
-    </div>
-    <table class="payout-table">
-        <thead><tr><th>RANK</th><th>PRIZE (TICKETS)</th></tr></thead>
-        <tbody id="payoutBody"></tbody>
-    </table>
-    <div style="text-align:center; margin-top:30px;" class="no-print">
-        <button onclick="window.print()" style="background:#333; color:white; padding:10px 20px; width:auto;">🖨️ PRINT PDF</button>
-    </div>
-</div>
+    <div class="box">
+        <h3>2. TOURNAMENT CATALOG SETUP</h3>
+        
+        <label>Event Type</label>
+        <select id="catType" onchange="toggleCatFields()">
+            <option value="ODE">On-Demand Event (ODE)</option>
+            <option value="SCH">Scheduled Event (SCH)</option>
+        </select>
 
-<div class="nav-footer no-print">
-    <button onclick="backToLead()">⬅ BACK TO LEAD SETUP</button>
+        <label>Game & Tournament Name</label>
+        <input type="text" id="catGame" placeholder="GAME (EX: POKEMON)">
+        <input type="text" id="catName" placeholder="TOURNAMENT NAME (EX: 8-PLAYER POD)">
+        
+        <label>Financials</label>
+        <div style="display: flex; gap: 10px;">
+            <input type="number" id="catFee" placeholder="ENTRY FEE ($)">
+            <input type="number" id="catCost" placeholder="COST ($)">
+        </div>
+
+        <div id="odeFields">
+            <label>ODE Settings</label>
+            <div style="display: flex; gap: 10px;">
+                <input type="number" id="catPodSize" placeholder="POD SIZE (EX: 4)">
+                <input type="number" id="catTickets" placeholder="TICKETS PER POD (EX: 500)">
+            </div>
+        </div>
+
+        <div id="schFields" style="display:none;">
+            <label>SCH Schedule</label>
+            <div style="display: flex; gap: 10px;">
+                <input type="text" id="catDay" placeholder="DAY (EX: FRIDAY)">
+                <input type="text" id="catHour" placeholder="HOUR (EX: 14:00)">
+            </div>
+            <label>SCH Payout Rules</label>
+            <div style="display: flex; gap: 10px;">
+                <input type="number" id="catTax" placeholder="TAX % (EX: 20)">
+                <input type="number" step="0.1" id="catSpread" placeholder="SPREAD (EX: 2.0)">
+            </div>
+        </div>
+        
+        <button class="btn-blue" onclick="saveCatalog()">💾 ADD TO CATALOG</button>
+    </div>
 </div>
 
 <script>
     const supabaseUrl = 'https://hocpoastnlcwgedvcyqs.supabase.co';
     const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhvY3BvYXN0bmxjd2dlZHZjeXFzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQyODU0MTYsImV4cCI6MjA4OTg2MTQxNn0.1MvvcFsnGW4e0Bj7mzoUKs_3bGM-eHDJTOqsvgKe-pI';
     const _supabase = supabase.createClient(supabaseUrl, supabaseKey);
-    const urlParams = new URLSearchParams(window.location.search);
-    let eventPrefix = urlParams.get('event') || localStorage.getItem('active_event_id');
-    let catalog = [];
-    let eventName = "";
-    let logoType = "";
+    const eventPrefix = new URLSearchParams(window.location.search).get('event');
 
-    window.onload = async () => {
-        if(!eventPrefix) return;
-        if(sessionStorage.getItem('sch_auth') === 'true') {
-            document.getElementById('loginOverlay').style.display = 'none';
-            await loadInitialData();
-        }
+    window.onload = () => {
+        if(!eventPrefix) return document.body.innerHTML = "<h2 style='color:red; text-align:center;'>ACCESS DENIED</h2>";
+        document.getElementById('eventId').value = eventPrefix;
     };
 
-    function checkLogin() {
-        const passInput = document.getElementById('passInput').value.toUpperCase().trim();
-        const letters = eventPrefix.slice(0, 3);
-        const lastNums = eventPrefix.slice(-2);
-        const masterPass = (letters + lastNums + "SCH").toUpperCase();
-        if(passInput === masterPass) {
-            sessionStorage.setItem('sch_auth', 'true');
-            location.reload();
-        } else { alert("ACCESS DENIED."); }
-    }
-
-    async function loadInitialData() {
-        const { data: idData } = await _supabase.from('tournament_history').select('*').eq('event_id', eventPrefix).eq('tournament_id', 'IDENTITY_ANCHOR').single();
-        if(idData) { eventName = idData.event_name; logoType = idData.logo_type; }
-
-        const { data: catData } = await _supabase.from('tournament_catalog').select('*').eq('event_id', eventPrefix).eq('item_type', 'SCH');
-        catalog = catData || [];
-        const select = document.getElementById('tourSelect');
-        select.innerHTML = '<option value="">-- SELECT --</option>';
-        catalog.forEach((t, index) => {
-            select.innerHTML += `<option value="${index}">${t.tname}</option>`;
-        });
-    }
-
-    function getPayoutRank(p) {
-        if (p >= 129) return 64; if (p >= 65) return 32;
-        if (p >= 33) return 16; if (p >= 17) return 8;
-        if (p >= 9) return 4; return 2;
-    }
-
-    function round10(v) { return Math.round(v / 10) * 10; }
-
-    async function generateAndSave() {
-        const idx = document.getElementById('tourSelect').value;
-        const p = parseInt(document.getElementById('numPlayers').value);
-        
-        if(idx === "" || !p || p < 4) return alert("Select tournament and min. 4 players.");
-
-        const t = catalog[idx];
-        const totalTickets = (t.tfee - t.tcost) * 10 * p;
-        const partIndiv = round10((totalTickets * (t.tax / 100)) / p);
-        const pool = totalTickets - (partIndiv * p);
-        const rankCut = getPayoutRank(p);
-
-        let tiers = [{ name: "1st Place", count: 1 }];
-        if (rankCut >= 2) tiers.push({ name: "2nd Place", count: 1 });
-        if (rankCut >= 4) tiers.push({ name: "3rd - 4th", count: 2 });
-        if (rankCut >= 8) tiers.push({ name: "5th - 8th", count: 4 });
-        if (rankCut >= 16) tiers.push({ name: "9th - 16th", count: 8 });
-        if (rankCut >= 32) tiers.push({ name: "17th - 32nd", count: 16 });
-
-        let totalW = 0;
-        const factor = parseFloat(t.spread);
-        tiers.forEach((tier, i) => { 
-            tier.weight = Math.pow(factor, (tiers.length - 1) - i); 
-            totalW += (tier.weight * tier.count); 
-        });
-
-        const unit = pool / totalW;
-        const body = document.getElementById('payoutBody');
-        body.innerHTML = "";
-        
-        tiers.forEach(tier => {
-            let prize = round10(unit * tier.weight) + partIndiv;
-            body.innerHTML += `<tr><td>${tier.name}</td><td>${prize.toLocaleString()}</td></tr>`;
-        });
-        body.innerHTML += `<tr style="background:#f9f9f9"><td>Participation (All)</td><td>${partIndiv.toLocaleString()}</td></tr>`;
-
-        document.getElementById('pdfEventName').innerText = eventName;
-        document.getElementById('pdfTourName').innerText = t.tname;
-        document.getElementById('pdfLogo').src = logoType === "REGIONAL" ? "reg.PNG" : "ic.png";
-        document.getElementById('pdfDetails').innerText = `Players: ${p} | Fee: $${t.tfee} | Rounds: ${p >= 33 ? 6 : 4}`;
-        document.getElementById('printArea').style.display = 'block';
+    async function saveEventAnchor() {
+        const eName = document.getElementById('eventName').value.trim();
+        const lType = document.getElementById('logoType').value;
+        if(!eName) return alert("Fill the Event Name!");
 
         const payload = {
-            event_id: eventPrefix, tournament_id: t.id, tournament_name: t.tname,
-            schedule: `${t.tday} - ${t.thour}`, players: p, entry_fee: t.tfee,
-            costs: t.tcost, total_tickets: totalTickets, event_name: eventName, logo_type: logoType
+            event_id: eventPrefix,
+            tournament_id: 'IDENTITY_ANCHOR',
+            event_name: eName,
+            logo_type: lType,
+            tournament_name: 'SYSTEM_ANCHOR',
+            players: 0, entry_fee: 0, costs: 0, total_tickets: 0
         };
-        await _supabase.from('tournament_history').upsert(payload, { onConflict: 'event_id, tournament_id' });
+
+        const { error } = await _supabase.from('tournament_history').upsert(payload, { onConflict: 'event_id, tournament_id' });
+        
+        if(!error) {
+            alert(`Event ${eventPrefix} activated successfully! Staff can now log in.`);
+        } else {
+            alert("Error activating event: " + error.message);
+        }
     }
 
-    function backToLead() {
-        const pass = prompt("ENTER LEAD PASSWORD:");
-        if(pass && pass.toUpperCase() === (eventPrefix.toUpperCase() + "_LEAD")) {
-            window.location.href = `admin_lead.html?event=${eventPrefix}`;
+    function toggleCatFields() {
+        const type = document.getElementById('catType').value;
+        document.getElementById('odeFields').style.display = type === 'ODE' ? 'block' : 'none';
+        document.getElementById('schFields').style.display = type === 'SCH' ? 'block' : 'none';
+    }
+
+    async function saveCatalog() {
+        const type = document.getElementById('catType').value;
+        const payload = {
+            event_id: eventPrefix,
+            item_type: type,
+            game: document.getElementById('catGame').value.trim(),
+            tname: document.getElementById('catName').value.trim(),
+            tfee: parseFloat(document.getElementById('catFee').value) || 0,
+            tcost: parseFloat(document.getElementById('catCost').value) || 0
+        };
+
+        if(!payload.game || !payload.tname) return alert("Fill Game and Tournament Name.");
+
+        if(type === 'ODE') {
+            payload.pod_size = parseInt(document.getElementById('catPodSize').value) || 4;
+            payload.tickets_per_pod = parseInt(document.getElementById('catTickets').value) || 0;
+        } else {
+            payload.tday = document.getElementById('catDay').value.trim();
+            payload.thour = document.getElementById('catHour').value.trim();
+            payload.tax = parseFloat(document.getElementById('catTax').value) || 0;
+            payload.spread = parseFloat(document.getElementById('catSpread').value) || 2.0;
+        }
+
+        const { error } = await _supabase.from('tournament_catalog').insert([payload]);
+        
+        if(!error) {
+            alert(payload.tname + " added to catalog!");
+            document.getElementById('catName').value = "";
+            document.getElementById('catFee').value = "";
+            document.getElementById('catCost').value = "";
+            if(type === 'ODE') document.getElementById('catTickets').value = "";
+        } else {
+            alert("Error: " + error.message);
         }
     }
 </script>
