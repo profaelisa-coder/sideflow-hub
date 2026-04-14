@@ -20,6 +20,10 @@
         button { width: 100%; padding: 16px; border-radius: 8px; border: none; font-weight: bold; text-transform: uppercase; cursor: pointer; transition: 0.3s; font-size: 0.9rem; }
         button:hover { filter: brightness(1.1); }
         .btn-calc { background: var(--gold); color: var(--dark); margin-top: 10px; }
+        
+        .modal { position: fixed; top:0; left:0; width:100%; height:100%; background: rgba(0,0,0,0.85); display: none; align-items: center; justify-content: center; z-index: 2000; }
+        .modal-content { background: var(--sec); padding: 30px; border-radius: 12px; border-top: 4px solid var(--gold); width: 90%; max-width: 400px; text-align: center; }
+
         #loginOverlay { position: fixed; top:0; left:0; width:100%; height:100%; background: var(--bg); display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 1000; }
         #loginOverlay input { width: 250px; text-align: center; margin-bottom: 20px; }
         #printArea { background: white; color: black; padding: 40px; width: 100%; max-width: 800px; display: none; margin-top: 20px; border-radius: 8px; }
@@ -37,15 +41,29 @@
     </style>
 </head>
 <body>
+
 <div id="loginOverlay">
     <h2>STAFF ACCESS - SCH</h2>
     <input type="password" id="passInput">
     <button onclick="checkLogin()" class="btn-calc">UNLOCK</button>
 </div>
+
+<div id="passwordModal" class="modal">
+    <div class="modal-content">
+        <h3 style="color: var(--gold); margin-top: 0;">LEAD AUTHORIZATION</h3>
+        <label>Enter Lead Password</label>
+        <input type="password" id="leadPassField" style="margin-bottom: 20px;">
+        <div style="display: flex; gap: 10px;">
+            <button class="btn-calc" style="margin:0" onclick="confirmBack()">CONFIRM</button>
+            <button style="background: var(--red); color: white; margin:0" onclick="closeModal()">CANCEL</button>
+        </div>
+    </div>
+</div>
+
 <div class="container no-print">
     <div class="header-top">
         <h2>TOURNAMENT PAYOUT SCH</h2>
-        <button class="btn-return" onclick="backToLead()">BACK</button>
+        <button class="btn-return" onclick="openPasswordModal()">BACK</button>
     </div>
     <div class="box">
         <label>Select Tournament</label>
@@ -55,6 +73,7 @@
         <button class="btn-calc" onclick="generateAndSave()">SAVE & GENERATE PAYOUT</button>
     </div>
 </div>
+
 <div id="printArea">
     <div class="pdf-header">
         <img id="pdfLogo" src="">
@@ -71,6 +90,7 @@
         <button onclick="window.print()" style="background:#333; color:white; padding:10px 20px; width:auto;">🖨️ PRINT PARTIAL</button>
     </div>
 </div>
+
 <script>
     const supabaseUrl = 'https://hocpoastnlcwgedvcyqs.supabase.co';
     const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhvY3BvYXN0bmxjd2dlZHZjeXFzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQyODU0MTYsImV4cCI6MjA4OTg2MTQxNn0.1MvvcFsnGW4e0Bj7mzoUKs_3bGM-eHDJTOqsvgKe-pI';
@@ -80,6 +100,7 @@
     let catalog = [];
     let eventName = "";
     let logoType = "";
+
     window.onload = async () => {
         if(!eventPrefix) return;
         if(sessionStorage.getItem('sch_auth') === 'true') {
@@ -87,6 +108,7 @@
             await loadInitialData();
         }
     };
+
     function checkLogin() {
         const passInput = document.getElementById('passInput').value.toUpperCase().trim();
         const masterPass = eventPrefix.substring(0,3).toUpperCase() + eventPrefix.substring(5,7) + "SCH";
@@ -95,6 +117,17 @@
             location.reload();
         } else { alert("ACCESS DENIED."); }
     }
+
+    function openPasswordModal() { document.getElementById('passwordModal').style.display = 'flex'; }
+    function closeModal() { document.getElementById('passwordModal').style.display = 'none'; }
+    
+    function confirmBack() {
+        const pass = document.getElementById('leadPassField').value.toUpperCase().trim();
+        if(pass === eventPrefix.toUpperCase() + "_LEAD") {
+            window.location.href = `admin_lead.html?event=${eventPrefix}`;
+        } else { alert("INCORRECT PASSWORD."); }
+    }
+
     async function loadInitialData() {
         const { data: idData } = await _supabase.from('tournament_history').select('*').eq('event_id', eventPrefix).eq('tournament_id', 0).single();
         if(idData) { eventName = idData.event_name; logoType = idData.logo_type; }
@@ -104,12 +137,15 @@
         select.innerHTML = '<option value="">-- SELECT --</option>';
         catalog.forEach((t, index) => { select.innerHTML += `<option value="${index}">${t.tname}</option>`; });
     }
+
     function getPayoutRank(p) {
         if (p >= 129) return 64; if (p >= 65) return 32;
         if (p >= 33) return 16; if (p >= 17) return 8;
         if (p >= 9) return 4; return 2;
     }
+
     function round10(v) { return Math.round(v / 10) * 10; }
+
     async function generateAndSave() {
         const idx = document.getElementById('tourSelect').value;
         const p = parseInt(document.getElementById('numPlayers').value);
@@ -151,12 +187,6 @@
             costs: t.tcost, total_tickets: totalTickets, event_name: eventName, logo_type: logoType
         };
         await _supabase.from('tournament_history').upsert(payload, { onConflict: 'event_id, tournament_id' });
-    }
-    function backToLead() {
-        const pass = prompt("ENTER LEAD PASSWORD:");
-        if(pass && pass.toUpperCase() === (eventPrefix.toUpperCase() + "_LEAD")) {
-            window.location.href = `admin_lead.html?event=${eventPrefix}`;
-        } else if (pass) { alert("Incorrect LEAD password."); }
     }
 </script>
 </body>
