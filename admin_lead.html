@@ -292,6 +292,7 @@
                 await _supabase.from('tournament_history').delete().eq('event_id', eventPrefix);
                 await _supabase.from('tournament_catalog').delete().eq('event_id', eventPrefix);
                 await _supabase.from('ode_registrations').delete().eq('event_id', eventPrefix);
+                await _supabase.from('event_tables').delete().eq('event_id', eventPrefix); // Linha adicionada
                 alert("Event completely wiped. Redirecting to Login.");
                 window.location.href = "index.html";
             } catch (err) {
