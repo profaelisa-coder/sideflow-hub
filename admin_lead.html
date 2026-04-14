@@ -6,9 +6,9 @@
     <title>SideFlow - LEAD SETUP</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
-        :root { --bg: #0d1b2a; --sec: #1b263b; --gold: #ffb703; --white: #e0e1dd; --blue: #457b9d; }
+        :root { --bg: #0d1b2a; --sec: #1b263b; --gold: #ffb703; --white: #e0e1dd; --blue: #457b9d; --red: #e63946; }
         body { font-family: 'Segoe UI', sans-serif; background: var(--bg); color: var(--white); margin: 0; padding: 20px; display: flex; flex-direction: column; align-items: center; }
-        .container { width: 100%; max-width: 600px; }
+        .container { width: 100%; max-width: 600px; padding-bottom: 50px; }
         .box { background: var(--sec); padding: 25px; border-radius: 12px; margin-bottom: 25px; border-bottom: 4px solid var(--gold); }
         h2 { color: var(--gold); text-align: center; }
         h3 { border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 10px; margin-top: 0; }
@@ -17,6 +17,9 @@
         button { width: 100%; padding: 16px; border-radius: 8px; border: none; font-weight: bold; text-transform: uppercase; cursor: pointer; background: var(--gold); color: var(--bg); transition: 0.3s; }
         button:hover { filter: brightness(1.1); }
         .btn-blue { background: var(--blue); color: white; }
+        .btn-nav { background: #333; color: white; border: 1px solid #555; }
+        .reset-link { display: block; text-align: center; color: var(--red); font-size: 0.8rem; text-decoration: none; opacity: 0.6; font-weight: bold; margin-top: 20px; transition: 0.3s; }
+        .reset-link:hover { opacity: 1; text-decoration: underline; }
     </style>
 </head>
 <body>
@@ -71,18 +74,37 @@
         <div id="schFields" style="display:none;">
             <label>SCH Schedule</label>
             <div style="display: flex; gap: 10px;">
-                <input type="text" id="catDay" placeholder="DAY (EX: FRIDAY)">
+                <select id="catDay">
+                    <option value="Day 1">Day 1</option>
+                    <option value="Day 2">Day 2</option>
+                    <option value="Day 3">Day 3</option>
+                </select>
                 <input type="text" id="catHour" placeholder="HOUR (EX: 14:00)">
             </div>
             <label>SCH Payout Rules</label>
             <div style="display: flex; gap: 10px;">
                 <input type="number" id="catTax" placeholder="TAX % (EX: 20)">
-                <input type="number" step="0.1" id="catSpread" placeholder="SPREAD (EX: 2.0)">
+                <select id="catSpread">
+                    <option value="2.0">2.0</option>
+                    <option value="1.75">1.75</option>
+                    <option value="1.5">1.5</option>
+                </select>
             </div>
         </div>
         
         <button class="btn-blue" onclick="saveCatalog()">💾 ADD TO CATALOG</button>
     </div>
+
+    <div class="box">
+        <h3>3. QUICK NAVIGATION</h3>
+        <div style="display: flex; gap: 10px; margin-bottom: 10px;">
+            <button class="btn-nav" onclick="navTo('admin_ode.html')">🎫 STAFF ODE</button>
+            <button class="btn-nav" onclick="navTo('admin_sch.html')">🏆 STAFF SCH</button>
+        </div>
+        <button class="btn-nav" style="background: var(--blue); color: white; border: none;" onclick="navTo('final_report.html')">📊 VIEW FINAL REPORT</button>
+    </div>
+
+    <a href="#" class="reset-link" onclick="resetEvent()">⚠️ DANGER: WIPE ALL EVENT DATA</a>
 </div>
 
 <script>
@@ -110,7 +132,7 @@
             players: 0, entry_fee: 0, costs: 0, total_tickets: 0
         };
 
-        const { error } = await _supabase.from('tournament_history').upsert(payload, { onConflict: 'event_id,tournament_id' });
+        const { error } = await _supabase.from('tournament_history').upsert(payload, { onConflict: 'event_id, tournament_id' });
         
         if(!error) {
             alert(`Event ${eventPrefix} activated successfully! Staff can now log in.`);
@@ -142,7 +164,7 @@
             payload.pod_size = parseInt(document.getElementById('catPodSize').value) || 4;
             payload.tickets_per_pod = parseInt(document.getElementById('catTickets').value) || 0;
         } else {
-            payload.tday = document.getElementById('catDay').value.trim();
+            payload.tday = document.getElementById('catDay').value;
             payload.thour = document.getElementById('catHour').value.trim();
             payload.tax = parseFloat(document.getElementById('catTax').value) || 0;
             payload.spread = parseFloat(document.getElementById('catSpread').value) || 2.0;
@@ -158,6 +180,29 @@
             if(type === 'ODE') document.getElementById('catTickets').value = "";
         } else {
             alert("Error: " + error.message);
+        }
+    }
+
+    function navTo(page) {
+        if(!eventPrefix) return alert("System Error: No Event ID found.");
+        // Concede auth temporária para o Lead poder acessar as telas de Staff sem travar no login interno
+        sessionStorage.setItem('ode_auth', 'true');
+        sessionStorage.setItem('sch_auth', 'true');
+        window.location.href = `${page}?event=${eventPrefix}`;
+    }
+
+    async function resetEvent() {
+        const check = prompt(`DANGER ZONE!\nType "DELETE" to completely wipe all records, catalog, and data for event ${eventPrefix}.`);
+        if (check === "DELETE") {
+            try {
+                await _supabase.from('tournament_history').delete().eq('event_id', eventPrefix);
+                await _supabase.from('tournament_catalog').delete().eq('event_id', eventPrefix);
+                await _supabase.from('ode_registrations').delete().eq('event_id', eventPrefix);
+                alert("Event completely wiped. Redirecting to Login.");
+                window.location.href = "index.html";
+            } catch (err) {
+                alert("Error deleting event data: " + err.message);
+            }
         }
     }
 </script>
