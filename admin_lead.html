@@ -3,188 +3,162 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SideFlow Hub - LEAD SETUP AREA</title>
+    <title>SideFlow - LEAD SETUP</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
-        :root { --bg: #1d3557; --sec: #2a4a73; --gold: #ffb703; --blue: #457b9d; --red: #e63946; --dark: #162a44; --green: #2ecc71; }
-        body { font-family: 'Segoe UI', sans-serif; background: var(--bg); color: white; margin: 0; padding: 20px; }
-        .container { max-width: 1250px; margin: 0 auto; padding-bottom: 150px; }
-        h2 { text-align: center; letter-spacing: 3px; color: var(--gold); text-transform: uppercase; margin-bottom: 30px; }
-        .sector { background: var(--sec); padding: 25px; border-radius: 12px; margin-bottom: 25px; border-left: 6px solid var(--gold); box-shadow: 0 4px 15px rgba(0,0,0,0.3); }
-        .sector-title { color: var(--gold); font-weight: bold; text-transform: uppercase; font-size: 0.9rem; display: block; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 10px; margin-bottom: 20px; }
-        .grid { display: grid; gap: 12px; align-items: end; }
-        .input-group { display: flex; flex-direction: column; }
-        label { font-size: 0.65rem; font-weight: bold; color: rgba(255,255,255,0.7); margin-bottom: 6px; text-transform: uppercase; white-space: nowrap; }
-        input, select { padding: 10px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.2); background: var(--dark); color: white; font-size: 0.85rem; width: 100%; box-sizing: border-box; }
-        button { padding: 12px 15px; border-radius: 6px; font-weight: bold; cursor: pointer; border: none; text-transform: uppercase; transition: 0.3s; font-size: 0.75rem; }
-        .btn-add { background: var(--gold); color: var(--bg); width: 100%; margin-top: 15px; }
+        :root { --bg: #0d1b2a; --sec: #1b263b; --gold: #ffb703; --white: #e0e1dd; --blue: #457b9d; }
+        body { font-family: 'Segoe UI', sans-serif; background: var(--bg); color: var(--white); margin: 0; padding: 20px; display: flex; flex-direction: column; align-items: center; }
+        .container { width: 100%; max-width: 600px; }
+        .box { background: var(--sec); padding: 25px; border-radius: 12px; margin-bottom: 25px; border-bottom: 4px solid var(--gold); }
+        h2 { color: var(--gold); text-align: center; }
+        h3 { border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 10px; margin-top: 0; }
+        label { display: block; font-size: 0.8rem; font-weight: bold; margin-bottom: 8px; color: var(--gold); }
+        input, select { width: 100%; padding: 15px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.1); background: var(--bg); color: white; margin-bottom: 20px; box-sizing: border-box; }
+        button { width: 100%; padding: 16px; border-radius: 8px; border: none; font-weight: bold; text-transform: uppercase; cursor: pointer; background: var(--gold); color: var(--bg); transition: 0.3s; }
+        button:hover { filter: brightness(1.1); }
         .btn-blue { background: var(--blue); color: white; }
-        .btn-green { background: var(--green); color: white; }
-        .reset-link { position: fixed; bottom: 20px; right: 20px; color: var(--red); cursor: pointer; font-weight: bold; font-size: 0.75rem; text-decoration: underline; opacity: 0.7; z-index: 100; }
-        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-        td { padding: 10px; border-bottom: 1px solid rgba(255,255,255,0.1); font-size: 0.85rem; }
-        .btn-del { color: var(--red); background: none; font-size: 10px; cursor: pointer; }
     </style>
 </head>
 <body>
+
 <div class="container">
-    <h2>LEAD SETUP AREA</h2>
+    <h2>LEAD COMMAND CENTER</h2>
+    
+    <div class="box">
+        <h3>1. INITIALIZE EVENT</h3>
+        <label>Event ID (Prefix)</label>
+        <input type="text" id="eventId" disabled>
+        
+        <label>Official Event Name</label>
+        <input type="text" id="eventName" placeholder="EX: SAO PAULO REGIONAL 2026">
+        
+        <label>Logo Type</label>
+        <select id="logoType">
+            <option value="REGIONAL">Regional Logo</option>
+            <option value="PREMIER">Premier Logo</option>
+        </select>
+        
+        <button onclick="saveEventAnchor()">🚀 SAVE & ACTIVATE EVENT</button>
+    </div>
 
-    <div class="sector">
-        <span class="sector-title">EVENT IDENTITY</span>
-        <div class="grid" style="grid-template-columns: 3fr 1fr;">
-            <div class="input-group"><label>Event Name</label><input type="text" id="masterEvent" onchange="updateIdentity()"></div>
-            <div class="input-group"><label>Logo Type</label><select id="masterLogo" onchange="updateIdentity()"><option>REGIONAL</option><option>IC</option></select></div>
+    <div class="box">
+        <h3>2. TOURNAMENT CATALOG SETUP</h3>
+        
+        <label>Event Type</label>
+        <select id="catType" onchange="toggleCatFields()">
+            <option value="ODE">On-Demand Event (ODE)</option>
+            <option value="SCH">Scheduled Event (SCH)</option>
+        </select>
+
+        <label>Game & Tournament Name</label>
+        <input type="text" id="catGame" placeholder="GAME (EX: POKEMON)">
+        <input type="text" id="catName" placeholder="TOURNAMENT NAME (EX: 8-PLAYER POD)">
+        
+        <label>Financials</label>
+        <div style="display: flex; gap: 10px;">
+            <input type="number" id="catFee" placeholder="ENTRY FEE ($)">
+            <input type="number" id="catCost" placeholder="COST ($)">
         </div>
-    </div>
 
-    <div class="sector">
-        <span class="sector-title">TABLE INITIALIZATION</span>
-        <div class="grid" style="grid-template-columns: 0.8fr 3fr auto;">
-            <div class="input-group"><label>Total Mesas</label><input type="number" id="setupTableCount" value="120"></div>
-            <div></div>
-            <button class="btn-blue" onclick="initTables()">🛠️ GENERATE TABLES</button>
+        <div id="odeFields">
+            <label>ODE Settings</label>
+            <div style="display: flex; gap: 10px;">
+                <input type="number" id="catPodSize" placeholder="POD SIZE (EX: 4)">
+                <input type="number" id="catTickets" placeholder="TICKETS PER POD (EX: 500)">
+            </div>
         </div>
-    </div>
 
-    <div class="sector">
-        <span class="sector-title">CATALOG MANAGEMENT</span>
-        <div class="grid" style="grid-template-columns: 1fr 1fr 1fr auto;">
-            <button class="btn-add" onclick="window.location.hash='sec-ode'">GO TO ODE CATALOG</button>
-            <button class="btn-add" onclick="window.location.hash='sec-sch'">GO TO SCH CATALOG</button>
-            <button class="btn-green" onclick="generateFinalReport()">📊 VIEW FINAL REPORT</button>
-            <button class="btn-blue" style="background: #9b59b6;" onclick="navStaff('tables')">🗺️ VIEW TABLE MAP</button>
+        <div id="schFields" style="display:none;">
+            <label>SCH Schedule</label>
+            <div style="display: flex; gap: 10px;">
+                <input type="text" id="catDay" placeholder="DAY (EX: FRIDAY)">
+                <input type="text" id="catHour" placeholder="HOUR (EX: 14:00)">
+            </div>
+            <label>SCH Payout Rules</label>
+            <div style="display: flex; gap: 10px;">
+                <input type="number" id="catTax" placeholder="TAX % (EX: 20)">
+                <input type="number" step="0.1" id="catSpread" placeholder="SPREAD (EX: 2.0)">
+            </div>
         </div>
+        
+        <button class="btn-blue" onclick="saveCatalog()">💾 ADD TO CATALOG</button>
     </div>
-
-    <div class="sector" id="sec-sch">
-        <span class="sector-title">SCHEDULED CATALOG</span>
-        <div class="grid" style="grid-template-columns: 2fr 0.8fr 0.8fr 0.7fr 0.7fr 0.7fr 0.7fr;">
-            <div class="input-group"><label>Torney Name</label><input type="text" id="schName"></div>
-            <div class="input-group"><label>Day</label><select id="schDay"><option>Day 1</option><option>Day 2</option><option>Day 3</option></select></div>
-            <div class="input-group"><label>Hour</label><input type="text" id="schHour" placeholder="9:00 AM"></div>
-            <div class="input-group"><label>Fee ($)</label><input type="number" id="schFee"></div>
-            <div class="input-group"><label>Cost ($)</label><input type="number" id="schCost"></div>
-            <div class="input-group"><label>Part %</label><input type="number" id="schTax" value="20"></div>
-            <div class="input-group"><label>Spread</label><input type="text" id="schSpread" value="2.0"></div>
-        </div>
-        <button class="btn-add" onclick="addItem('SCH')">+ ADD SCHEDULED</button>
-        <table id="schList"><tbody></tbody></table>
-    </div>
-
-    <div class="sector" id="sec-ode">
-        <span class="sector-title">ON-DEMAND CATALOG</span>
-        <div class="grid" style="grid-template-columns: 0.8fr 2fr 0.8fr 0.7fr 0.7fr 1fr;">
-            <div class="input-group"><label>Game</label><select id="odeGame"><option>TCG</option><option>VGC</option><option>GO</option></select></div>
-            <div class="input-group"><label>Pod Name</label><input type="text" id="odeName"></div>
-            <div class="input-group"><label>Size</label><select id="odeSize"><option value="4">4 PPL</option><option value="8">8 PPL</option></select></div>
-            <div class="input-group"><label>Fee ($)</label><input type="number" id="odeFee"></div>
-            <div class="input-group"><label>Cost ($)</label><input type="number" id="odeCost"></div>
-            <div class="input-group"><label>Range</label><input type="text" id="tableRange" placeholder="1-50"></div>
-        </div>
-        <button class="btn-add" onclick="addItem('ODE_FULL')">+ ADD ODE POD</button>
-        <table id="odeList"><tbody></tbody></table>
-    </div>
-
-    <div style="display:grid; grid-template-columns: repeat(2, 1fr); gap: 15px;">
-        <button class="btn-blue" onclick="navStaff('ode')">OPEN STAFF ODE</button>
-        <button class="btn-blue" onclick="navStaff('sch')">OPEN STAFF SCH</button>
-    </div>
-
-    <span class="reset-link" onclick="resetSystem()">⚠️ RESET SYSTEM</span>
 </div>
 
 <script>
     const supabaseUrl = 'https://hocpoastnlcwgedvcyqs.supabase.co';
     const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhvY3BvYXN0bmxjd2dlZHZjeXFzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQyODU0MTYsImV4cCI6MjA4OTg2MTQxNn0.1MvvcFsnGW4e0Bj7mzoUKs_3bGM-eHDJTOqsvgKe-pI';
     const _supabase = supabase.createClient(supabaseUrl, supabaseKey);
-    const urlParams = new URLSearchParams(window.location.search);
-    let eventPrefix = urlParams.get('event') || localStorage.getItem('active_event_id');
+    const eventPrefix = new URLSearchParams(window.location.search).get('event');
 
-    window.onload = () => { 
-        if(!eventPrefix) { document.body.innerHTML="<h1>URL sem ID de Evento</h1>"; return; }
-        localStorage.setItem('active_event_id', eventPrefix);
-        loadAll(); 
+    window.onload = () => {
+        if(!eventPrefix) return document.body.innerHTML = "<h2 style='color:red; text-align:center;'>ACCESS DENIED</h2>";
+        document.getElementById('eventId').value = eventPrefix;
     };
 
-    async function initTables() {
-        const count = parseInt(document.getElementById('setupTableCount').value);
-        if(!confirm(`Gerar ${count} mesas?`)) return;
-        await _supabase.from('event_tables').delete().eq('event_id', eventPrefix);
-        const tables = [];
-        for(let i=1; i<=count; i++) tables.push({ event_id: eventPrefix, table_number: i, status: 'vacant' });
-        await _supabase.from('event_tables').insert(tables);
-        alert("Mesas prontas!");
-    }
+    async function saveEventAnchor() {
+        const eName = document.getElementById('eventName').value.trim();
+        const lType = document.getElementById('logoType').value;
+        if(!eName) return alert("Fill the Event Name!");
 
-    async function updateIdentity() {
-        await _supabase.from('tournament_history').upsert({ 
-            event_id: eventPrefix, tournament_id: 'IDENTITY_ANCHOR', 
-            event_name: document.getElementById('masterEvent').value,
-            logo_type: document.getElementById('masterLogo').value
-        }, { onConflict: 'event_id, tournament_id' });
-    }
+        const payload = {
+            event_id: eventPrefix,
+            tournament_id: 'IDENTITY_ANCHOR',
+            event_name: eName,
+            logo_type: lType,
+            tournament_name: 'SYSTEM_ANCHOR',
+            players: 0, entry_fee: 0, costs: 0, total_tickets: 0
+        };
 
-    async function addItem(type) {
-        if(type === 'SCH') {
-            await _supabase.from('tournament_catalog').insert([{
-                event_id: eventPrefix, item_type: 'SCH', tname: document.getElementById('schName').value,
-                tday: document.getElementById('schDay').value, thour: document.getElementById('schHour').value,
-                tfee: document.getElementById('schFee').value, tcost: document.getElementById('schCost').value,
-                tax: document.getElementById('schTax').value, spread: document.getElementById('schSpread').value
-            }]);
-        } else {
-            const tname = document.getElementById('odeName').value;
-            await _supabase.from('tournament_catalog').insert([
-                { event_id: eventPrefix, item_type: 'ODE', tname: tname, game: document.getElementById('odeGame').value, pod_size: document.getElementById('odeSize').value, tfee: document.getElementById('odeFee').value, tcost: document.getElementById('odeCost').value },
-                { event_id: eventPrefix, item_type: 'TABLE', tname: tname, value: document.getElementById('tableRange').value }
-            ]);
-        }
-        loadAll();
-    }
-
-    async function loadAll() {
-        const { data: idData } = await _supabase.from('tournament_history').select('*').eq('event_id', eventPrefix).eq('tournament_id', 'IDENTITY_ANCHOR').single();
-        if (idData) {
-            document.getElementById('masterEvent').value = idData.event_name || "";
-            document.getElementById('masterLogo').value = idData.logo_type || "REGIONAL";
-        }
-        const { data: catalog } = await _supabase.from('tournament_catalog').select('*').eq('event_id', eventPrefix);
-        if(!catalog) return;
-        const schT = document.querySelector('#schList tbody');
-        const odeT = document.querySelector('#odeList tbody');
-        schT.innerHTML = ""; odeT.innerHTML = "";
-        catalog.forEach(i => {
-            const row = `<tr><td>${i.tname}</td><td>${i.item_type === 'SCH' ? i.thour : i.game}</td><td>${i.tfee || i.value}</td><td style="text-align:right"><button class="btn-del" onclick="del('${i.id}')">REMOVE</button></td></tr>`;
-            if(i.item_type === 'SCH') schT.innerHTML += row; else odeT.innerHTML += row;
-        });
-    }
-
-    async function generateFinalReport() {
-        const { data } = await _supabase.from('tournament_history').select('*').eq('event_id', eventPrefix).neq('tournament_id', 'IDENTITY_ANCHOR');
-        if(!data || data.length === 0) return alert("Sem dados para o relatório.");
+        const { error } = await _supabase.from('tournament_history').upsert(payload, { onConflict: 'event_id, tournament_id' });
         
-        let totalRev = 0; let totalTickets = 0;
-        data.forEach(h => {
-            totalRev += (h.players * h.entry_fee);
-            totalTickets += h.total_tickets;
-        });
-        alert(`📊 RELATÓRIO PRELIMINAR:\n\nEvent: ${document.getElementById('masterEvent').value}\nTotal Revenue: $${totalRev.toFixed(2)}\nTotal Prize Tickets: ${totalTickets.toLocaleString()}\n\nDados salvos no banco para o PDF Final.`);
+        if(!error) {
+            alert(`Event ${eventPrefix} activated successfully! Staff can now log in.`);
+        } else {
+            alert("Error activating event: " + error.message);
+        }
     }
 
-    async function del(id) { if(confirm("Del?")) { await _supabase.from('tournament_catalog').delete().eq('id', id); loadAll(); } }
-  function navStaff(t) { 
-        // Dá o crachá VIP para o Lead não ser barrado na tela do Staff
-        sessionStorage.setItem(`${t}_auth`, 'true');
-        window.location.href = `admin_${t}.html?event=${eventPrefix}`; 
+    function toggleCatFields() {
+        const type = document.getElementById('catType').value;
+        document.getElementById('odeFields').style.display = type === 'ODE' ? 'block' : 'none';
+        document.getElementById('schFields').style.display = type === 'SCH' ? 'block' : 'none';
     }
-    async function resetSystem() { 
-        if(confirm("Deseja apagar TUDO?")) { 
-            await _supabase.from('tournament_catalog').delete().eq('event_id', eventPrefix); 
-            await _supabase.from('event_tables').delete().eq('event_id', eventPrefix);
-            await _supabase.from('tournament_history').delete().eq('event_id', eventPrefix);
-            location.reload();
-        } 
+
+    async function saveCatalog() {
+        const type = document.getElementById('catType').value;
+        const payload = {
+            event_id: eventPrefix,
+            item_type: type,
+            game: document.getElementById('catGame').value.trim(),
+            tname: document.getElementById('catName').value.trim(),
+            tfee: parseFloat(document.getElementById('catFee').value) || 0,
+            tcost: parseFloat(document.getElementById('catCost').value) || 0
+        };
+
+        if(!payload.game || !payload.tname) return alert("Fill Game and Tournament Name.");
+
+        if(type === 'ODE') {
+            payload.pod_size = parseInt(document.getElementById('catPodSize').value) || 4;
+            payload.tickets_per_pod = parseInt(document.getElementById('catTickets').value) || 0;
+        } else {
+            payload.tday = document.getElementById('catDay').value.trim();
+            payload.thour = document.getElementById('catHour').value.trim();
+            payload.tax = parseFloat(document.getElementById('catTax').value) || 0;
+            payload.spread = parseFloat(document.getElementById('catSpread').value) || 2.0;
+        }
+
+        const { error } = await _supabase.from('tournament_catalog').insert([payload]);
+        
+        if(!error) {
+            alert(payload.tname + " added to catalog!");
+            document.getElementById('catName').value = "";
+            document.getElementById('catFee').value = "";
+            document.getElementById('catCost').value = "";
+            if(type === 'ODE') document.getElementById('catTickets').value = "";
+        } else {
+            alert("Error: " + error.message);
+        }
     }
 </script>
 </body>
