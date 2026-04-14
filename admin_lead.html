@@ -6,41 +6,37 @@
     <title>SideFlow - LEAD SETUP</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
-        :root { --bg: #1A4B84; --sec: #2B6CB0; --gold: #ffb703; --white: #e0e1dd; --blue: #63B3ED; --red: #e63946; }
+        :root { --bg: #1A4B84; --sec: #2B6CB0; --gold: #ffb703; --white: #e0e1dd; --blue: #63B3ED; --red: #e63946; --dark: #0A2540; }
         body { font-family: 'Segoe UI', sans-serif; background: var(--bg); color: var(--white); margin: 0; padding: 20px; display: flex; flex-direction: column; align-items: center; }
         .container { width: 100%; max-width: 850px; padding-bottom: 50px; }
         
-        /* Caixas principais */
         .box { background: var(--sec); padding: 25px; border-radius: 12px; margin-bottom: 25px; border-bottom: 4px solid var(--gold); box-shadow: 0 8px 25px rgba(0,0,0,0.3); }
         h2 { color: var(--gold); text-align: center; letter-spacing: 1px; }
         h3 { border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 10px; margin-top: 0; font-size: 1.1rem; }
         
-        /* Layout em Linha (Grid/Flex) */
         .row { display: flex; gap: 15px; margin-bottom: 15px; width: 100%; }
         .col { flex: 1; display: flex; flex-direction: column; }
-        .col-2 { flex: 2; } /* Coluna mais larga para nomes */
+        .col-2 { flex: 2; }
         
         label { font-size: 0.75rem; font-weight: bold; margin-bottom: 5px; color: var(--gold); text-transform: uppercase; }
-        input, select { width: 100%; padding: 12px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.1); background: var(--bg); color: white; box-sizing: border-box; font-size: 0.95rem; }
+        input, select { width: 100%; padding: 12px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.1); background: var(--dark); color: white; box-sizing: border-box; font-size: 0.95rem; }
         
         button { padding: 14px; border-radius: 8px; border: none; font-weight: bold; text-transform: uppercase; cursor: pointer; transition: 0.3s; font-size: 0.9rem; }
         button:hover { filter: brightness(1.1); }
-        .btn-gold { background: var(--gold); color: var(--bg); width: 100%; margin-top: 10px; }
-        .btn-blue { background: var(--blue); color: white; width: 100%; margin-top: 10px; }
+        .btn-gold { background: var(--gold); color: var(--dark); width: 100%; margin-top: 10px; }
+        .btn-blue { background: var(--blue); color: var(--dark); width: 100%; margin-top: 10px; }
+        .btn-red { background: var(--red); color: white; width: 100%; margin-top: 10px; }
         
-        /* Botões Fora da Caixa */
         .nav-buttons { display: flex; gap: 10px; justify-content: center; margin-bottom: 30px; flex-wrap: wrap; }
         .btn-nav { background: var(--sec); color: var(--white); border: 1px solid var(--blue); padding: 15px 30px; border-radius: 8px; font-size: 0.85rem; }
-        .btn-nav:hover { background: var(--blue); }
+        .btn-nav:hover { background: var(--blue); color: var(--dark); }
         
-        /* Lista de Catálogo */
         .catalog-list { width: 100%; margin-bottom: 30px; }
         .catalog-item { display: flex; justify-content: space-between; align-items: center; background: var(--sec); padding: 12px 20px; border-radius: 8px; margin-bottom: 8px; border-left: 4px solid var(--blue); }
         .catalog-info { font-size: 0.9rem; }
         .catalog-info strong { color: var(--gold); margin-right: 10px; }
         .btn-del { background: var(--red); color: white; padding: 8px 12px; font-size: 0.75rem; width: auto; border-radius: 6px; }
         
-        /* Reset Link */
         .reset-link { display: block; text-align: center; color: var(--red); font-size: 0.8rem; text-decoration: none; opacity: 0.6; font-weight: bold; margin-top: 40px; transition: 0.3s; }
         .reset-link:hover { opacity: 1; text-decoration: underline; }
     </style>
@@ -73,8 +69,22 @@
     </div>
 
     <div class="box">
-        <h3>2. TOURNAMENT CATALOG SETUP</h3>
-        
+        <h3>2. TABLE INFRASTRUCTURE</h3>
+        <div class="row">
+            <div class="col col-2">
+                <label>Total Tables in Sides Area</label>
+                <input type="number" id="totalTables" placeholder="EX: 80">
+            </div>
+            <div class="col">
+                <label>Action</label>
+                <button class="btn-red" onclick="setupTables()" style="margin-top: 0;">⚙️ UPDATE TABLE MAP</button>
+            </div>
+        </div>
+        <p style="font-size: 0.7rem; color: rgba(255,255,255,0.6); margin: 0;">* Digite um número maior que o atual para adicionar novas mesas sem apagar as existentes.</p>
+    </div>
+
+    <div class="box">
+        <h3>3. TOURNAMENT CATALOG SETUP</h3>
         <div class="row">
             <div class="col">
                 <label>Event Type</label>
@@ -93,18 +103,15 @@
                 </select>
             </div>
         </div>
-
         <div class="row">
             <div class="col col-2">
                 <label>Tournament Name</label>
                 <input type="text" id="catName" placeholder="EX: 8-PLAYER POD / MAIN EVENT">
             </div>
-            
             <div class="col ode-field">
                 <label>Pod Size</label>
                 <input type="number" id="catPodSize" placeholder="EX: 8">
             </div>
-            
             <div class="col sch-field" style="display:none;">
                 <label>Day</label>
                 <select id="catDay">
@@ -118,7 +125,6 @@
                 <input type="text" id="catHour" placeholder="EX: 14:00">
             </div>
         </div>
-        
         <div class="row">
             <div class="col">
                 <label>Entry Fee ($)</label>
@@ -128,12 +134,10 @@
                 <label>Cost ($)</label>
                 <input type="number" id="catCost" placeholder="0">
             </div>
-            
             <div class="col ode-field">
                 <label>Total Tickets Per Pod</label>
                 <input type="number" id="catTickets" placeholder="EX: 800">
             </div>
-            
             <div class="col sch-field" style="display:none;">
                 <label>Tax %</label>
                 <input type="number" id="catTax" placeholder="EX: 20">
@@ -147,18 +151,16 @@
                 </select>
             </div>
         </div>
-
         <button class="btn-blue" onclick="saveCatalog()">💾 ADD TO CATALOG</button>
     </div>
 
     <div class="nav-buttons">
         <button class="btn-nav" onclick="navTo('admin_ode.html')">🎫 STAFF ODE</button>
         <button class="btn-nav" onclick="navTo('admin_sch.html')">🏆 STAFF SCH</button>
-        <button class="btn-nav" style="background: var(--gold); color: var(--bg); border: none;" onclick="navTo('final_report.html')">📊 VIEW FINAL REPORT</button>
+        <button class="btn-nav" style="background: var(--gold); color: var(--dark); border: none;" onclick="navTo('final_report.html')">📊 VIEW FINAL REPORT</button>
     </div>
 
-    <div class="catalog-list" id="catalogList">
-        </div>
+    <div class="catalog-list" id="catalogList"></div>
 
     <a href="#" class="reset-link" onclick="resetEvent()">⚠️ DANGER: WIPE ALL EVENT DATA</a>
 </div>
@@ -179,7 +181,6 @@
         const type = document.getElementById('catType').value;
         const odeFields = document.querySelectorAll('.ode-field');
         const schFields = document.querySelectorAll('.sch-field');
-        
         if(type === 'ODE') {
             odeFields.forEach(el => el.style.display = 'flex');
             schFields.forEach(el => el.style.display = 'none');
@@ -189,42 +190,67 @@
         }
     }
 
+    async function setupTables() {
+        const targetQty = parseInt(document.getElementById('totalTables').value);
+        if(!targetQty || targetQty <= 0) return alert("Digite uma quantidade válida!");
+
+        const { data: existingTables } = await _supabase
+            .from('event_tables')
+            .select('table_number')
+            .eq('event_id', eventPrefix)
+            .order('table_number', { ascending: false });
+
+        const lastTable = existingTables && existingTables.length > 0 ? existingTables[0].table_number : 0;
+
+        if (targetQty <= lastTable) {
+            return alert(`Você já tem ${lastTable} mesas. Digite um número maior para expandir.`);
+        }
+
+        if(!confirm(`Adicionar mesas da ${lastTable + 1} até a ${targetQty}?`)) return;
+
+        const newTables = [];
+        for(let i = lastTable + 1; i <= targetQty; i++) {
+            newTables.push({
+                event_id: eventPrefix,
+                table_number: i,
+                status: 'FREE',
+                tournament_name: null
+            });
+        }
+
+        const { error } = await _supabase.from('event_tables').insert(newTables);
+        if(!error) {
+            alert(`${targetQty - lastTable} mesas adicionadas! Total: ${targetQty}`);
+            document.getElementById('totalTables').value = "";
+        } else {
+            alert("Erro: " + error.message);
+        }
+    }
+
     async function saveEventAnchor() {
         const eName = document.getElementById('eventName').value.trim();
         const lType = document.getElementById('logoType').value;
         if(!eName) return alert("Fill the Event Name!");
-
         const payload = {
-            event_id: eventPrefix,
-            tournament_id: 0, 
-            event_name: eName,
-            logo_type: lType,
-            tournament_name: 'SYSTEM_ANCHOR',
+            event_id: eventPrefix, tournament_id: 0, event_name: eName,
+            logo_type: lType, tournament_name: 'SYSTEM_ANCHOR',
             players: 0, entry_fee: 0, costs: 0, total_tickets: 0
         };
-
         const { error } = await _supabase.from('tournament_history').upsert(payload, { onConflict: 'event_id, tournament_id' });
-        
-        if(!error) {
-            alert(`Event ${eventPrefix} activated successfully!`);
-        } else {
-            alert("Error activating event: " + error.message);
-        }
+        if(!error) alert(`Event ${eventPrefix} activated!`);
+        else alert("Error: " + error.message);
     }
 
     async function saveCatalog() {
         const type = document.getElementById('catType').value;
         const payload = {
-            event_id: eventPrefix,
-            item_type: type,
+            event_id: eventPrefix, item_type: type,
             game: document.getElementById('catGame').value,
             tname: document.getElementById('catName').value.trim(),
             tfee: parseFloat(document.getElementById('catFee').value) || 0,
             tcost: parseFloat(document.getElementById('catCost').value) || 0
         };
-
         if(!payload.tname) return alert("Fill Tournament Name.");
-
         if(type === 'ODE') {
             payload.pod_size = parseInt(document.getElementById('catPodSize').value) || 4;
             payload.tickets_per_pod = parseInt(document.getElementById('catTickets').value) || 0;
@@ -234,31 +260,25 @@
             payload.tax = parseFloat(document.getElementById('catTax').value) || 0;
             payload.spread = parseFloat(document.getElementById('catSpread').value) || 2.0;
         }
-
         const { error } = await _supabase.from('tournament_catalog').insert([payload]);
-        
         if(!error) {
             document.getElementById('catName').value = "";
             document.getElementById('catFee').value = "";
             document.getElementById('catCost').value = "";
             document.getElementById('catTickets').value = "";
-            loadCatalog(); // Atualiza a lista na hora
-        } else {
-            alert("Error: " + error.message);
-        }
+            loadCatalog();
+        } else alert("Error: " + error.message);
     }
 
     async function loadCatalog() {
-        const { data, error } = await _supabase.from('tournament_catalog').select('*').eq('event_id', eventPrefix).order('id', { ascending: false });
+        const { data } = await _supabase.from('tournament_catalog').select('*').eq('event_id', eventPrefix).order('id', { ascending: false });
         const listDiv = document.getElementById('catalogList');
         listDiv.innerHTML = "";
-        
-        if (data && data.length > 0) {
+        if (data) {
             data.forEach(item => {
                 const info = item.item_type === 'ODE' 
                     ? `[${item.game}] Pod Size: ${item.pod_size} | Entry: $${item.tfee}`
                     : `[${item.game}] ${item.tday} - ${item.thour} | Entry: $${item.tfee}`;
-
                 listDiv.innerHTML += `
                     <div class="catalog-item">
                         <div class="catalog-info">
@@ -266,14 +286,13 @@
                             <span style="color: #aaa; font-size: 0.8rem;">${info}</span>
                         </div>
                         <button class="btn-del" onclick="deleteCatalogItem(${item.id}, '${item.tname}')">🗑️ DEL</button>
-                    </div>
-                `;
+                    </div>`;
             });
         }
     }
 
     async function deleteCatalogItem(id, name) {
-        if(confirm(`Are you sure you want to delete ${name} from the catalog?`)) {
+        if(confirm(`Delete ${name}?`)) {
             await _supabase.from('tournament_catalog').delete().eq('id', id);
             loadCatalog();
         }
@@ -286,21 +305,17 @@
     }
 
     async function resetEvent() {
-        const check = prompt(`DANGER ZONE!\nType the LEAD password to completely wipe all records for event ${eventPrefix}.`);
+        const check = prompt(`DANGER ZONE!\nType the LEAD password to wipe all records for ${eventPrefix}.`);
         if (check && check.toUpperCase() === eventPrefix.toUpperCase() + "_LEAD") {
             try {
                 await _supabase.from('tournament_history').delete().eq('event_id', eventPrefix);
                 await _supabase.from('tournament_catalog').delete().eq('event_id', eventPrefix);
                 await _supabase.from('ode_registrations').delete().eq('event_id', eventPrefix);
                 await _supabase.from('event_tables').delete().eq('event_id', eventPrefix); 
-                alert("Event completely wiped. Redirecting to Login.");
+                alert("Wiped. Redirecting.");
                 window.location.href = "index.html";
-            } catch (err) {
-                alert("Error deleting event data: " + err.message);
-            }
-        } else if (check) {
-            alert("Incorrect LEAD password. Aborting.");
-        }
+            } catch (err) { alert("Error: " + err.message); }
+        } else if (check) alert("Incorrect password.");
     }
 </script>
 </body>
