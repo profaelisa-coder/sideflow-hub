@@ -70,7 +70,7 @@
         <select id="tourSelect"></select>
         <label>Total Players</label>
         <input type="number" id="numPlayers"> 
-        <button class="btn-calc" onclick="generateAndSave()">SAVE & GENERATE PAYOUT</button>
+        <button class="btn-calc" onclick="generateAndSave()">SAVE AND GENERATE PAYOUT</button>
     </div>
 </div>
 
@@ -87,7 +87,7 @@
         <tbody id="payoutBody"></tbody>
     </table>
     <div style="text-align:center; margin-top:30px;" class="no-print">
-        <button onclick="window.print()" style="background:#333; color:white; padding:10px 20px; width:auto;">🖨️ PRINT PARTIAL</button>
+        <button onclick="window.print()" style="background:#333; color:white; padding:10px 20px; width:auto;">PRINT PARTIAL</button>
     </div>
 </div>
 
@@ -179,14 +179,22 @@
         document.getElementById('pdfDate').innerText = new Date().toLocaleDateString('pt-BR');
         document.getElementById('pdfTourName').innerText = t.tname;
         document.getElementById('pdfLogo').src = logoType === "REGIONAL" ? "reg.PNG" : "ic.png";
-        document.getElementById('pdfDetails').innerText = `Players: ${p} | Fee: $${t.tfee} | Rounds: ${p >= 33 ? 6 : 4}`;
+        document.getElementById('pdfDetails').innerText = `Schedule: ${t.tday} - ${t.thour} | Players: ${p} | Fee: $${t.tfee} | Rounds: ${p >= 33 ? 6 : 4}`;
         document.getElementById('printArea').style.display = 'block';
         const payload = {
-            event_id: eventPrefix, tournament_id: t.id, tournament_name: t.tname,
-            schedule: `${t.tday} - ${t.thour}`, players: p, entry_fee: t.tfee,
-            costs: t.tcost, total_tickets: totalTickets, event_name: eventName, logo_type: logoType
+            event_id: eventPrefix, 
+            tournament_name: t.tname,
+            tday: t.tday,
+            thour: t.thour,
+            schedule: `${t.tday} - ${t.thour}`, 
+            players: p, 
+            entry_fee: t.tfee,
+            costs: t.tcost, 
+            total_tickets: totalTickets, 
+            event_name: eventName, 
+            logo_type: logoType
         };
-        await _supabase.from('tournament_history').upsert(payload, { onConflict: 'event_id, tournament_id' });
+        await _supabase.from('tournament_history').upsert(payload, { onConflict: 'event_id, tournament_name, tday, thour' });
     }
 </script>
 </body>
