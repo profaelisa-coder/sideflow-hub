@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SideFlow - Final Report</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        :root { --bg: #0d1b2a; --sec: #1b263b; --gold: #ffb703; --white: #f8f9fa; --red: #e63946; }
+        body { font-family: 'Segoe UI', sans-serif; background: var(--bg); color: #333; margin: 0; padding: 20px; display: flex; flex-direction: column; align-items: center; }
+        .no-print { display: flex; gap: 10px; margin-bottom: 20px; width: 100%; max-width: 900px; justify-content: center; }
+        button { padding: 12px 20px; border-radius: 6px; border: none; font-weight: bold; cursor: pointer; text-transform: uppercase; transition: 0.3s; }
+        .btn-print { background: #333; color: white; }
+        .btn-mail { background: #0078d4; color: white; display: none; }
+        .report-paper { background: white; width: 100%; max-width: 900px; padding: 40px; box-sizing: border-box; border-radius: 4px; box-shadow: 0 0 20px rgba(0,0,0,0.5); }
+        .header { text-align: center; border-bottom: 2px solid #333; padding-bottom: 20px; margin-bottom: 30px; }
+        .header img { height: 80px; margin-bottom: 10px; }
+        .header h1 { margin: 0; font-size: 24px; color: #000; }
+        .header h2 { margin: 5px 0; color: var(--red); font-size: 20px; }
+        .header p { margin: 5px 0; font-weight: bold; color: #666; }
+        h3 { background: #f4f4f4; padding: 10px; border-left: 5px solid var(--sec); margin-top: 40px; font-size: 16px; text-transform: uppercase; }
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+        th, td { border: 1px solid #ccc; padding: 10px; text-align: center; font-size: 13px; }
+        th { background: #eee; font-weight: bold; }
+        .row-total { background: #f9f9f9; font-weight: bold; }
+        @media print {
+            body { background: white; padding: 0; }
+            .no-print { display: none; }
+            .report-paper { box-shadow: none; max-width: 100%; padding: 20px; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="no-print">
+    <button class="btn-print" onclick="window.print()">🖨️ Imprimir PDF</button>
+    <button id="mailBtn" class="btn-mail" onclick="enviarRelatorioEmail()">📧 Enviar por E-mail</button>
+</div>
+
+<div class="report-paper">
+    <div class="header">
+        <img id="logoImg" src="" alt="Logo">
+        <h1 id="eventTitle">CARREGANDO...</h1>
+        <p id="reportDate"></p>
+        <h2>FINAL REPORT</h2>
+    </div>
+
+    <h3>Scheduled Events</h3>
+    <table id="schTable">
+        <thead>
+            <tr>
+                <th>Tournament</th>
+                <th>Day/Hour</th>
+                <th>Players</th>
+                <th>Entry ($)</th>
+                <th>Costs ($)</th>
+                <th>Tickets</th>
+            </tr>
+        </thead>
+        <tbody id="schBody"></tbody>
+    </table>
+
+    <h3>On-Demand Events</h3>
+    <table id="odeTable">
+        <thead>
+            <tr>
+                <th>Tournament</th>
+                <th>Pods</th>
+                <th>Total Players</th>
+                <th>Unique Players</th>
+                <th>Entry ($)</th>
+                <th>Costs ($)</th>
+                <th>Tickets</th>
+            </tr>
+        </thead>
+        <tbody id="odeBody"></tbody>
+    </table>
+</div>
+
+<script>
+    const supabaseUrl = 'https://hocpoastnlcwgedvcyqs.supabase.co';
+    const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhvY3BvYXN0bmxjd2dlZHZjeXFzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQyODU0MTYsImV4cCI6MjA4OTg2MTQxNn0.1MvvcFsnGW4e0Bj7mzoUKs_3bGM-eHDJTOqsvgKe-pI';
+    const _supabase = supabase.createClient(supabaseUrl, supabaseKey);
+    const params = new URLSearchParams(window.location.search);
+    const eventPrefix = params.get('event');
+
+    window.onload = async () => {
+        if (!eventPrefix) return;
+        
+        document.getElementById('reportDate').innerText = new Date().toLocaleDateString('pt-BR');
+        
+        if (sessionStorage.getItem('ode_auth') === 'true' || sessionStorage.getItem('sch_auth') === 'true') {
+            document.getElementById('mailBtn').style.display = 'block';
+        }
+
+        const { data: identity } = await _supabase.from('tournament_history').select('*').eq('event_id', eventPrefix).eq('tournament_id', 'IDENTITY_ANCHOR').single();
+        if (identity) {
+            document.getElementById('eventTitle').innerText = identity.event_name;
+            document.getElementById('logoImg').src = identity.logo_type === 'REGIONAL' ? 'reg.PNG' : 'ic.png';
+        }
+
+        const { data: catalog } = await _supabase.from('tournament_catalog').select('*').eq('event_id', eventPrefix);
+        const { data: history } = await _supabase.from('tournament_history').select('*').eq('event_id', eventPrefix).neq('tournament_id', 'IDENTITY_ANCHOR');
+        const { data: registrations } = await _supabase.from('ode_registrations').select('*').eq('event_id', eventPrefix);
+
+        renderSCH(catalog.filter(c => c.item_type === 'SCH'), history);
+        renderODE(catalog.filter(c => c.item_type === 'ODE'), registrations);
+    };
+
+    function renderSCH(catItems, histItems) {
+        const body = document.getElementById('schBody');
+        let totals = { p: 0, e: 0, c: 0, t: 0 };
+
+        catItems.forEach(cat => {
+            const hist = histItems.find(h => h.tournament_id == cat.id) || { players: 0, total_tickets: 0 };
+            const entry = hist.players * cat.tfee;
+            const costs = hist.players * cat.tcost;
+            
+            body.innerHTML += `
+                <tr>
+                    <td>${cat.tname}</td>
+                    <td>${cat.tday} - ${cat.thour}</td>
+                    <td>${hist.players}</td>
+                    <td>$${entry.toLocaleString()}</td>
+                    <td>$${costs.toLocaleString()}</td>
+                    <td>${hist.total_tickets.toLocaleString()}</td>
+                </tr>`;
+            
+            totals.p += hist.players; totals.e += entry; totals.c += costs; totals.t += hist.total_tickets;
+        });
+
+        body.innerHTML += `
+            <tr class="row-total">
+                <td colspan="2">TOTALS</td>
+                <td>${totals.p}</td>
+                <td>$${totals.e.toLocaleString()}</td>
+                <td>$${totals.c.toLocaleString()}</td>
+                <td>${totals.t.toLocaleString()}</td>
+            </tr>`;
+    }
+
+    function renderODE(catItems, regs) {
+        const body = document.getElementById('odeBody');
+        let totals = { pods: 0, tp: 0, up: 0, e: 0, c: 0, t: 0 };
+
+        catItems.forEach(cat => {
+            const tRegs = regs.filter(r => r.tname === cat.tname);
+            const pods = [...new Set(tRegs.map(r => r.pod_number))].length;
+            const unique = [...new Set(tRegs.map(r => r.player_id))].length;
+            
+            const entry = tRegs.length * cat.tfee;
+            const costs = tRegs.length * cat.tcost;
+            const tickets = pods * (cat.tickets_per_pod || 0);
+
+            body.innerHTML += `
+                <tr>
+                    <td>${cat.tname}</td>
+                    <td>${pods}</td>
+                    <td>${tRegs.length}</td>
+                    <td>${unique}</td>
+                    <td>$${entry.toLocaleString()}</td>
+                    <td>$${costs.toLocaleString()}</td>
+                    <td>${tickets.toLocaleString()}</td>
+                </tr>`;
+            
+            totals.pods += pods; totals.tp += tRegs.length; totals.up += unique; 
+            totals.e += entry; totals.c += costs; totals.t += tickets;
+        });
+
+        body.innerHTML += `
+            <tr class="row-total">
+                <td>TOTALS</td>
+                <td>${totals.pods}</td>
+                <td>${totals.tp}</td>
+                <td>${totals.up}</td>
+                <td>$${totals.e.toLocaleString()}</td>
+                <td>$${totals.c.toLocaleString()}</td>
+                <td>${totals.t.toLocaleString()}</td>
+            </tr>`;
+    }
+
+    function enviarRelatorioEmail() {
+        const eventName = document.getElementById('eventTitle').innerText;
+        const currentUrl = window.location.href;
+        const subject = encodeURIComponent(`FINAL REPORT - ${eventName}`);
+        const body = encodeURIComponent(`O fechamento do evento ${eventName} está pronto.\n\nAcesse o relatório completo no link abaixo:\n${currentUrl}\n\nAtt,\nSideFlow Hub System`);
+        window.location.href = `mailto:sidesflow_hub@outlook.com?subject=${subject}&body=${body}`;
+    }
+</script>
+
+</body>
+</html>
