@@ -32,12 +32,11 @@
     </style>
 </head>
 <body>
-
 <div class="no-print">
-    <button class="btn-print" onclick="window.print()">🖨️ Imprimir PDF</button>
-    <button id="mailBtn" class="btn-mail" onclick="enviarRelatorioEmail()">📧 Enviar por E-mail</button>
+    <button class="btn-print" onclick="window.history.back()">⬅ BACK</button>
+    <button class="btn-print" onclick="window.print()">🖨️ PRINT PDF</button>
+    <button id="mailBtn" class="btn-mail" onclick="enviarRelatorioEmail()">📧 SEND BY E-MAIL</button>
 </div>
-
 <div class="report-paper">
     <div class="header">
         <img id="logoImg" src="" alt="Logo">
@@ -45,7 +44,6 @@
         <p id="reportDate"></p>
         <h2>FINAL REPORT</h2>
     </div>
-
     <h3>Scheduled Events</h3>
     <table id="schTable">
         <thead>
@@ -60,7 +58,6 @@
         </thead>
         <tbody id="schBody"></tbody>
     </table>
-
     <h3>On-Demand Events</h3>
     <table id="odeTable">
         <thead>
@@ -77,46 +74,36 @@
         <tbody id="odeBody"></tbody>
     </table>
 </div>
-
 <script>
     const supabaseUrl = 'https://hocpoastnlcwgedvcyqs.supabase.co';
     const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhvY3BvYXN0bmxjd2dlZHZjeXFzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQyODU0MTYsImV4cCI6MjA4OTg2MTQxNn0.1MvvcFsnGW4e0Bj7mzoUKs_3bGM-eHDJTOqsvgKe-pI';
     const _supabase = supabase.createClient(supabaseUrl, supabaseKey);
     const params = new URLSearchParams(window.location.search);
     const eventPrefix = params.get('event');
-
     window.onload = async () => {
         if (!eventPrefix) return;
-        
         document.getElementById('reportDate').innerText = new Date().toLocaleDateString('pt-BR');
-        
         if (sessionStorage.getItem('ode_auth') === 'true' || sessionStorage.getItem('sch_auth') === 'true') {
             document.getElementById('mailBtn').style.display = 'block';
         }
-
         const { data: identity } = await _supabase.from('tournament_history').select('*').eq('event_id', eventPrefix).eq('tournament_id', 0).single();
         if (identity) {
             document.getElementById('eventTitle').innerText = identity.event_name;
             document.getElementById('logoImg').src = identity.logo_type === 'REGIONAL' ? 'reg.PNG' : 'ic.png';
         }
-
         const { data: catalog } = await _supabase.from('tournament_catalog').select('*').eq('event_id', eventPrefix);
         const { data: history } = await _supabase.from('tournament_history').select('*').eq('event_id', eventPrefix).neq('tournament_id', 0);
         const { data: registrations } = await _supabase.from('ode_registrations').select('*').eq('event_id', eventPrefix);
-
         renderSCH(catalog.filter(c => c.item_type === 'SCH'), history);
         renderODE(catalog.filter(c => c.item_type === 'ODE'), registrations);
     };
-
     function renderSCH(catItems, histItems) {
         const body = document.getElementById('schBody');
         let totals = { p: 0, e: 0, c: 0, t: 0 };
-
         catItems.forEach(cat => {
             const hist = histItems.find(h => h.tournament_id == cat.id) || { players: 0, total_tickets: 0 };
             const entry = hist.players * cat.tfee;
             const costs = hist.players * cat.tcost;
-            
             body.innerHTML += `
                 <tr>
                     <td>${cat.tname}</td>
@@ -126,10 +113,8 @@
                     <td>$${costs.toLocaleString()}</td>
                     <td>${hist.total_tickets.toLocaleString()}</td>
                 </tr>`;
-            
             totals.p += hist.players; totals.e += entry; totals.c += costs; totals.t += hist.total_tickets;
         });
-
         body.innerHTML += `
             <tr class="row-total">
                 <td colspan="2">TOTALS</td>
@@ -139,20 +124,16 @@
                 <td>${totals.t.toLocaleString()}</td>
             </tr>`;
     }
-
     function renderODE(catItems, regs) {
         const body = document.getElementById('odeBody');
         let totals = { pods: 0, tp: 0, up: 0, e: 0, c: 0, t: 0 };
-
         catItems.forEach(cat => {
             const tRegs = regs.filter(r => r.tname === cat.tname);
             const pods = [...new Set(tRegs.map(r => r.pod_number))].length;
             const unique = [...new Set(tRegs.map(r => r.player_id))].length;
-            
             const entry = tRegs.length * cat.tfee;
             const costs = tRegs.length * cat.tcost;
             const tickets = pods * (cat.tickets_per_pod || 0);
-
             body.innerHTML += `
                 <tr>
                     <td>${cat.tname}</td>
@@ -163,11 +144,9 @@
                     <td>$${costs.toLocaleString()}</td>
                     <td>${tickets.toLocaleString()}</td>
                 </tr>`;
-            
             totals.pods += pods; totals.tp += tRegs.length; totals.up += unique; 
             totals.e += entry; totals.c += costs; totals.t += tickets;
         });
-
         body.innerHTML += `
             <tr class="row-total">
                 <td>TOTALS</td>
@@ -179,7 +158,6 @@
                 <td>${totals.t.toLocaleString()}</td>
             </tr>`;
     }
-
     function enviarRelatorioEmail() {
         const eventName = document.getElementById('eventTitle').innerText;
         const currentUrl = window.location.href;
@@ -188,6 +166,5 @@
         window.location.href = `mailto:sidesflow_hub@outlook.com?subject=${subject}&body=${body}`;
     }
 </script>
-
 </body>
 </html>
