@@ -68,7 +68,7 @@
         <h3 style="color: var(--gold); margin-top: 0;">REGISTER FULL POD PLAYERS</h3>
         <div id="fullPodInputs" style="max-height: 350px; overflow-y: auto; margin-bottom: 20px;"></div>
         <div class="row">
-            <button class="btn-reg" onclick="submitFullPod()">SAVE ALL & ALLOCATE</button>
+            <button class="btn-reg" onclick="submitFullPod()">SAVE ALL AND ALLOCATE</button>
             <button style="background: var(--red); color: white;" onclick="closeModal('fullPodModal')">CANCEL</button>
         </div>
     </div>
@@ -86,7 +86,7 @@
                 <input type="text" id="playerName" autocomplete="off">
             </div>
             <div class="col">
-                <label>Player ID</label>
+                <label>Player ID (DCI / Play! ID)</label>
                 <input type="number" id="playerId" autocomplete="off">
             </div>
         </div>
@@ -102,7 +102,7 @@
         </div>
         <div class="row" style="margin-top: 10px; margin-bottom: 0;">
             <button class="btn-reg col" onclick="registerPlayer()">REGISTER PLAYER</button>
-            <button class="btn-full col" onclick="openFullPodModal()">🚀 REGISTER FULL POD</button>
+            <button class="btn-full col" onclick="openFullPodModal()">REGISTER FULL POD</button>
         </div>
     </div>
     <div class="live-label"><div class="live-dot"></div> WAITING QUEUE</div>
@@ -112,7 +112,7 @@
 </div>
 
 <div class="nav-footer">
-    <button onclick="navToTables()">🗺 VIEW TABLE MAP</button>
+    <button onclick="navToTables()">VIEW TABLE MAP</button>
 </div>
 
 <script>
@@ -204,6 +204,7 @@
             const { data: podNum } = await _supabase.rpc('get_next_pod_number', { target_tname: tname, target_event_id: eventPrefix, pod_limit: podLimit });
             await _supabase.from('ode_registrations').insert([{ event_id: eventPrefix, player_id: pId, player_name: name, player_phone: phone, tname: tname, status: 'waiting', pod_number: podNum }]);
             idInput.value = ""; nameInput.value = ""; phoneInput.value = ""; tourSelect.selectedIndex = 0; nameInput.focus();
+            updateWaitingList();
         } catch (err) { alert("Error."); }
     }
 
@@ -231,6 +232,8 @@
         }
 
         const tour = currentCatalog.find(c => c.tname === tname);
+        
+        // Lógica Inteligente de Mesas: Respeita Min/Max e evita as ocupadas por Scheduled no final
         const { data: tableData } = await _supabase.rpc('assign_table_smart', { 
             target_event_id: eventPrefix, 
             min_t: tour.table_min, 
