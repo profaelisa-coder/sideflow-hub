@@ -3,60 +3,97 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SideFlow - ODE Registration</title>
+    <title>SideFlow - Staff ODE</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
-        :root { --bg: #0d1b2a; --sec: #1b263b; --gold: #ffb703; --blue: #457b9d; --white: #e0e1dd; --red: #e63946; --green: #2ecc71; }
+        /* TONS DE AZUL REAIS E VIVOS */
+        :root { --bg: #1A4B84; --sec: #2B6CB0; --gold: #ffb703; --blue: #63B3ED; --white: #e0e1dd; --red: #e63946; --green: #2ecc71; --dark: #0A2540; }
         body { font-family: 'Segoe UI', sans-serif; background: var(--bg); color: var(--white); margin: 0; padding: 20px; padding-bottom: 120px; display: flex; flex-direction: column; align-items: center; }
-        .container { width: 100%; max-width: 600px; }
-        h2 { color: var(--gold); text-transform: uppercase; letter-spacing: 2px; text-align: center; margin-bottom: 5px; }
-        .sub-title { text-align: center; font-size: 0.8rem; opacity: 0.7; margin-bottom: 25px; letter-spacing: 1px; }
+        .container { width: 100%; max-width: 800px; }
+        
+        /* Header c/ Botão de Retorno */
+        .header-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; width: 100%; }
+        h2 { color: var(--gold); text-transform: uppercase; letter-spacing: 2px; margin: 0; font-size: 1.4rem; }
+        .btn-return { background: transparent; color: var(--gold); border: 1px solid var(--gold); padding: 8px 15px; border-radius: 8px; cursor: pointer; font-weight: bold; transition: 0.3s; text-transform: uppercase; font-size: 0.8rem; }
+        .btn-return:hover { background: var(--gold); color: var(--dark); }
+
+        .sub-title { text-align: left; font-size: 0.8rem; opacity: 0.7; margin-bottom: 25px; letter-spacing: 1px; width: 100%; }
+        
         .box { background: var(--sec); padding: 25px; border-radius: 12px; box-shadow: 0 8px 25px rgba(0,0,0,0.4); margin-bottom: 25px; border-bottom: 4px solid var(--gold); }
+        
+        /* Layout Grid */
+        .row { display: flex; gap: 15px; margin-bottom: 15px; width: 100%; }
+        .col { flex: 1; display: flex; flex-direction: column; }
+
         label { display: block; font-size: 0.75rem; font-weight: bold; margin-bottom: 8px; color: var(--gold); text-transform: uppercase; }
-        input, select { width: 100%; padding: 15px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.1); background: var(--bg); color: white; font-size: 1rem; margin-bottom: 20px; box-sizing: border-box; }
+        input, select { width: 100%; padding: 12px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.2); background: rgba(0,0,0,0.15); color: white; font-size: 0.95rem; box-sizing: border-box; transition: 0.3s; }
+        input:focus, select:focus { border-color: var(--gold); outline: none; background: rgba(0,0,0,0.3); }
+        
         button { width: 100%; padding: 16px; border-radius: 8px; border: none; font-weight: bold; text-transform: uppercase; cursor: pointer; transition: 0.3s; font-size: 0.9rem; }
-        .btn-reg { background: var(--gold); color: var(--bg); margin-top: 10px; }
+        button:hover { filter: brightness(1.1); }
+        .btn-reg { background: var(--gold); color: var(--dark); }
+        .btn-full { background: var(--blue); color: var(--dark); }
+        
         .live-label { color: var(--gold); font-size: 0.9rem; font-weight: bold; margin: 20px 0 10px 0; display: flex; align-items: center; gap: 8px; }
         .live-dot { width: 8px; height: 8px; background: var(--red); border-radius: 50%; animation: blink 1s infinite; }
         .live-dot.green { background: var(--green); }
         @keyframes blink { 0% { opacity: 1; } 50% { opacity: 0.3; } 100% { opacity: 1; } }
-        .pod-row { background: var(--sec); padding: 15px; border-radius: 8px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; border-left: 4px solid var(--blue); }
-        .active-row { background: #1e2a38; padding: 15px; border-radius: 8px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; border-left: 4px solid var(--green); border: 1px solid rgba(46, 204, 113, 0.2); }
+        
+        .pod-row { background: var(--dark); padding: 15px; border-radius: 8px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; border-left: 4px solid var(--blue); }
+        .active-row { background: var(--dark); padding: 15px; border-radius: 8px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; border-left: 4px solid var(--green); border: 1px solid rgba(46, 204, 113, 0.2); }
         .pod-info b { color: var(--gold); }
-        .pod-count { background: var(--blue); padding: 6px 15px; border-radius: 20px; font-weight: bold; font-size: 0.8rem; }
-        .table-badge { background: var(--green); color: var(--bg); padding: 4px 10px; border-radius: 4px; font-weight: bold; font-size: 0.8rem; }
+        .pod-count { background: var(--blue); color: var(--dark); padding: 6px 15px; border-radius: 20px; font-weight: bold; font-size: 0.8rem; }
+        .table-badge { background: var(--green); color: var(--dark); padding: 4px 10px; border-radius: 4px; font-weight: bold; font-size: 0.8rem; }
+        
         #loginOverlay { position: fixed; top:0; left:0; width:100%; height:100%; background: var(--bg); display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 1000; }
-        .nav-footer { position: fixed; bottom: 0; left: 0; width: 100%; background: #162a44; padding: 15px; display: flex; justify-content: center; gap: 15px; border-top: 1px solid rgba(255,255,255,0.1); }
-        .nav-footer button { width: auto; padding: 10px 20px; font-size: 0.75rem; background: var(--blue); color: white; }
+        #loginOverlay input { width: 250px; text-align: center; margin-bottom: 20px; }
+        #loginOverlay button { width: 250px; }
+        
+        .nav-footer { position: fixed; bottom: 0; left: 0; width: 100%; background: var(--dark); padding: 15px; display: flex; justify-content: center; gap: 15px; border-top: 1px solid rgba(255,255,255,0.1); }
+        .nav-footer button { width: auto; padding: 10px 20px; font-size: 0.75rem; background: var(--sec); color: white; border: 1px solid var(--blue); }
     </style>
 </head>
 <body>
 
 <div id="loginOverlay">
-    <h2>STAFF ACCESS</h2>
-    <input type="password" id="passInput" placeholder="PASSWORD" style="width: 250px; text-align: center;">
-    <button onclick="checkLogin()" style="width: 250px;" class="btn-reg">UNLOCK</button>
+    <h2>STAFF ACCESS - ODE</h2>
+    <input type="password" id="passInput" placeholder="PASSWORD">
+    <button onclick="checkLogin()" class="btn-reg">UNLOCK</button>
 </div>
 
 <div class="container">
-    <h2>TOURNAMENT REGISTRATION ODE</h2>
-    <div class="sub-title">ON-DEMAND EVENT MANAGEMENT</div>
+    <div class="header-top">
+        <h2>TOURNAMENT REGISTRATION ODE</h2>
+        <button class="btn-return" onclick="backToLead()">RETURN LEAD AREA</button>
+    </div>
     
     <div class="box">
-        <label>Player ID (DCI / Play! ID)</label>
-        <input type="number" id="playerId" placeholder="EX: 1234567" autocomplete="off">
+        <div class="row">
+            <div class="col">
+                <label>Player Full Name</label>
+                <input type="text" id="playerName" placeholder="EX: ASH KETCHUM" autocomplete="off">
+            </div>
+            <div class="col">
+                <label>Player ID (DCI / Play! ID)</label>
+                <input type="number" id="playerId" placeholder="EX: 1234567" autocomplete="off">
+            </div>
+        </div>
 
-        <label>Player Full Name</label>
-        <input type="text" id="playerName" placeholder="EX: ASH KETCHUM" autocomplete="off">
+        <div class="row">
+            <div class="col">
+                <label>Tournament Pod</label>
+                <select id="tourSelect"><option value="">LOADING...</option></select>
+            </div>
+            <div class="col">
+                <label>WhatsApp (with area code)</label>
+                <input type="number" id="playerPhone" placeholder="EX: 5511999998888" autocomplete="off">
+            </div>
+        </div>
         
-        <label>WhatsApp (with area code)</label>
-        <input type="number" id="playerPhone" placeholder="EX: 5511999998888" autocomplete="off">
-
-        <label>Tournament Pod</label>
-        <select id="tourSelect"><option value="">LOADING...</option></select>
-        
-        <button class="btn-reg" onclick="registerPlayer()">REGISTER PLAYER</button>
-        <button class="btn-reg" onclick="registerFullPod()" style="background: var(--blue); margin-top: 15px;">🚀 REGISTER FULL POD</button>
+        <div class="row" style="margin-top: 10px; margin-bottom: 0;">
+            <button class="btn-reg col" onclick="registerPlayer()">REGISTER PLAYER</button>
+            <button class="btn-full col" onclick="registerFullPod()">🚀 REGISTER FULL POD</button>
+        </div>
     </div>
 
     <div class="live-label"><div class="live-dot"></div> WAITING QUEUE</div>
@@ -87,9 +124,20 @@
 
     function checkLogin() {
         const passInput = document.getElementById('passInput').value.toUpperCase().trim();
-        const masterODEPas = (eventPrefix.slice(0, 5) + "ODE").toUpperCase(); 
-        if(passInput === masterODEPas) { sessionStorage.setItem('ode_auth', 'true'); location.reload(); }
-        else { alert("ACCESS DENIED."); }
+        const masterPass = eventPrefix.substring(0,3).toUpperCase() + eventPrefix.substring(3,5) + "ODE";
+        if(passInput === masterPass) {
+            sessionStorage.setItem('ode_auth', 'true');
+            location.reload();
+        } else { alert("ACCESS DENIED."); }
+    }
+
+    function backToLead() {
+        const pass = prompt("ENTER LEAD PASSWORD:");
+        if(pass && pass.toUpperCase() === eventPrefix.toUpperCase() + "_LEAD") {
+            window.location.href = `admin_lead.html?event=${eventPrefix}`;
+        } else if (pass) {
+            alert("Incorrect LEAD password.");
+        }
     }
 
     async function loadData() {
@@ -172,7 +220,7 @@
             nameInput.value = ""; 
             phoneInput.value = ""; 
             tourSelect.selectedIndex = 0; 
-            idInput.focus(); 
+            nameInput.focus(); // Mudei o foco inicial para o nome, já que ele é o primeiro campo agora
             updateWaitingList();
         }
     }
