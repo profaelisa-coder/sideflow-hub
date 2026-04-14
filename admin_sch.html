@@ -6,19 +6,28 @@
     <title>SideFlow - SCH Registration & Payout</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
-        :root { --bg: #0d1b2a; --sec: #1b263b; --gold: #ffb703; --blue: #457b9d; --white: #e0e1dd; --red: #e63946; --dark: #0a141f; }
+        /* TONS DE AZUL REAIS E VIVOS */
+        :root { --bg: #1A4B84; --sec: #2B6CB0; --gold: #ffb703; --blue: #63B3ED; --white: #e0e1dd; --red: #e63946; --dark: #0A2540; }
         body { font-family: 'Segoe UI', sans-serif; background: var(--bg); color: var(--white); margin: 0; padding: 20px; padding-bottom: 100px; display: flex; flex-direction: column; align-items: center; }
         .container { width: 100%; max-width: 700px; }
-        h2 { color: var(--gold); text-transform: uppercase; letter-spacing: 2px; text-align: center; margin-bottom: 5px; }
-        .sub-title { text-align: center; font-size: 0.8rem; opacity: 0.7; margin-bottom: 25px; letter-spacing: 1px; }
+        
+        /* Header c/ Botão de Retorno */
+        .header-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; width: 100%; }
+        h2 { color: var(--gold); text-transform: uppercase; letter-spacing: 2px; margin: 0; text-align: left; }
+        .btn-return { background: transparent; color: var(--gold); border: 1px solid var(--gold); padding: 8px 15px; border-radius: 8px; cursor: pointer; font-weight: bold; transition: 0.3s; text-transform: uppercase; font-size: 0.8rem; }
+        .btn-return:hover { background: var(--gold); color: var(--dark); }
+
         .box { background: var(--sec); padding: 25px; border-radius: 12px; box-shadow: 0 8px 25px rgba(0,0,0,0.4); margin-bottom: 25px; border-bottom: 4px solid var(--gold); }
         label { display: block; font-size: 0.75rem; font-weight: bold; margin-bottom: 8px; color: var(--gold); text-transform: uppercase; }
-        input, select { width: 100%; padding: 15px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.1); background: var(--bg); color: white; font-size: 1rem; margin-bottom: 20px; box-sizing: border-box; }
+        input, select { width: 100%; padding: 15px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.2); background: rgba(0,0,0,0.15); color: white; font-size: 1rem; margin-bottom: 20px; box-sizing: border-box; transition: 0.3s; }
+        input:focus, select:focus { border-color: var(--gold); outline: none; background: rgba(0,0,0,0.3); }
         button { width: 100%; padding: 16px; border-radius: 8px; border: none; font-weight: bold; text-transform: uppercase; cursor: pointer; transition: 0.3s; font-size: 0.9rem; }
-        .btn-calc { background: var(--gold); color: var(--bg); margin-top: 10px; }
+        button:hover { filter: brightness(1.1); }
+        .btn-calc { background: var(--gold); color: var(--dark); margin-top: 10px; }
+        
         #loginOverlay { position: fixed; top:0; left:0; width:100%; height:100%; background: var(--bg); display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 1000; }
-        .nav-footer { position: fixed; bottom: 0; left: 0; width: 100%; background: #162a44; padding: 15px; display: flex; justify-content: center; gap: 15px; border-top: 1px solid rgba(255,255,255,0.1); }
-        .nav-footer button { width: auto; padding: 10px 20px; font-size: 0.75rem; background: var(--blue); color: white; }
+        #loginOverlay input { width: 250px; text-align: center; margin-bottom: 20px; }
+        #loginOverlay button { width: 250px; }
         
         #printArea { background: white; color: black; padding: 40px; width: 100%; max-width: 800px; display: none; margin-top: 20px; border-radius: 8px; }
         .pdf-header { text-align: center; border-bottom: 2px solid #333; padding-bottom: 15px; margin-bottom: 20px; }
@@ -39,13 +48,15 @@
 
 <div id="loginOverlay">
     <h2>STAFF ACCESS - SCH</h2>
-    <input type="password" id="passInput" placeholder="PASSWORD" style="width: 250px; text-align: center;">
-    <button onclick="checkLogin()" style="width: 250px;" class="btn-calc">UNLOCK</button>
+    <input type="password" id="passInput" placeholder="PASSWORD">
+    <button onclick="checkLogin()" class="btn-calc">UNLOCK</button>
 </div>
 
 <div class="container no-print">
-    <h2>TOURNAMENT PAYOUT SCH</h2>
-    <div class="sub-title">SCHEDULED EVENT MANAGEMENT</div>
+    <div class="header-top">
+        <h2 style="font-size: 1.4rem;">TOURNAMENT PAYOUT SCH</h2>
+        <button class="btn-return" onclick="backToLead()">RETURN LEAD AREA</button>
+    </div>
     
     <div class="box">
         <label>Select Tournament</label>
@@ -53,7 +64,7 @@
         
         <label>Total Players</label>
         <input type="number" id="numPlayers" placeholder="0"> 
-        <button class="btn-calc" onclick="generateAndSave()">GENERATE PAYOUT & SAVE</button>
+        <button class="btn-calc" onclick="generateAndSave()">SAVE & GENERATE PAYOUT</button>
     </div>
 </div>
 
@@ -72,10 +83,6 @@
     <div style="text-align:center; margin-top:30px;" class="no-print">
         <button onclick="window.print()" style="background:#333; color:white; padding:10px 20px; width:auto;">🖨️ PRINT PARTIAL</button>
     </div>
-</div>
-
-<div class="nav-footer no-print">
-    <button onclick="backToLead()">⬅ BACK TO LEAD SETUP</button>
 </div>
 
 <script>
@@ -98,9 +105,8 @@
 
     function checkLogin() {
         const passInput = document.getElementById('passInput').value.toUpperCase().trim();
-        const letters = eventPrefix.slice(0, 3);
-        const lastNums = eventPrefix.slice(-2);
-        const masterPass = (letters + lastNums + "SCH").toUpperCase();
+        // Recorta as 3 letras e os 2 últimos números
+        const masterPass = eventPrefix.substring(0,3).toUpperCase() + eventPrefix.substring(5,7) + "SCH";
         if(passInput === masterPass) {
             sessionStorage.setItem('sch_auth', 'true');
             location.reload();
@@ -188,6 +194,8 @@
         const pass = prompt("ENTER LEAD PASSWORD:");
         if(pass && pass.toUpperCase() === (eventPrefix.toUpperCase() + "_LEAD")) {
             window.location.href = `admin_lead.html?event=${eventPrefix}`;
+        } else if (pass) {
+            alert("Incorrect LEAD password.");
         }
     }
 </script>
