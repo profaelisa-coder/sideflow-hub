@@ -93,14 +93,14 @@
             document.getElementById('mailBtn').style.display = 'block';
         }
 
-        const { data: identity } = await _supabase.from('tournament_history').select('*').eq('event_id', eventPrefix).eq('tournament_id', 'IDENTITY_ANCHOR').single();
+        const { data: identity } = await _supabase.from('tournament_history').select('*').eq('event_id', eventPrefix).eq('tournament_id', 0).single();
         if (identity) {
             document.getElementById('eventTitle').innerText = identity.event_name;
             document.getElementById('logoImg').src = identity.logo_type === 'REGIONAL' ? 'reg.PNG' : 'ic.png';
         }
 
         const { data: catalog } = await _supabase.from('tournament_catalog').select('*').eq('event_id', eventPrefix);
-        const { data: history } = await _supabase.from('tournament_history').select('*').eq('event_id', eventPrefix).neq('tournament_id', 'IDENTITY_ANCHOR');
+        const { data: history } = await _supabase.from('tournament_history').select('*').eq('event_id', eventPrefix).neq('tournament_id', 0);
         const { data: registrations } = await _supabase.from('ode_registrations').select('*').eq('event_id', eventPrefix);
 
         renderSCH(catalog.filter(c => c.item_type === 'SCH'), history);
