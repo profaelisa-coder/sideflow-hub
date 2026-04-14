@@ -6,7 +6,7 @@
     <title>SideFlow - LEAD SETUP</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
-        :root { --bg: #0d1b2a; --sec: #1b263b; --gold: #ffb703; --white: #e0e1dd; --blue: #457b9d; --red: #e63946; }
+        :root { --bg: #1A4B84; --sec: #2B6CB0; --gold: #ffb703; --white: #e0e1dd; --blue: #63B3ED; --red: #e63946; }
         body { font-family: 'Segoe UI', sans-serif; background: var(--bg); color: var(--white); margin: 0; padding: 20px; display: flex; flex-direction: column; align-items: center; }
         .container { width: 100%; max-width: 850px; padding-bottom: 50px; }
         
@@ -286,18 +286,20 @@
     }
 
     async function resetEvent() {
-        const check = prompt(`DANGER ZONE!\nType "DELETE" to completely wipe all records for event ${eventPrefix}.`);
-        if (check === "DELETE") {
+        const check = prompt(`DANGER ZONE!\nType the LEAD password to completely wipe all records for event ${eventPrefix}.`);
+        if (check && check.toUpperCase() === eventPrefix.toUpperCase() + "_LEAD") {
             try {
                 await _supabase.from('tournament_history').delete().eq('event_id', eventPrefix);
                 await _supabase.from('tournament_catalog').delete().eq('event_id', eventPrefix);
                 await _supabase.from('ode_registrations').delete().eq('event_id', eventPrefix);
-                await _supabase.from('event_tables').delete().eq('event_id', eventPrefix); // Linha adicionada
+                await _supabase.from('event_tables').delete().eq('event_id', eventPrefix); 
                 alert("Event completely wiped. Redirecting to Login.");
                 window.location.href = "index.html";
             } catch (err) {
                 alert("Error deleting event data: " + err.message);
             }
+        } else if (check) {
+            alert("Incorrect LEAD password. Aborting.");
         }
     }
 </script>
