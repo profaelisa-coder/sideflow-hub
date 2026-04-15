@@ -20,6 +20,7 @@
         .btn-alloc { width: 100%; background: var(--gold); color: var(--dark); border: none; padding: 10px; border-radius: 6px; font-weight: bold; cursor: pointer; text-transform: uppercase; }
         .btn-wa { width: 100%; background: var(--green); color: white; border: none; padding: 10px; border-radius: 6px; font-weight: bold; cursor: pointer; text-transform: uppercase; margin-top: 10px; display: none; }
         
+        /* Map Area com fundo azul da paleta */
         .map-area { flex: 1; background: var(--sec); border-radius: 12px; padding: 20px; overflow-y: auto; border: 1px solid rgba(255,255,255,0.1); }
         .grid-tables { display: grid; grid-template-columns: repeat(auto-fill, minmax(65px, 1fr)); gap: 12px; }
         
@@ -40,7 +41,7 @@
 
 <div class="layout">
     <div class="sidebar">
-        <h3>🟢 READY TO ALLOCATE</h3>
+        <h3>READY TO ALLOCATE</h3>
         <div id="readyPodsList"></div>
     </div>
     <div class="map-area">
@@ -49,7 +50,7 @@
 </div>
 
 <div class="nav-footer">
-    <button onclick="window.history.back()">⬅ BACK</button>
+    <button onclick="window.history.back()">BACK</button>
 </div>
 
 <script>
@@ -67,8 +68,12 @@
         await loadCatalog();
         await loadTables();
         await loadReadyPods();
-        _supabase.channel('any').on('postgres_changes', { event: '*', schema: 'public', table: 'ode_registrations' }, loadReadyPods).subscribe();
-        _supabase.channel('any').on('postgres_changes', { event: '*', schema: 'public', table: 'event_tables' }, loadTables).subscribe();
+        
+        // Ativação do Realtime para atualização automática sem F5
+        _supabase.channel('custom-all-channel')
+            .on('postgres_changes', { event: '*', schema: 'public', table: 'ode_registrations' }, loadReadyPods)
+            .on('postgres_changes', { event: '*', schema: 'public', table: 'event_tables' }, loadTables)
+            .subscribe();
     };
 
     async function loadCatalog() {
@@ -106,14 +111,15 @@
                 listDiv.innerHTML += `
                     <div class="pod-card">
                         <h4>${info.tname} #${info.pod_number}</h4>
-                        <button class="btn-alloc" id="alloc-${safeKey}" style="display:${isPending?'none':'block'}" onclick="allocate('${info.tname}', '${safeKey}', '${key}')">📍 ALLOCATE</button>
-                        <button class="btn-wa" id="wa-${safeKey}" style="display:${isPending?'block':'none'}" onclick="sendBulkWA('${key}', '${safeKey}')">💬 SEND WHATSAPP</button>
+                        <button class="btn-alloc" id="alloc-${safeKey}" style="display:${isPending?'none':'block'}" onclick="allocate('${info.tname}', '${safeKey}', '${key}')">ALLOCATE</button>
+                        <button class="btn-wa" id="wa-${safeKey}" style="display:${isPending?'block':'none'}" onclick="sendBulkWA('${key}', '${safeKey}')">SEND WHATSAPP</button>
                     </div>`;
             }
         }
     }
 
     async function allocate(tname, safeKey, groupKey) {
+        // Usa a lógica rpc configurada para respeitar faixas de mesas
         const { data: tableData } = await _supabase.rpc('assign_table_to_full_pod', { target_event_id: eventPrefix, target_tname: tname });
         if (!tableData || tableData.length === 0) return alert("NO FREE TABLES IN THIS SECTION!");
         const tableNum = tableData[0].table_number;
@@ -138,7 +144,7 @@
         if(players && players.length > 0) {
             for (const p of players) {
                 if(p.player_phone) {
-                    const msg = encodeURIComponent(`🚨 SIDEFLOW: Your Pod ${tname} #${podNum} is READY! Please proceed to Table ${info.table}.`);
+                    const msg = encodeURIComponent(`SIDEFLOW: Your Pod ${tname} #${podNum} is READY! Please proceed to Table ${info.table}.`);
                     if(confirm(`Send WhatsApp to ${p.player_name} (${p.player_phone})?`)) {
                         window.open(`https://wa.me/${p.player_phone}?text=${msg}`, '_blank');
                     }
