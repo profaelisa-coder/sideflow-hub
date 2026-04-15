@@ -107,7 +107,7 @@
             document.getElementById('loginOverlay').style.display = 'none';
             await loadInitialData();
             
-            // Alteração 4: Realtime ativado para o catálogo
+            // Realtime para o catálogo do SCH
             _supabase.channel('sch_catalog_sync')
                 .on('postgres_changes', { event: '*', schema: 'public', table: 'tournament_catalog' }, loadInitialData)
                 .subscribe();
@@ -157,7 +157,7 @@
         if(idx === "" || !p || p < 4) return alert("Select tournament and min. 4 players.");
         const t = catalog[idx];
 
-        // Alterações 1, 2 e 3: Cálculo e Reserva Reversa de Bloqueio Físico
+        // --- BLOQUEIO DE MESAS INTELIGENTE SCH ---
         const qtyTablesNeeded = Math.ceil(p / 2);
         const { error: blockError } = await _supabase.rpc('reserve_sch_tables', {
             p_event_id: eventPrefix,
@@ -169,6 +169,7 @@
             console.error("Erro ao bloquear mesas:", blockError);
             return alert("Error reserving tables for SCH.");
         }
+        // ------------------------------------------
 
         const totalTickets = (t.tfee - t.tcost) * 10 * p;
         const partIndiv = round10((totalTickets * (t.tax / 100)) / p);
@@ -215,7 +216,6 @@
         };
         await _supabase.from('tournament_history').upsert(payload, { onConflict: 'event_id, tournament_name, tday, thour' });
         
-        // Alerta informando o sucesso da reserva
         alert(`Payout generated and ${qtyTablesNeeded} tables reserved at the end of the map.`);
     }
 </script>
