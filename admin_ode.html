@@ -22,13 +22,12 @@
         button { width: 100%; padding: 16px; border-radius: 8px; border: none; font-weight: bold; text-transform: uppercase; cursor: pointer; transition: 0.3s; font-size: 0.9rem; }
         button:hover { filter: brightness(1.1); }
         .btn-reg { background: var(--gold); color: var(--dark); }
-        .btn-full { background: var(--blue); color: var(--dark); }
         .live-label { color: var(--gold); font-size: 0.9rem; font-weight: bold; margin: 20px 0 10px 0; display: flex; align-items: center; gap: 8px; }
         .live-dot { width: 8px; height: 8px; background: var(--red); border-radius: 50%; animation: blink 1s infinite; }
         .live-dot.green { background: var(--green); }
         @keyframes blink { 0% { opacity: 1; } 50% { opacity: 0.3; } 100% { opacity: 1; } }
         
-        /* Grid de cards horizontais ocupando largura total conforme Imagem 3 */
+        /* Grid de cards horizontais ocupando largura total */
         .card-container { display: grid; grid-template-columns: 1fr; gap: 10px; width: 100%; }
         .pod-row { background: var(--dark); padding: 15px; border-radius: 8px; display: flex; justify-content: space-between; align-items: center; border-left: 4px solid var(--blue); width: 100%; box-sizing: border-box; }
         .active-row { background: var(--dark); padding: 15px; border-radius: 8px; display: flex; justify-content: space-between; align-items: center; border-left: 4px solid var(--green); border: 1px solid rgba(46, 204, 113, 0.2); width: 100%; box-sizing: border-box; }
@@ -68,48 +67,32 @@
     </div>
 </div>
 
-<div id="fullPodModal" class="modal">
-    <div class="modal-content" style="max-width: 600px;">
-        <h3 style="color: var(--gold); margin-top: 0;">REGISTER FULL POD PLAYERS</h3>
-        <div id="fullPodInputs" style="max-height: 350px; overflow-y: auto; margin-bottom: 20px;"></div>
-        <div class="row">
-            <button class="btn-reg" onclick="submitFullPod()">SAVE ALL AND ALLOCATE</button>
-            <button style="background: var(--red); color: white;" onclick="closeModal('fullPodModal')">CANCEL</button>
-        </div>
-    </div>
-</div>
-
 <div class="container">
     <div class="header-top">
         <h2>TOURNAMENT REGISTRATION ODE</h2>
         <button class="btn-return" onclick="openPasswordModal()">BACK</button>
     </div>
+    
     <div class="box">
         <div class="row">
             <div class="col">
-                <label>Player Full Name</label>
-                <input type="text" id="playerName" autocomplete="off">
-            </div>
-            <div class="col">
-                <label>Player ID</label>
-                <input type="number" id="playerId" autocomplete="off">
-            </div>
-        </div>
-        <div class="row">
-            <div class="col">
                 <label>Tournament Pod</label>
-                <select id="tourSelect"><option value="">LOADING...</option></select>
+                <select id="tourSelect" onchange="updateGroupSizeOptions()"><option value="">LOADING...</option></select>
             </div>
             <div class="col">
-                <label>WhatsApp (with area code)</label>
-                <input type="number" id="playerPhone" autocomplete="off">
+                <label>How Many Players?</label>
+                <select id="groupSizeSelect" onchange="renderPlayerInputs()" disabled>
+                    <option value="1">1 Player</option>
+                </select>
             </div>
         </div>
-        <div class="row" style="margin-top: 10px; margin-bottom: 0;">
-            <button class="btn-reg col" onclick="registerPlayer()">REGISTER PLAYER</button>
-            <button class="btn-full col" onclick="openFullPodModal()">REGISTER FULL POD</button>
-        </div>
+        
+        <div id="playersContainer">
+            </div>
+
+        <button class="btn-reg" style="width: 100%; margin-top: 15px;" onclick="submitRegistration()">REGISTER TO POD</button>
     </div>
+    
     <div class="live-label"><div class="live-dot"></div> WAITING QUEUE</div>
     <div id="waitingList" class="card-container"></div>
     <div class="live-label"><div class="live-dot green"></div> ACTIVE PODS ON TABLES</div>
@@ -161,8 +144,118 @@
         const select = document.getElementById('tourSelect');
         select.innerHTML = '<option value="">-- SELECT TOURNAMENT --</option>';
         if(catalog) catalog.forEach(t => select.innerHTML += `<option value="${t.tname}" data-size="${t.pod_size || 4}">${t.tname}</option>`);
+        
+        updateGroupSizeOptions(); // Atualiza o select de tamanho de grupo na carga
         updateWaitingList();
         updateActivePods();
+    }
+
+    // AÇÃO 2: Atualiza o Dropdown de Quantidade de Jogadores com base no Catálogo
+    function updateGroupSizeOptions() {
+        const tname = document.getElementById('tourSelect').value;
+        const groupSelect = document.getElementById('groupSizeSelect');
+        groupSelect.innerHTML = "";
+        
+        if(!tname) {
+            groupSelect.innerHTML = '<option value="1">1 Player</option>';
+            groupSelect.disabled = true;
+            document.getElementById('playersContainer').innerHTML = "";
+            return;
+        }
+
+        const size = parseInt(document.querySelector(`#tourSelect option[value="${tname}"]`).dataset.size);
+        for(let i = 1; i <= size; i++) {
+            groupSelect.innerHTML += `<option value="${i}">${i} Player${i > 1 ? 's' : ''}</option>`;
+        }
+        groupSelect.disabled = false;
+        renderPlayerInputs();
+    }
+
+    // AÇÃO 3: Renderiza as linhas de preenchimento dinamicamente
+    function renderPlayerInputs() {
+        const qty = parseInt(document.getElementById('groupSizeSelect').value) || 0;
+        const container = document.getElementById('playersContainer');
+        container.innerHTML = "";
+        
+        for(let i = 1; i <= qty; i++) {
+            container.innerHTML += `
+                <div class="row" style="background: rgba(0,0,0,0.1); padding: 10px; border-radius: 8px; margin-bottom: 10px;">
+                    <div class="col" style="margin-bottom: 0;">
+                        <label style="font-size: 0.65rem;">Player ${i} ID</label>
+                        <input type="number" class="dyn-id" autocomplete="off" style="padding: 10px;">
+                    </div>
+                    <div class="col" style="margin-bottom: 0;">
+                        <label style="font-size: 0.65rem;">Player ${i} Name</label>
+                        <input type="text" class="dyn-name" autocomplete="off" style="padding: 10px;">
+                    </div>
+                    <div class="col" style="margin-bottom: 0;">
+                        <label style="font-size: 0.65rem;">WhatsApp (Opt)</label>
+                        <input type="number" class="dyn-phone" autocomplete="off" style="padding: 10px;">
+                    </div>
+                </div>`;
+        }
+    }
+
+    // AÇÃO 4: O Pulo do Gato (Alocação Inteligente Única)
+    async function submitRegistration() {
+        const tname = document.getElementById('tourSelect').value;
+        if(!tname) return alert("Select tournament first.");
+        
+        const podLimit = parseInt(document.querySelector(`#tourSelect option[value="${tname}"]`).dataset.size);
+        const groupSize = parseInt(document.getElementById('groupSizeSelect').value);
+        
+        const ids = document.querySelectorAll('.dyn-id');
+        const names = document.querySelectorAll('.dyn-name');
+        const phones = document.querySelectorAll('.dyn-phone');
+        
+        const players = [];
+        for(let i = 0; i < groupSize; i++) {
+            if(!ids[i].value || !names[i].value) return alert("Fill ID and Name for all players.");
+            players.push({ id: ids[i].value, name: names[i].value, phone: phones[i].value });
+        }
+
+        const tour = currentCatalog.find(c => c.tname === tname);
+
+        if (groupSize === podLimit) {
+            // CASO: GRUPO FECHADO (FULL POD) - Vai direto para a mesa
+            const { data: tableData } = await _supabase.rpc('assign_table_smart', { 
+                target_event_id: eventPrefix, min_t: tour.table_min, max_t: tour.table_max 
+            });
+
+            if(!tableData || tableData.length === 0) return alert("NO FREE TABLES IN RANGE!");
+            const tableNum = tableData[0].table_number;
+            
+            // Usa a nova função para pegar o pod number
+            const { data: podNum } = await _supabase.rpc('get_pod_for_group', { p_event_id: eventPrefix, p_tname: tname, p_pod_limit: podLimit, p_group_size: groupSize });
+
+            const inserts = players.map(p => ({
+                event_id: eventPrefix, player_id: p.id, player_name: p.name, player_phone: p.phone,
+                tname: tname, status: 'allocated', pod_number: podNum, assigned_table: tableNum
+            }));
+
+            const { error } = await _supabase.from('ode_registrations').insert(inserts);
+            if(!error) {
+                await _supabase.from('event_tables').update({ tournament_name: tname, status: 'OCCUPIED' }).eq('event_id', eventPrefix).eq('table_number', tableNum);
+                updateActivePods();
+            }
+        } else {
+            // CASO: GRUPO PARCIAL (1, 2, ou 3) - Vai para a fila (waiting) juntos
+            const { data: podNum } = await _supabase.rpc('get_pod_for_group', { p_event_id: eventPrefix, p_tname: tname, p_pod_limit: podLimit, p_group_size: groupSize });
+
+            const inserts = players.map(p => ({
+                event_id: eventPrefix, player_id: p.id, player_name: p.name, player_phone: p.phone,
+                tname: tname, status: 'waiting', pod_number: podNum
+            }));
+
+            const { error } = await _supabase.from('ode_registrations').insert(inserts);
+            if(!error) {
+                updateWaitingList();
+            }
+        }
+        
+        // Reseta o formulário
+        renderPlayerInputs();
+        alert("Registration Successful!");
     }
 
     async function updateWaitingList() {
@@ -191,67 +284,6 @@
         });
         for (const info of Object.values(uniquePods)) {
             listDiv.innerHTML += `<div class="active-row"><div class="pod-info"><b>${info.tname}</b><br><small>POD #${info.pod_number}</small></div><div class="table-badge">TABLE ${info.table}</div></div>`;
-        }
-    }
-
-    async function registerPlayer() {
-        const idInput = document.getElementById('playerId');
-        const nameInput = document.getElementById('playerName');
-        const phoneInput = document.getElementById('playerPhone');
-        const tourSelect = document.getElementById('tourSelect');
-        const pId = idInput.value.trim();
-        const name = nameInput.value.trim();
-        const phone = phoneInput.value.trim();
-        const tname = tourSelect.value;
-        if(!pId || !name || !tname) return alert("Fill mandatory fields.");
-        try {
-            const podLimit = parseInt(tourSelect.options[tourSelect.selectedIndex].dataset.size);
-            const { data: podNum } = await _supabase.rpc('get_next_pod_number', { target_tname: tname, target_event_id: eventPrefix, pod_limit: podLimit });
-            await _supabase.from('ode_registrations').insert([{ event_id: eventPrefix, player_id: pId, player_name: name, player_phone: phone, tname: tname, status: 'waiting', pod_number: podNum }]);
-            idInput.value = ""; nameInput.value = ""; phoneInput.value = ""; tourSelect.selectedIndex = 0; nameInput.focus();
-            updateWaitingList();
-        } catch (err) { alert("Error."); }
-    }
-
-    function openFullPodModal() {
-        const tname = document.getElementById('tourSelect').value;
-        if(!tname) return alert("Select tournament first.");
-        const size = parseInt(document.querySelector(`#tourSelect option[value="${tname}"]`).dataset.size);
-        const container = document.getElementById('fullPodInputs');
-        container.innerHTML = "";
-        for(let i=1; i<=size; i++) {
-            container.innerHTML += `<div class="row"><input type="number" class="fp-id" placeholder="Player ${i} ID"><input type="text" class="fp-name" placeholder="Player ${i} Name"></div>`;
-        }
-        document.getElementById('fullPodModal').style.display = 'flex';
-    }
-
-    async function submitFullPod() {
-        const tname = document.getElementById('tourSelect').value;
-        const ids = document.querySelectorAll('.fp-id');
-        const names = document.querySelectorAll('.fp-name');
-        const players = [];
-        for(let i=0; i<ids.length; i++) {
-            if(!ids[i].value || !names[i].value) return alert("Fill all player data.");
-            players.push({ id: ids[i].value, name: names[i].value });
-        }
-        const tour = currentCatalog.find(c => c.tname === tname);
-        const { data: tableData } = await _supabase.rpc('assign_table_smart', { 
-            target_event_id: eventPrefix, 
-            min_t: tour.table_min, 
-            max_t: tour.table_max 
-        });
-        if(!tableData || tableData.length === 0) return alert("NO FREE TABLES IN RANGE!");
-        const tableNum = tableData[0].table_number;
-        const { data: podNum } = await _supabase.rpc('get_next_pod_number', { target_tname: tname, target_event_id: eventPrefix, pod_limit: players.length });
-        const inserts = players.map(p => ({
-            event_id: eventPrefix, player_id: p.id, player_name: p.name,
-            tname: tname, status: 'allocated', pod_number: podNum, assigned_table: tableNum
-        }));
-        const { error } = await _supabase.from('ode_registrations').insert(inserts);
-        if(!error) {
-            await _supabase.from('event_tables').update({ tournament_name: tname, status: 'OCCUPIED' }).eq('event_id', eventPrefix).eq('table_number', tableNum);
-            closeModal('fullPodModal');
-            updateActivePods();
         }
     }
 
