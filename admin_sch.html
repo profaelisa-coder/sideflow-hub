@@ -80,6 +80,7 @@
         <h1 id="pdfEventName" style="margin:0; font-size: 1.5rem;"></h1>
         <p id="pdfDate" style="margin:5px 0; font-weight: bold;"></p>
         <h2 id="pdfTourName" style="margin:5px 0; color: #e63946;"></h2>
+        <p id="pdfTables" style="margin:0; font-weight: bold; font-size: 1.1rem; color: #333; text-align: center;"></p>
         <p id="pdfDetails" style="font-size: 0.9rem; font-weight: bold;"></p>
     </div>
     <table class="payout-table">
@@ -107,7 +108,6 @@
             document.getElementById('loginOverlay').style.display = 'none';
             await loadInitialData();
             
-            // Realtime para o catálogo do SCH
             _supabase.channel('sch_catalog_sync')
                 .on('postgres_changes', { event: '*', schema: 'public', table: 'tournament_catalog' }, loadInitialData)
                 .subscribe();
@@ -157,19 +157,20 @@
         if(idx === "" || !p || p < 4) return alert("Select tournament and min. 4 players.");
         const t = catalog[idx];
 
-        // --- BLOQUEIO DE MESAS INTELIGENTE SCH ---
         const qtyTablesNeeded = Math.ceil(p / 2);
-        const { error: blockError } = await _supabase.rpc('reserve_sch_tables', {
+        const { data: tableRange, error: blockError } = await _supabase.rpc('reserve_sch_tables', {
             p_event_id: eventPrefix,
             p_tname: t.tname,
             p_qty_tables: qtyTablesNeeded
         });
 
-        if(blockError) {
+        if(blockError || !tableRange || tableRange.length === 0) {
             console.error("Erro ao bloquear mesas:", blockError);
             return alert("Error reserving tables for SCH.");
         }
-        // ------------------------------------------
+
+        const minT = tableRange[0].min_table;
+        const maxT = tableRange[0].max_table;
 
         const totalTickets = (t.tfee - t.tcost) * 10 * p;
         const partIndiv = round10((totalTickets * (t.tax / 100)) / p);
@@ -198,6 +199,7 @@
         document.getElementById('pdfEventName').innerText = eventName;
         document.getElementById('pdfDate').innerText = new Date().toLocaleDateString('pt-BR');
         document.getElementById('pdfTourName').innerText = t.tname;
+        document.getElementById('pdfTables').innerText = `Tables: ${minT} to ${maxT}`;
         document.getElementById('pdfLogo').src = logoType === "REGIONAL" ? "reg.PNG" : "ic.png";
         document.getElementById('pdfDetails').innerText = `Schedule: ${t.tday} - ${t.thour} | Players: ${p} | Fee: $${t.tfee} | Rounds: ${p >= 33 ? 6 : 4}`;
         document.getElementById('printArea').style.display = 'block';
