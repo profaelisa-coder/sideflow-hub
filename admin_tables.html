@@ -6,7 +6,7 @@
     <title>SideFlow - Table Map</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
-        :root { --bg: #1A4B84; --sec: #2B6CB0; --gold: #ffb703; --blue: #63B3ED; --red: #e63946; --green: #2ecc71; --white: #e0e1dd; --dark: #0A2540; }
+        :root { --bg: #1A4B84; --sec: #2B6CB0; --gold: #ffb703; --blue: #63B3ED; --red: #e63946; --green: #2ecc71; --white: #e0e1dd; --dark: #0A2540; --blocked: #666666; }
         body { font-family: 'Segoe UI', sans-serif; background: var(--bg); color: var(--white); margin: 0; padding: 20px; display: flex; flex-direction: column; height: 100vh; box-sizing: border-box; }
         h2 { color: var(--gold); text-transform: uppercase; letter-spacing: 2px; text-align: center; margin: 0 0 20px 0; }
         
@@ -20,16 +20,19 @@
         .btn-alloc { width: 100%; background: var(--gold); color: var(--dark); border: none; padding: 10px; border-radius: 6px; font-weight: bold; cursor: pointer; text-transform: uppercase; }
         .btn-wa { width: 100%; background: var(--green); color: white; border: none; padding: 10px; border-radius: 6px; font-weight: bold; cursor: pointer; text-transform: uppercase; margin-top: 10px; display: none; }
         
-        /* Map Area com fundo azul da paleta */
         .map-area { flex: 1; background: var(--sec); border-radius: 12px; padding: 20px; overflow-y: auto; border: 1px solid rgba(255,255,255,0.1); }
         .grid-tables { display: grid; grid-template-columns: repeat(auto-fill, minmax(65px, 1fr)); gap: 12px; }
         
-        .table-box { aspect-ratio: 1; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 1.1rem; cursor: pointer; transition: 0.2s; box-shadow: 0 4px 6px rgba(0,0,0,0.3); flex-direction: column; background: var(--dark); border: 1px solid var(--blue); }
+        .table-box { aspect-ratio: 1; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 1.1rem; cursor: pointer; transition: 0.2s; box-shadow: 0 4px 6px rgba(0,0,0,0.3); flex-direction: column; background: var(--dark); border: 1px solid var(--blue); position: relative; }
         .table-box span { font-size: 0.55rem; margin-top: 4px; opacity: 0.8; text-align: center; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; width: 90%; }
         
         .free-state { background: rgba(255,255,255,0.05); color: white; border: 1px solid rgba(255,255,255,0.2); }
         .occupied-state { background: var(--red); color: white; border: 2px solid #a30000; }
+        .blocked-state { background: var(--blocked); color: white; border: 2px solid #333333; cursor: not-allowed; }
         
+        .btn-block-table { position: absolute; top: 2px; right: 2px; background: rgba(0,0,0,0.5); color: white; border: none; font-size: 0.5rem; cursor: pointer; border-radius: 4px; padding: 2px 4px; }
+        .btn-block-table:hover { background: var(--red); }
+
         .nav-footer { margin-top: 20px; text-align: center; }
         .nav-footer button { background: rgba(255,255,255,0.1); color: white; border: 1px solid rgba(255,255,255,0.2); padding: 10px 25px; border-radius: 6px; cursor: pointer; font-size: 0.8rem; text-transform: uppercase; font-weight: bold; }
         .nav-footer button:hover { background: rgba(255,255,255,0.2); }
@@ -62,6 +65,7 @@
     let allTables = [];
     let catalogSizes = {}; 
     let pendingWA = {};
+    let subscription = null;
 
     window.onload = async () => {
         if(!eventPrefix) return;
@@ -69,12 +73,26 @@
         await loadTables();
         await loadReadyPods();
         
-        // Ativação do Realtime para atualização automática sem F5
-        _supabase.channel('custom-all-channel')
+        setupRealtime();
+        
+        document.addEventListener('visibilitychange', () => {
+            if (document.visibilityState === 'visible') {
+                loadTables();
+                loadReadyPods();
+                setupRealtime();
+            }
+        });
+    };
+
+    function setupRealtime() {
+        if (subscription) {
+            _supabase.removeChannel(subscription);
+        }
+        subscription = _supabase.channel('custom-all-channel')
             .on('postgres_changes', { event: '*', schema: 'public', table: 'ode_registrations' }, loadReadyPods)
             .on('postgres_changes', { event: '*', schema: 'public', table: 'event_tables' }, loadTables)
             .subscribe();
-    };
+    }
 
     async function loadCatalog() {
         const { data } = await _supabase.from('tournament_catalog').select('tname, pod_size').eq('event_id', eventPrefix);
@@ -87,8 +105,30 @@
         const grid = document.getElementById('tablesGrid');
         grid.innerHTML = "";
         allTables.forEach(t => {
+            let stateClass = 'free-state';
+            let statusText = 'FREE';
+            
+            if (t.status === 'OCCUPIED') {
+                stateClass = 'occupied-state';
+                statusText = t.tournament_name;
+            } else if (t.status === 'BLOCKED') {
+                stateClass = 'blocked-state';
+                statusText = 'BLOCKED';
+            }
+
             const isFree = t.status === 'FREE';
-            grid.innerHTML += `<div class="table-box ${isFree ? 'free-state' : 'occupied-state'}" onclick="clearTable('${t.id}', ${isFree}, ${t.table_number})">${t.table_number}<span>${isFree ? 'FREE' : t.tournament_name}</span></div>`;
+            
+            let blockBtn = '';
+            if (isFree) {
+                blockBtn = `<button class="btn-block-table" onclick="event.stopPropagation(); toggleBlockTable('${t.id}', 'BLOCK')">X</button>`;
+            } else if (t.status === 'BLOCKED') {
+                 blockBtn = `<button class="btn-block-table" onclick="event.stopPropagation(); toggleBlockTable('${t.id}', 'FREE')">O</button>`;
+            }
+
+            grid.innerHTML += `<div class="table-box ${stateClass}" onclick="clearTable('${t.id}', '${t.status}', ${t.table_number})">
+                ${blockBtn}
+                ${t.table_number}<span>${statusText}</span>
+            </div>`;
         });
     }
 
@@ -119,7 +159,6 @@
     }
 
     async function allocate(tname, safeKey, groupKey) {
-        // Usa a lógica rpc configurada para respeitar faixas de mesas
         const { data: tableData } = await _supabase.rpc('assign_table_to_full_pod', { target_event_id: eventPrefix, target_tname: tname });
         if (!tableData || tableData.length === 0) return alert("NO FREE TABLES IN THIS SECTION!");
         const tableNum = tableData[0].table_number;
@@ -160,12 +199,18 @@
         loadReadyPods();
     }
 
-    async function clearTable(id, isFree, num) {
-        if(isFree) return; 
+    async function clearTable(id, status, num) {
+        if(status === 'FREE' || status === 'BLOCKED') return; 
         if(confirm(`Free Table ${num}?`)) {
             await _supabase.from('event_tables').update({ status: 'FREE', tournament_name: null }).eq('id', id);
             loadTables();
         }
+    }
+
+    async function toggleBlockTable(id, action) {
+        const newStatus = action === 'BLOCK' ? 'BLOCKED' : 'FREE';
+        await _supabase.from('event_tables').update({ status: newStatus, tournament_name: null }).eq('id', id);
+        loadTables();
     }
 </script>
 </body>
