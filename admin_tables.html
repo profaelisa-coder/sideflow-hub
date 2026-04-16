@@ -95,8 +95,8 @@
     }
 
     async function loadCatalog() {
-        const { data } = await _supabase.from('tournament_catalog').select('tname, pod_size').eq('event_id', eventPrefix);
-        if(data) data.forEach(t => catalogSizes[t.tname] = parseInt(t.pod_size));
+        const { data } = await _supabase.from('tournament_catalog').select('tname, pod_size, table_min, table_max').eq('event_id', eventPrefix);
+        if(data) data.forEach(t => catalogSizes[t.tname] = { size: parseInt(t.pod_size), min: t.table_min, max: t.table_max });
     }
 
     async function loadTables() {
@@ -144,7 +144,7 @@
         });
         listDiv.innerHTML = "";
         for (const [key, info] of Object.entries(groups)) {
-            const targetSize = catalogSizes[info.tname] || 4; 
+            const targetSize = catalogSizes[info.tname] ? catalogSizes[info.tname].size : 4; 
             if(info.players.length >= targetSize) {
                 const safeKey = key.replace(/[^a-zA-Z0-9]/g, '');
                 const isPending = pendingWA[key];
@@ -159,9 +159,12 @@
     }
 
     async function allocate(tname, safeKey, groupKey) {
-        const { data: tableData } = await _supabase.rpc('assign_table_to_full_pod', { target_event_id: eventPrefix, target_tname: tname });
+        const minT = catalogSizes[tname] ? catalogSizes[tname].min : null;
+        const maxT = catalogSizes[tname] ? catalogSizes[tname].max : null;
+        const { data: tableData } = await _supabase.rpc('assign_table_smart', { target_event_id: eventPrefix, min_t: minT, max_t: maxT });
         if (!tableData || tableData.length === 0) return alert("NO FREE TABLES IN THIS SECTION!");
         const tableNum = tableData[0].table_number;
+        await _supabase.from('event_tables').update({ tournament_name: tname, status: 'OCCUPIED' }).eq('event_id', eventPrefix).eq('table_number', tableNum);
         pendingWA[groupKey] = { table: tableNum };
         document.getElementById(`alloc-${safeKey}`).style.display = 'none';
         document.getElementById(`wa-${safeKey}`).style.display = 'block';
