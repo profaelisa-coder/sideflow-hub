@@ -166,7 +166,7 @@
                 </select>
             </div>
         </div>
-        <div class="row">
+        <div class="row ode-field">
             <div class="col">
                 <label>Min Table (Optional)</label>
                 <input type="number" id="catMinTable">
@@ -276,6 +276,15 @@
             document.getElementById('catGame').selectedIndex = 0;
             document.getElementById('catMinTable').value = "";
             document.getElementById('catMaxTable').value = "";
+            document.getElementById('catPodSize').value = "";
+            document.getElementById('catDay').selectedIndex = 0;
+            document.getElementById('catHour').value = "";
+            document.getElementById('catFee').value = "";
+            document.getElementById('catCost').value = "";
+            document.getElementById('catTickets').value = "";
+            document.getElementById('catTax').value = "";
+            document.getElementById('catSpread').selectedIndex = 0;
+            toggleCatFields();
             loadCatalog();
         }
     }
@@ -286,8 +295,9 @@
         listDiv.innerHTML = "";
         if (data) {
             data.forEach(item => {
+                const dayInfo = item.tday ? ` - ${item.tday}` : "";
                 const range = (item.table_min) ? ` | Tables: ${item.table_min}-${item.table_max}` : "";
-                listDiv.innerHTML += `<div class="catalog-item"><div class="catalog-info"><strong>${item.item_type}</strong> ${item.tname}${range}</div><button class="btn-del" onclick="deleteCatalogItem(${item.id})">DEL</button></div>`;
+                listDiv.innerHTML += `<div class="catalog-item"><div class="catalog-info"><strong>${item.item_type}</strong> [${item.game}] ${item.tname}${dayInfo}${range}</div><button class="btn-del" onclick="deleteCatalogItem(${item.id})">DEL</button></div>`;
             });
         }
     }
