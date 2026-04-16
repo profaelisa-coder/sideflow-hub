@@ -27,7 +27,6 @@
         .live-dot.green { background: var(--green); }
         @keyframes blink { 0% { opacity: 1; } 50% { opacity: 0.3; } 100% { opacity: 1; } }
         
-        /* Design 3D dos Cards conforme Imagens Anexas */
         .card-container { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 15px; width: 100%; margin-bottom: 20px; }
         .pod-card-3d {
             background: var(--dark);
@@ -85,11 +84,21 @@
     <div class="box">
         <div class="row">
             <div class="col">
+                <label>Game</label>
+                <select id="gameSelect" onchange="filterTournaments()">
+                    <option value="">ALL GAMES</option>
+                    <option value="TCG">TCG</option>
+                    <option value="VGC">VGC</option>
+                    <option value="GO">GO</option>
+                    <option value="POCKET">POCKET</option>
+                </select>
+            </div>
+            <div class="col">
                 <label>Tournament Pod</label>
                 <select id="tourSelect" onchange="updateGroupSizeOptions()"><option value="">LOADING...</option></select>
             </div>
             <div class="col">
-                <label>How Many Players?</label>
+                <label>Players?</label>
                 <select id="groupSizeSelect" onchange="renderPlayerInputs()" disabled>
                     <option value="1">1 Player</option>
                 </select>
@@ -149,13 +158,20 @@
     async function loadData() {
         const { data: catalog } = await _supabase.from('tournament_catalog').select('*').eq('event_id', eventPrefix).eq('item_type', 'ODE');
         currentCatalog = catalog || [];
-        const select = document.getElementById('tourSelect');
-        select.innerHTML = '<option value="">-- SELECT TOURNAMENT --</option>';
-        if(catalog) catalog.forEach(t => select.innerHTML += `<option value="${t.tname}" data-size="${t.pod_size || 4}">${t.tname}</option>`);
-        
-        updateGroupSizeOptions();
+        filterTournaments();
         updateWaitingList();
         updateActivePods();
+    }
+
+    function filterTournaments() {
+        const game = document.getElementById('gameSelect').value;
+        const select = document.getElementById('tourSelect');
+        select.innerHTML = '<option value="">-- SELECT TOURNAMENT --</option>';
+        
+        const filtered = game ? currentCatalog.filter(c => c.game === game) : currentCatalog;
+        
+        filtered.forEach(t => select.innerHTML += `<option value="${t.tname}" data-size="${t.pod_size || 4}">${t.tname}</option>`);
+        updateGroupSizeOptions();
     }
 
     function updateGroupSizeOptions() {
@@ -269,7 +285,6 @@
         for (const [key, count] of Object.entries(groups)) {
             const [tname, podNum] = key.split('|');
             const targetSize = currentCatalog.find(c => c.tname === tname)?.pod_size || 4;
-            // Design 3D Card
             listDiv.innerHTML += `
                 <div class="pod-card-3d">
                     <div class="pod-info-3d">
@@ -292,7 +307,6 @@
             if(!uniquePods[key]) uniquePods[key] = { tname: r.tname, pod_number: r.pod_number, table: r.assigned_table };
         });
         for (const info of Object.values(uniquePods)) {
-            // Design 3D Card
             listDiv.innerHTML += `
                 <div class="pod-card-3d">
                     <div class="pod-info-3d">
