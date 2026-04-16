@@ -66,7 +66,7 @@
         
         setInterval(updateData, 10000);
 
-        _supabase.channel('tv_realtime')
+        _supabase.channel('tv_realtime_events')
             .on('postgres_changes', { event: '*', schema: 'public', table: 'ode_registrations' }, () => {
                 updateData();
             })
@@ -113,35 +113,45 @@
         updateSidebar(regs, tours);
     }
 
-    async function updateSidebar(regs, tours) {
-        const allocated = regs.filter(r => r.status === 'allocated').sort((a,b) => b.id - a.id);
+    function updateSidebar(regs, tours) {
+        const allocated = regs.filter(r => r.status === 'allocated');
         const callsArea = document.getElementById('callsArea');
         
-        const unique = [];
-        const seen = new Set();
+        const latestPodsMap = new Map();
         
         for (const r of allocated) {
-            const key = r.tname;
-            if (!seen.has(key)) {
-                const tourInfo = tours.find(t => t.tname === r.tname);
-                r.game = tourInfo ? tourInfo.game : 'GAME';
-                unique.push(r);
-                seen.add(key);
+            const existing = latestPodsMap.get(r.tname);
+            if (!existing || r.pod_number > existing.pod_number) {
+                latestPodsMap.set(r.tname, r);
             }
-            if (unique.length >= 6) break;
         }
 
-        if(unique.length === 0) {
+        let unique = Array.from(latestPodsMap.values());
+        
+        unique.sort((a, b) => {
+            if (a.created_at && b.created_at) {
+                return new Date(b.created_at) - new Date(a.created_at);
+            }
+            return b.pod_number - a.pod_number;
+        });
+
+        const topCalls = unique.slice(0, 6);
+
+        if(topCalls.length === 0) {
             callsArea.innerHTML = "<p style='opacity:0.5; font-style: italic; text-align:center;'>WAITING FOR ASSIGNMENTS...</p>";
             return;
         }
 
-        const html = unique.map((r, index) => `
+        const html = topCalls.map((r, index) => {
+            const tourInfo = tours.find(t => t.tname === r.tname);
+            const game = tourInfo ? tourInfo.game : 'GAME';
+            return `
             <div class="sidebar-item ${index === 0 ? 'new-call' : ''}">
-                <div style="font-size: 0.95rem; color: var(--gold); margin-bottom: 8px; font-weight: bold; text-transform: uppercase;">[${r.game}] - ${r.tname}</div>
+                <div style="font-size: 0.95rem; color: var(--gold); margin-bottom: 8px; font-weight: bold; text-transform: uppercase;">[${game}] - ${r.tname}</div>
                 <div style="font-size: 1.5rem; font-weight: 900; color: white;">POD #${r.pod_number} <span style="color: var(--gold);">➔ TABLE ${r.assigned_table}</span></div>
             </div>
-        `).join('');
+            `;
+        }).join('');
         
         callsArea.innerHTML = html;
     }
