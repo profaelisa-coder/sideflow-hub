@@ -237,41 +237,20 @@
 
         const tour = currentCatalog.find(c => c.tname === tname);
 
-        if (groupSize === podLimit) {
-            const { data: tableData } = await _supabase.rpc('assign_table_smart', { 
-                target_event_id: eventPrefix, min_t: tour.table_min, max_t: tour.table_max 
-            });
+        const { data: podNum } = await _supabase.rpc('get_pod_for_group', { p_event_id: eventPrefix, p_tname: tname, p_pod_limit: podLimit, p_group_size: groupSize });
 
-            if(!tableData || tableData.length === 0) return alert("NO FREE TABLES IN RANGE!");
-            const tableNum = tableData[0].table_number;
-            
-            const { data: podNum } = await _supabase.rpc('get_pod_for_group', { p_event_id: eventPrefix, p_tname: tname, p_pod_limit: podLimit, p_group_size: groupSize });
+        const inserts = players.map(p => ({
+            event_id: eventPrefix, player_id: p.id, player_name: p.name, player_phone: p.phone,
+            tname: tname, status: 'waiting', pod_number: podNum
+        }));
 
-            const inserts = players.map(p => ({
-                event_id: eventPrefix, player_id: p.id, player_name: p.name, player_phone: p.phone,
-                tname: tname, status: 'allocated', pod_number: podNum, assigned_table: tableNum
-            }));
-
-            const { error } = await _supabase.from('ode_registrations').insert(inserts);
-            if(!error) {
-                await _supabase.from('event_tables').update({ tournament_name: tname, status: 'OCCUPIED' }).eq('event_id', eventPrefix).eq('table_number', tableNum);
-                updateActivePods();
-            }
-        } else {
-            const { data: podNum } = await _supabase.rpc('get_pod_for_group', { p_event_id: eventPrefix, p_tname: tname, p_pod_limit: podLimit, p_group_size: groupSize });
-
-            const inserts = players.map(p => ({
-                event_id: eventPrefix, player_id: p.id, player_name: p.name, player_phone: p.phone,
-                tname: tname, status: 'waiting', pod_number: podNum
-            }));
-
-            const { error } = await _supabase.from('ode_registrations').insert(inserts);
-            if(!error) {
-                updateWaitingList();
-            }
+        const { error } = await _supabase.from('ode_registrations').insert(inserts);
+        if(!error) {
+            updateWaitingList();
         }
         
-        renderPlayerInputs();
+        document.getElementById('gameSelect').value = "";
+        filterTournaments();
         alert("Registration Successful!");
     }
 
