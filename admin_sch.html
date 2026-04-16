@@ -109,6 +109,7 @@
     let catalog = [];
     let eventName = "";
     let logoType = "";
+    let eventDates = "";
 
     window.onload = async () => {
         if(!eventPrefix) return;
@@ -145,12 +146,12 @@
 
     async function loadInitialData() {
         const { data: idData } = await _supabase.from('tournament_history').select('*').eq('event_id', eventPrefix).eq('tournament_id', 0).single();
-        if(idData) { eventName = idData.event_name; logoType = idData.logo_type; }
+        if(idData) { eventName = idData.event_name; logoType = idData.logo_type; eventDates = idData.event_dates; }
         const { data: catData } = await _supabase.from('tournament_catalog').select('*').eq('event_id', eventPrefix).eq('item_type', 'SCH');
         catalog = catData || [];
         const select = document.getElementById('tourSelect');
         select.innerHTML = '<option value="">-- SELECT --</option>';
-        catalog.forEach((t, index) => { select.innerHTML += `<option value="${index}">${t.tname} - ${t.tday} - ${t.thour}</option>`; });
+        catalog.forEach((t, index) => { select.innerHTML += `<option value="${index}">[${t.game}] ${t.tname} - ${t.tday} - ${t.thour}</option>`; });
     }
 
     function getPayoutRank(p) {
@@ -205,9 +206,9 @@
             let prize = round10(unit * tier.weight) + partIndiv;
             if (prize > 0) { body.innerHTML += `<tr><td>${tier.name}</td><td>${prize.toLocaleString()}</td></tr>`; }
         });
-        if (partIndiv > 0) { body.innerHTML += `<tr style="background:#f9f9f9"><td>Participation (All)</td><td>${partIndiv.toLocaleString()}</td></tr>`; }
+        if (partIndiv > 0) { body.innerHTML += `<tr style="background:#f9f9f9"><td>Participation</td><td>${partIndiv.toLocaleString()}</td></tr>`; }
         document.getElementById('pdfEventName').innerText = eventName;
-        document.getElementById('pdfDate').innerText = new Date().toLocaleDateString('pt-BR');
+        document.getElementById('pdfDate').innerText = eventDates;
         document.getElementById('pdfTourName').innerText = t.tname;
         document.getElementById('pdfTables').innerText = `Tables: ${minT} to ${maxT}`;
         document.getElementById('pdfLogo').src = logoType === "REGIONAL" ? "reg.PNG" : "ic.png";
