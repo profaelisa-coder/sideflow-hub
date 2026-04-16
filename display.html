@@ -6,42 +6,42 @@
     <title>SideFlow Hub - HYPE DISPLAY</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
-        :root { --bg: #0d1b2a; --sec: #1b263b; --gold: #ffb703; --blue: #457b9d; --white: #e0e1dd; --red: #e63946; }
+        :root { --bg: #0A2540; --sec: #1A4B84; --gold: #ffb703; --blue: #63B3ED; --white: #e0e1dd; --red: #e63946; }
         body { font-family: 'Segoe UI', sans-serif; background: var(--bg); color: var(--white); margin: 0; overflow: hidden; display: flex; flex-direction: column; height: 100vh; }
-        header { padding: 15px; text-align: center; background: rgba(0,0,0,0.4); border-bottom: 3px solid var(--gold); }
-        h1 { margin: 0; letter-spacing: 8px; text-transform: uppercase; color: var(--gold); font-size: 2.5rem; }
-        .main-layout { display: flex; flex: 1; overflow: hidden; }
-        .hype-container { flex: 7; display: grid; grid-template-columns: repeat(auto-fit, minmax(350px, 1fr)); gap: 20px; padding: 30px; align-content: start; overflow-y: auto; }
-        .calls-sidebar { flex: 3; background: rgba(0,0,0,0.3); border-left: 2px solid rgba(255,255,255,0.1); display: flex; flex-direction: column; padding: 20px; }
-        .calls-title { color: var(--gold); font-weight: 900; text-align: center; font-size: 1.5rem; margin-bottom: 20px; border-bottom: 2px solid var(--gold); padding-bottom: 10px; text-transform: uppercase; }
-        .call-card { background: var(--sec); padding: 20px; border-radius: 15px; margin-bottom: 15px; border-left: 8px solid var(--blue); animation: slideIn 0.5s ease-out; }
-        .call-card.new { border-left-color: var(--gold); animation: pulse-new 2s infinite; }
-        @keyframes slideIn { from { transform: translateX(50px); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
-        @keyframes pulse-new { 0% { box-shadow: 0 0 0px var(--gold); } 50% { box-shadow: 0 0 20px var(--gold); } 100% { box-shadow: 0 0 0px var(--gold); } }
-        .call-pod { font-size: 0.9rem; opacity: 0.7; text-transform: uppercase; }
-        .call-name { font-size: 1.4rem; font-weight: 800; margin: 5px 0; color: white; }
-        .call-table { font-size: 2rem; color: var(--gold); font-weight: 900; }
-        .pod-card { background: linear-gradient(145deg, var(--sec), #0d1b2a); border-radius: 20px; padding: 25px; border: 2px solid rgba(255,255,255,0.05); }
+        .main-layout { display: flex; flex: 1; overflow: hidden; position: relative; }
+        .hype-container { width: 100%; display: grid; grid-template-columns: repeat(auto-fit, minmax(350px, 1fr)); gap: 20px; padding: 30px; padding-bottom: 120px; align-content: start; overflow-y: auto; scroll-behavior: auto; -ms-overflow-style: none; scrollbar-width: none; }
+        .hype-container::-webkit-scrollbar { display: none; }
+        
+        .footer-calls { position: fixed; bottom: 0; left: 0; width: 100%; background: var(--bg); border-top: 3px solid var(--gold); display: flex; align-items: center; padding: 15px 30px; box-sizing: border-box; gap: 20px; z-index: 100; box-shadow: 0 -5px 20px rgba(0,0,0,0.5); }
+        .footer-title { color: var(--gold); font-weight: 900; font-size: 1.5rem; text-transform: uppercase; white-space: nowrap; letter-spacing: 2px; }
+        .footer-calls-list { display: flex; gap: 15px; flex: 1; overflow: hidden; justify-content: flex-start; }
+        .footer-call { background: var(--sec); padding: 10px 25px; border-radius: 8px; border-left: 5px solid var(--blue); font-size: 1.2rem; font-weight: bold; white-space: nowrap; display: flex; align-items: center; gap: 10px; color: white; }
+        .footer-call span { color: var(--gold); font-size: 1.4rem; }
+        .footer-call.new-call { border-left-color: var(--gold); animation: pulse-new 2s infinite; }
+        
+        @keyframes pulse-new { 0% { box-shadow: 0 0 0px var(--gold); } 50% { box-shadow: 0 0 15px var(--gold); } 100% { box-shadow: 0 0 0px var(--gold); } }
+        
+        .pod-card { background: linear-gradient(145deg, var(--sec), #0c2b4d); border-radius: 15px; padding: 25px; border: 2px solid rgba(255,255,255,0.05); }
         .pod-category { font-size: 0.9rem; color: var(--gold); font-weight: bold; text-transform: uppercase; }
-        .pod-name { font-size: 1.8rem; margin: 10px 0; font-weight: 800; color: white; }
-        .progress-container { background: rgba(255,255,255,0.05); height: 35px; border-radius: 18px; margin-top: 20px; overflow: hidden; position: relative; border: 1px solid rgba(255,255,255,0.1); }
-        .progress-bar { height: 100%; background: linear-gradient(90deg, #1d3557, var(--blue), #a8dadc); width: 0%; transition: width 0.8s ease-in-out; }
-        .pod-status { position: absolute; width: 100%; text-align: center; top: 50%; transform: translateY(-50%); font-weight: 900; font-size: 1rem; text-shadow: 1px 1px 2px rgba(0,0,0,0.8); }
+        .pod-name { font-size: 1.8rem; margin: 10px 0; font-weight: 800; color: white; display: flex; justify-content: space-between; align-items: center; }
+        .pod-name small { font-size: 1.1rem; opacity: 0.7; color: var(--blue); }
+        .progress-container { background: rgba(0,0,0,0.3); height: 40px; border-radius: 20px; margin-top: 20px; overflow: hidden; position: relative; border: 1px solid rgba(255,255,255,0.1); }
+        .progress-bar { height: 100%; background: linear-gradient(90deg, #b08d00, var(--gold), #ffda6a); width: 0%; transition: width 0.5s ease-in-out; }
+        .pod-status { position: absolute; width: 100%; text-align: center; top: 50%; transform: translateY(-50%); font-weight: 900; font-size: 1.2rem; text-shadow: 1px 1px 3px rgba(0,0,0,0.9); }
+        
+        .pulse-gold { animation: border-pulse 1.5s infinite; }
+        @keyframes border-pulse { 0% { border-color: rgba(255,183,3,0.2); } 50% { border-color: rgba(255,183,3,1); box-shadow: 0 0 20px rgba(255,183,3,0.6); } 100% { border-color: rgba(255,183,3,0.2); } }
     </style>
 </head>
 <body>
 
-<header>
-    <h1 id="eventName">SIDEFLOW HUB</h1>
-</header>
-
 <div class="main-layout">
     <div class="hype-container" id="displayArea"></div>
     
-    <div class="calls-sidebar">
-        <div class="calls-title">TABLE ASSIGNMENTS</div>
-        <div id="callsArea">
-            <p style="text-align:center; opacity:0.5;">No assignments yet...</p>
+    <div class="footer-calls">
+        <div class="footer-title">LAST PODS STARTED ➔</div>
+        <div class="footer-calls-list" id="callsArea">
+            <p style="opacity:0.5; font-style: italic; margin:0;">Waiting for first assignments...</p>
         </div>
     </div>
 </div>
@@ -52,6 +52,9 @@
     const _supabase = supabase.createClient(supabaseUrl, supabaseKey);
     
     let eventPrefix = new URLSearchParams(window.location.search).get('event') || localStorage.getItem('active_event_id');
+    let scrollSpeed = 0.5;
+    let scrollDirection = 1;
+    let isPaused = false;
 
     async function initDisplay() {
         const displayArea = document.getElementById('displayArea');
@@ -59,9 +62,6 @@
             displayArea.innerHTML = "<h2 style='color:red; width:100%; text-align:center;'>ERRO: EVENT ID MISSING. ADD ?event=ID</h2>";
             return;
         }
-
-        const { data: info } = await _supabase.from('tournament_history').select('*').eq('event_id', eventPrefix).single();
-        if(info) document.getElementById('eventName').innerText = info.event_name;
 
         updateDisplay();
         updateCalls();
@@ -77,22 +77,47 @@
                 updateCalls();
             })
             .subscribe();
+
+        requestAnimationFrame(autoScroll);
+    }
+
+    function autoScroll() {
+        const container = document.getElementById('displayArea');
+        if (!container || isPaused) {
+            requestAnimationFrame(autoScroll);
+            return;
+        }
+        if (container.scrollHeight <= container.clientHeight) {
+            requestAnimationFrame(autoScroll);
+            return;
+        }
+        
+        container.scrollTop += scrollSpeed * scrollDirection;
+
+        if (scrollDirection === 1 && container.scrollTop + container.clientHeight >= container.scrollHeight - 1) {
+            scrollDirection = -1;
+            isPaused = true;
+            setTimeout(() => { isPaused = false; requestAnimationFrame(autoScroll); }, 3000);
+            return;
+        } else if (scrollDirection === -1 && container.scrollTop <= 0) {
+            scrollDirection = 1;
+            isPaused = true;
+            setTimeout(() => { isPaused = false; requestAnimationFrame(autoScroll); }, 3000);
+            return;
+        }
+        requestAnimationFrame(autoScroll);
     }
 
     async function updateDisplay() {
         const displayArea = document.getElementById('displayArea');
-        const { data: tours, error: errTours } = await _supabase.from('tournament_catalog').select('*').eq('event_id', eventPrefix).eq('item_type', 'ODE');
+        const { data: tours, error: errTours } = await _supabase.from('tournament_catalog').select('*').eq('event_id', eventPrefix).eq('item_type', 'ODE').order('id', { ascending: true });
         
-        if(errTours) {
-            displayArea.innerHTML = `<h2 style='color:red; width:100%; text-align:center;'>DATABASE ERROR: ${errTours.message}</h2>`;
-            return;
-        }
+        if(errTours) return;
         if(!tours || tours.length === 0) return;
 
         const { data: regs } = await _supabase.from('ode_registrations').select('*').eq('event_id', eventPrefix).in('status', ['waiting', 'allocated']);
-        displayArea.innerHTML = "";
 
-        tours.forEach(t => {
+        tours.forEach((t, index) => {
             const relevantRegs = regs ? regs.filter(r => r.tname === t.tname) : [];
             let maxPod = relevantRegs.length > 0 ? Math.max(...relevantRegs.map(r => r.pod_number)) : 1;
             let currentPodPlayers = relevantRegs.filter(r => r.pod_number === maxPod);
@@ -106,18 +131,25 @@
             }
 
             const percentage = Math.min((count / target) * 100, 100);
+            const cardId = `pod-${t.id}`;
+            let card = document.getElementById(cardId);
 
-            const card = document.createElement('div');
+            if (!card) {
+                card = document.createElement('div');
+                card.id = cardId;
+                card.style.order = index;
+                displayArea.appendChild(card);
+            }
+
             card.className = `pod-card ${count === (target - 1) ? 'pulse-gold' : ''}`;
             card.innerHTML = `
-                <div class="pod-category">${t.game}</div>
-                <div class="pod-name">${t.tname} <small style="font-size:0.8rem; opacity:0.5;">#${maxPod}</small></div>
+                <div class="pod-category">[${t.game}]</div>
+                <div class="pod-name">${t.tname} <small>POD #${maxPod}</small></div>
                 <div class="progress-container">
                     <div class="progress-bar" style="width: ${percentage}%"></div>
                     <div class="pod-status">${count} / ${target}</div>
                 </div>
             `;
-            displayArea.appendChild(card);
         });
     }
 
@@ -129,10 +161,9 @@
             .order('created_at', { ascending: false });
 
         const callsArea = document.getElementById('callsArea');
-        callsArea.innerHTML = "";
 
         if(!calls || calls.length === 0) {
-            callsArea.innerHTML = "<p style='text-align:center; opacity:0.5;'>No assignments yet...</p>";
+            callsArea.innerHTML = "<p style='opacity:0.5; font-style: italic; margin:0;'>Waiting for first assignments...</p>";
             return;
         }
 
@@ -147,15 +178,12 @@
             if (uniqueCalls.length >= 4) break; 
         }
 
+        callsArea.innerHTML = "";
         uniqueCalls.forEach((c, index) => {
-            const card = document.createElement('div');
-            card.className = `call-card ${index === 0 ? 'new' : ''}`;
-            card.innerHTML = `
-                <div class="call-pod">${c.tname} - POD #${c.pod_number}</div>
-                <div class="call-name">PROCEED TO:</div>
-                <div class="call-table">TABLE ${c.assigned_table}</div>
-            `;
-            callsArea.appendChild(card);
+            const item = document.createElement('div');
+            item.className = `footer-call ${index === 0 ? 'new-call' : ''}`;
+            item.innerHTML = `${c.tname} #${c.pod_number} &nbsp;➔&nbsp; <span>TABLE ${c.assigned_table}</span>`;
+            callsArea.appendChild(item);
         });
     }
 
