@@ -130,6 +130,7 @@
             <div class="col sch-field" style="display:none;">
                 <label>Day</label>
                 <select id="catDay">
+                    <option value="">-- SELECT --</option>
                     <option value="Day 1">Day 1</option>
                     <option value="Day 2">Day 2</option>
                     <option value="Day 3">Day 3</option>
@@ -160,6 +161,7 @@
             <div class="col sch-field" style="display:none;">
                 <label>Spread</label>
                 <select id="catSpread">
+                    <option value="">-- SELECT --</option>
                     <option value="2.0">2.0</option>
                     <option value="1.75">1.75</option>
                     <option value="1.5">1.5</option>
@@ -214,7 +216,7 @@
         const type = document.getElementById('catType').value;
         const odeFields = document.querySelectorAll('.ode-field');
         const schFields = document.querySelectorAll('.sch-field');
-        if(type === 'ODE') {
+        if(type === 'ODE' || type === '') {
             odeFields.forEach(el => el.style.display = 'flex');
             schFields.forEach(el => el.style.display = 'none');
         } else if (type === 'SCH') {
