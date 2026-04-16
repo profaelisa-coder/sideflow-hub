@@ -32,6 +32,10 @@
         .payout-table { width: 100%; border-collapse: collapse; margin-top: 20px; }
         .payout-table th, .payout-table td { border: 1px solid #ddd; padding: 12px; text-align: center; }
         .payout-table th { background: #f4f4f4; text-transform: uppercase; font-size: 0.8rem; }
+        
+        .nav-footer { position: fixed; bottom: 0; left: 0; width: 100%; background: var(--dark); padding: 15px; display: flex; justify-content: center; gap: 15px; border-top: 1px solid rgba(255,255,255,0.1); }
+        .nav-footer button { width: auto; padding: 10px 20px; font-size: 0.75rem; background: var(--sec); color: white; border: 1px solid var(--blue); }
+
         @media print {
             body * { visibility: hidden; background: white !important; }
             #printArea, #printArea * { visibility: visible; }
@@ -72,6 +76,10 @@
         <input type="number" id="numPlayers"> 
         <button class="btn-calc" onclick="generateAndSave()">SAVE AND GENERATE PAYOUT</button>
     </div>
+</div>
+
+<div class="nav-footer no-print">
+    <button onclick="navToTables()">VIEW TABLE MAP</button>
 </div>
 
 <div id="printArea">
@@ -132,6 +140,8 @@
             window.location.href = `admin_lead.html?event=${eventPrefix}`;
         } else { alert("INCORRECT PASSWORD."); }
     }
+
+    function navToTables() { window.location.href = `admin_tables.html?event=${eventPrefix}`; }
 
     async function loadInitialData() {
         const { data: idData } = await _supabase.from('tournament_history').select('*').eq('event_id', eventPrefix).eq('tournament_id', 0).single();
