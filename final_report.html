@@ -82,17 +82,17 @@
     const eventPrefix = params.get('event');
     window.onload = async () => {
         if (!eventPrefix) return;
-        document.getElementById('reportDate').innerText = new Date().toLocaleDateString('pt-BR');
         if (sessionStorage.getItem('ode_auth') === 'true' || sessionStorage.getItem('sch_auth') === 'true') {
             document.getElementById('mailBtn').style.display = 'block';
         }
         const { data: identity } = await _supabase.from('tournament_history').select('*').eq('event_id', eventPrefix).eq('tournament_id', 0).single();
         if (identity) {
             document.getElementById('eventTitle').innerText = identity.event_name;
+            document.getElementById('reportDate').innerText = identity.event_dates || new Date().toLocaleDateString('pt-BR');
             document.getElementById('logoImg').src = identity.logo_type === 'REGIONAL' ? 'reg.PNG' : 'ic.png';
         }
         const { data: catalog } = await _supabase.from('tournament_catalog').select('*').eq('event_id', eventPrefix);
-        const { data: history } = await _supabase.from('tournament_history').select('*').eq('event_id', eventPrefix).neq('tournament_id', 0);
+        const { data: history } = await _supabase.from('tournament_history').select('*').eq('event_id', eventPrefix).neq('tournament_name', 'SYSTEM_ANCHOR');
         const { data: registrations } = await _supabase.from('ode_registrations').select('*').eq('event_id', eventPrefix);
         renderSCH(catalog.filter(c => c.item_type === 'SCH'), history);
         renderODE(catalog.filter(c => c.item_type === 'ODE'), registrations);
@@ -101,12 +101,12 @@
         const body = document.getElementById('schBody');
         let totals = { p: 0, e: 0, c: 0, t: 0 };
         catItems.forEach(cat => {
-            const hist = histItems.find(h => h.tournament_id == cat.id) || { players: 0, total_tickets: 0 };
+            const hist = histItems.find(h => h.tournament_name === cat.tname && h.tday === cat.tday && h.thour === cat.thour) || { players: 0, total_tickets: 0 };
             const entry = hist.players * cat.tfee;
             const costs = hist.players * cat.tcost;
             body.innerHTML += `
                 <tr>
-                    <td>${cat.tname}</td>
+                    <td>[${cat.game}] ${cat.tname}</td>
                     <td>${cat.tday} - ${cat.thour}</td>
                     <td>${hist.players}</td>
                     <td>$${entry.toLocaleString()}</td>
@@ -136,7 +136,7 @@
             const tickets = pods * (cat.tickets_per_pod || 0);
             body.innerHTML += `
                 <tr>
-                    <td>${cat.tname}</td>
+                    <td>[${cat.game}] ${cat.tname}</td>
                     <td>${pods}</td>
                     <td>${tRegs.length}</td>
                     <td>${unique}</td>
