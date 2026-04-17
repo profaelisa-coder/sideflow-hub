@@ -5,14 +5,15 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>SideFlow - Final Report</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
     <style>
         :root { --bg: #1A4B84; --sec: #2B6CB0; --gold: #ffb703; --blue: #63B3ED; --white: #e0e1dd; --red: #e63946; --green: #2ecc71; --dark: #0A2540; }
         body { font-family: 'Segoe UI', sans-serif; background: var(--bg); color: #333; margin: 0; padding: 20px; display: flex; flex-direction: column; align-items: center; }
         .no-print { display: flex; gap: 10px; margin-bottom: 20px; width: 100%; max-width: 900px; justify-content: center; }
         button { padding: 12px 20px; border-radius: 6px; border: none; font-weight: bold; cursor: pointer; text-transform: uppercase; transition: 0.3s; }
         .btn-print { background: var(--dark); color: white; }
-        .btn-mail { background: var(--sec); color: white; display: none; }
-        .btn-print:hover, .btn-mail:hover { filter: brightness(1.2); }
+        .btn-print:hover { filter: brightness(1.2); }
         .report-paper { background: white; width: 100%; max-width: 900px; padding: 40px; box-sizing: border-box; border-radius: 4px; box-shadow: 0 0 20px rgba(0,0,0,0.5); }
         .header { text-align: center; border-bottom: 2px solid #333; padding-bottom: 20px; margin-bottom: 30px; }
         .header img { height: 80px; margin-bottom: 10px; }
@@ -35,7 +36,6 @@
 <div class="no-print">
     <button class="btn-print" onclick="window.history.back()">⬅ BACK</button>
     <button class="btn-print" onclick="window.print()">🖨️ PRINT PDF</button>
-    <button id="mailBtn" class="btn-mail" onclick="enviarRelatorioEmail()">📧 SEND BY E-MAIL</button>
 </div>
 <div class="report-paper">
     <div class="header">
@@ -80,11 +80,11 @@
     const _supabase = supabase.createClient(supabaseUrl, supabaseKey);
     const params = new URLSearchParams(window.location.search);
     const eventPrefix = params.get('event');
+    
+    emailjs.init("isrFxc39zpCE43OQC");
+
     window.onload = async () => {
         if (!eventPrefix) return;
-        if (sessionStorage.getItem('ode_auth') === 'true' || sessionStorage.getItem('sch_auth') === 'true') {
-            document.getElementById('mailBtn').style.display = 'block';
-        }
         const { data: identity } = await _supabase.from('tournament_history').select('*').eq('event_id', eventPrefix).eq('tournament_id', 0).single();
         if (identity) {
             document.getElementById('eventTitle').innerText = identity.event_name;
@@ -96,7 +96,12 @@
         const { data: registrations } = await _supabase.from('ode_registrations').select('*').eq('event_id', eventPrefix);
         renderSCH(catalog.filter(c => c.item_type === 'SCH'), history);
         renderODE(catalog.filter(c => c.item_type === 'ODE'), registrations);
+        const autoSend = params.get('autoSend');
+        if (autoSend === 'true') {
+            setTimeout(() => { enviarRelatorioEmail(); }, 2000);
+        }
     };
+
     function renderSCH(catItems, histItems) {
         const body = document.getElementById('schBody');
         let totals = { p: 0, e: 0, c: 0, t: 0 };
@@ -104,26 +109,12 @@
             const hist = histItems.find(h => h.tournament_name === cat.tname && h.tday === cat.tday && h.thour === cat.thour) || { players: 0, total_tickets: 0 };
             const entry = hist.players * cat.tfee;
             const costs = hist.players * cat.tcost;
-            body.innerHTML += `
-                <tr>
-                    <td>[${cat.game}] ${cat.tname}</td>
-                    <td>${cat.tday} - ${cat.thour}</td>
-                    <td>${hist.players}</td>
-                    <td>$${entry.toLocaleString()}</td>
-                    <td>$${costs.toLocaleString()}</td>
-                    <td>${hist.total_tickets.toLocaleString()}</td>
-                </tr>`;
+            body.innerHTML += `<tr><td>[${cat.game}] ${cat.tname}</td><td>${cat.tday} - ${cat.thour}</td><td>${hist.players}</td><td>$${entry.toLocaleString()}</td><td>$${costs.toLocaleString()}</td><td>${hist.total_tickets.toLocaleString()}</td></tr>`;
             totals.p += hist.players; totals.e += entry; totals.c += costs; totals.t += hist.total_tickets;
         });
-        body.innerHTML += `
-            <tr class="row-total">
-                <td colspan="2">TOTALS</td>
-                <td>${totals.p}</td>
-                <td>$${totals.e.toLocaleString()}</td>
-                <td>$${totals.c.toLocaleString()}</td>
-                <td>${totals.t.toLocaleString()}</td>
-            </tr>`;
+        body.innerHTML += `<tr class="row-total"><td colspan="2">TOTALS</td><td>${totals.p}</td><td>$${totals.e.toLocaleString()}</td><td>$${totals.c.toLocaleString()}</td><td>${totals.t.toLocaleString()}</td></tr>`;
     }
+
     function renderODE(catItems, regs) {
         const body = document.getElementById('odeBody');
         let totals = { pods: 0, tp: 0, up: 0, e: 0, c: 0, t: 0 };
@@ -134,36 +125,44 @@
             const entry = tRegs.length * cat.tfee;
             const costs = tRegs.length * cat.tcost;
             const tickets = pods * (cat.tickets_per_pod || 0);
-            body.innerHTML += `
-                <tr>
-                    <td>[${cat.game}] ${cat.tname}</td>
-                    <td>${pods}</td>
-                    <td>${tRegs.length}</td>
-                    <td>${unique}</td>
-                    <td>$${entry.toLocaleString()}</td>
-                    <td>$${costs.toLocaleString()}</td>
-                    <td>${tickets.toLocaleString()}</td>
-                </tr>`;
-            totals.pods += pods; totals.tp += tRegs.length; totals.up += unique; 
-            totals.e += entry; totals.c += costs; totals.t += tickets;
+            body.innerHTML += `<tr><td>[${cat.game}] ${cat.tname}</td><td>${pods}</td><td>${tRegs.length}</td><td>${unique}</td><td>$${entry.toLocaleString()}</td><td>$${costs.toLocaleString()}</td><td>${tickets.toLocaleString()}</td></tr>`;
+            totals.pods += pods; totals.tp += tRegs.length; totals.up += unique; totals.e += entry; totals.c += costs; totals.t += tickets;
         });
-        body.innerHTML += `
-            <tr class="row-total">
-                <td>TOTALS</td>
-                <td>${totals.pods}</td>
-                <td>${totals.tp}</td>
-                <td>${totals.up}</td>
-                <td>$${totals.e.toLocaleString()}</td>
-                <td>$${totals.c.toLocaleString()}</td>
-                <td>${totals.t.toLocaleString()}</td>
-            </tr>`;
+        body.innerHTML += `<tr class="row-total"><td>TOTALS</td><td>${totals.pods}</td><td>${totals.tp}</td><td>${totals.up}</td><td>$${totals.e.toLocaleString()}</td><td>$${totals.c.toLocaleString()}</td><td>${totals.t.toLocaleString()}</td></tr>`;
     }
-    function enviarRelatorioEmail() {
+    
+    async function gerarEEnviarPDF() {
+        const elemento = document.querySelector(".report-paper");
         const eventName = document.getElementById('eventTitle').innerText;
-        const currentUrl = window.location.href;
-        const subject = encodeURIComponent(`FINAL REPORT - ${eventName}`);
-        const body = encodeURIComponent(`O fechamento do evento ${eventName} está pronto.\n\nAcesse o relatório completo no link abaixo:\n${currentUrl}\n\nAtt,\nSideFlow Hub System`);
-        window.location.href = `mailto:sidesflow_hub@outlook.com?subject=${subject}&body=${body}`;
+        const opt = { margin: 10, filename: `Relatorio_${eventName}.pdf`, image: { type: 'jpeg', quality: 0.98 }, html2canvas: { scale: 2, useCORS: true }, jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' } };
+        try {
+            const pdfBlob = await html2pdf().set(opt).from(elemento).output('blob');
+            const fileName = `report_${eventPrefix}_${Date.now()}.pdf`;
+            const { data, error } = await _supabase.storage.from('PAYOUTS').upload(fileName, pdfBlob, { contentType: 'application/pdf', upsert: true });
+            if (error) throw error;
+            const { data: urlData } = _supabase.storage.from('PAYOUTS').getPublicUrl(fileName);
+            return urlData.publicUrl;
+        } catch (err) { alert('Erro ao gerar PDF: ' + err.message); return null; }
+    }
+
+    async function enviarRelatorioEmail() {
+        const pdfUrl = await gerarEEnviarPDF();
+        if (pdfUrl) {
+            const eventName = document.getElementById('eventTitle').innerText;
+            const eventDate = document.getElementById('reportDate').innerText;
+            const recipients = sessionStorage.getItem('report_recipients');
+            
+            const templateParams = {
+                to_email: recipients,
+                event_name: eventName,
+                event_date: eventDate,
+                pdf_url: pdfUrl
+            };
+
+            emailjs.send('service_s7h9k4o', 'template_6ro2udu', templateParams)
+                .then(() => { alert("E-mail enviado com sucesso!"); })
+                .catch((err) => { alert("Erro ao enviar e-mail automático: " + JSON.stringify(err)); });
+        }
     }
 </script>
 </body>
