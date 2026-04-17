@@ -275,8 +275,8 @@
             tname: document.getElementById('catName').value.trim(),
             tfee: parseFloat(document.getElementById('catFee').value) || 0,
             tcost: parseFloat(document.getElementById('catCost').value) || 0,
-	    min_table: parseInt(document.getElementById('catMinTable').value) || 0,
-            max_table: parseInt(document.getElementById('catMaxTable').value) || 0
+	    table_min: parseInt(document.getElementById('catMinTable').value) || 0,
+            table_max: parseInt(document.getElementById('catMaxTable').value) || 0
         };
         if(!type || !payload.game || !payload.tname) return alert("Fill mandatory fields");
         if(type === 'ODE') {
@@ -299,7 +299,7 @@
         if (data) {
             data.forEach(item => {
                 const dayInfo = item.tday ? ` - ${item.tday}` : "";
-		const tables = item.min_table ? ` [Tables ${item.min_table}-${item.max_table}]` : "";
+		const tables = item.min_table ? ` [Tables ${item.table_min}-${item.table_max}]` : "";
                 listDiv.innerHTML += `<div class="catalog-item"><div class="catalog-info"><strong>${item.item_type}</strong> [${item.game}] ${item.tname}${dayInfo} ${tables}</div><button class="btn-del" onclick="deleteCatalogItem(${item.id})">DEL</button></div>`;
             });
         }
