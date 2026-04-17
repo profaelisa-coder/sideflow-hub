@@ -25,11 +25,7 @@
         th, td { border: 1px solid #ccc; padding: 10px; text-align: center; font-size: 13px; }
         th { background: #eee; font-weight: bold; }
         .row-total { background: #f9f9f9; font-weight: bold; }
-        @media print {
-            body { background: white; padding: 0; }
-            .no-print { display: none; }
-            .report-paper { box-shadow: none; max-width: 100%; padding: 20px; }
-        }
+        @media print { body { background: white; padding: 0; } .no-print { display: none; } .report-paper { box-shadow: none; max-width: 100%; padding: 20px; } }
     </style>
 </head>
 <body>
@@ -46,31 +42,12 @@
     </div>
     <h3>Scheduled Events</h3>
     <table id="schTable">
-        <thead>
-            <tr>
-                <th>Tournament</th>
-                <th>Day/Hour</th>
-                <th>Players</th>
-                <th>Entry ($)</th>
-                <th>Costs ($)</th>
-                <th>Tickets</th>
-            </tr>
-        </thead>
+        <thead><tr><th>Tournament</th><th>Day/Hour</th><th>Players</th><th>Entry ($)</th><th>Costs ($)</th><th>Tickets</th></tr></thead>
         <tbody id="schBody"></tbody>
     </table>
     <h3>On-Demand Events</h3>
     <table id="odeTable">
-        <thead>
-            <tr>
-                <th>Tournament</th>
-                <th>Pods</th>
-                <th>Total Players</th>
-                <th>Unique Players</th>
-                <th>Entry ($)</th>
-                <th>Costs ($)</th>
-                <th>Tickets</th>
-            </tr>
-        </thead>
+        <thead><tr><th>Tournament</th><th>Pods</th><th>Total Players</th><th>Unique Players</th><th>Entry ($)</th><th>Costs ($)</th><th>Tickets</th></tr></thead>
         <tbody id="odeBody"></tbody>
     </table>
 </div>
@@ -80,7 +57,6 @@
     const _supabase = supabase.createClient(supabaseUrl, supabaseKey);
     const params = new URLSearchParams(window.location.search);
     const eventPrefix = params.get('event');
-    
     emailjs.init("isrFxc39zpCE43OQC");
 
     window.onload = async () => {
@@ -96,10 +72,7 @@
         const { data: registrations } = await _supabase.from('ode_registrations').select('*').eq('event_id', eventPrefix);
         renderSCH(catalog.filter(c => c.item_type === 'SCH'), history);
         renderODE(catalog.filter(c => c.item_type === 'ODE'), registrations);
-        const autoSend = params.get('autoSend');
-        if (autoSend === 'true') {
-            setTimeout(() => { enviarRelatorioEmail(); }, 2000);
-        }
+        if (params.get('autoSend') === 'true') { setTimeout(() => { enviarRelatorioEmail(); }, 2000); }
     };
 
     function renderSCH(catItems, histItems) {
@@ -107,8 +80,7 @@
         let totals = { p: 0, e: 0, c: 0, t: 0 };
         catItems.forEach(cat => {
             const hist = histItems.find(h => h.tournament_name === cat.tname && h.tday === cat.tday && h.thour === cat.thour) || { players: 0, total_tickets: 0 };
-            const entry = hist.players * cat.tfee;
-            const costs = hist.players * cat.tcost;
+            const entry = hist.players * cat.tfee; const costs = hist.players * cat.tcost;
             body.innerHTML += `<tr><td>[${cat.game}] ${cat.tname}</td><td>${cat.tday} - ${cat.thour}</td><td>${hist.players}</td><td>$${entry.toLocaleString()}</td><td>$${costs.toLocaleString()}</td><td>${hist.total_tickets.toLocaleString()}</td></tr>`;
             totals.p += hist.players; totals.e += entry; totals.c += costs; totals.t += hist.total_tickets;
         });
@@ -122,9 +94,7 @@
             const tRegs = regs.filter(r => r.tname === cat.tname);
             const pods = [...new Set(tRegs.map(r => r.pod_number))].length;
             const unique = [...new Set(tRegs.map(r => r.player_id))].length;
-            const entry = tRegs.length * cat.tfee;
-            const costs = tRegs.length * cat.tcost;
-            const tickets = pods * (cat.tickets_per_pod || 0);
+            const entry = tRegs.length * cat.tfee; const costs = tRegs.length * cat.tcost; const tickets = pods * (cat.tickets_per_pod || 0);
             body.innerHTML += `<tr><td>[${cat.game}] ${cat.tname}</td><td>${pods}</td><td>${tRegs.length}</td><td>${unique}</td><td>$${entry.toLocaleString()}</td><td>$${costs.toLocaleString()}</td><td>${tickets.toLocaleString()}</td></tr>`;
             totals.pods += pods; totals.tp += tRegs.length; totals.up += unique; totals.e += entry; totals.c += costs; totals.t += tickets;
         });
@@ -151,17 +121,10 @@
             const eventName = document.getElementById('eventTitle').innerText;
             const eventDate = document.getElementById('reportDate').innerText;
             const recipients = sessionStorage.getItem('report_recipients');
-            
-            const templateParams = {
-                to_email: recipients,
-                event_name: eventName,
-                event_date: eventDate,
-                pdf_url: pdfUrl
-            };
-
+            const templateParams = { to_email: recipients, event_name: eventName, event_date: eventDate, pdf_url: pdfUrl };
             emailjs.send('service_s7h9k4o', 'template_6ro2udu', templateParams)
-                .then(() => { alert("E-mail enviado com sucesso!"); })
-                .catch((err) => { alert("Erro ao enviar e-mail automático: " + JSON.stringify(err)); });
+                .then(() => { alert("Report generated and e-mail sent!"); })
+                .catch((err) => { alert("PDF Error: " + JSON.stringify(err)); });
         }
     }
 </script>
