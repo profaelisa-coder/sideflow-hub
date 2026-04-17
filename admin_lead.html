@@ -276,7 +276,7 @@
             tfee: parseFloat(document.getElementById('catFee').value) || 0,
             tcost: parseFloat(document.getElementById('catCost').value) || 0,
 	    table_min: parseInt(document.getElementById('catMinTable').value) || 0,
-            table_max: parseInt(document.getElementById('catMaxTable').value) || 0
+            table_max: parseInt(document.getElementById('catMaxTable').value) || 9999
         };
         if(!type || !payload.game || !payload.tname) return alert("Fill mandatory fields");
         if(type === 'ODE') {
