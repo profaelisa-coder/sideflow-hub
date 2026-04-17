@@ -75,12 +75,14 @@
                 <label>Logo Type</label>
                 <select id="logoType">
                     <option value="REGIONAL">Regional Logo</option>
-                    <option value="PREMIER">Premier Logo</option>
+                    <option value="IC">Premier Logo</option>
                 </select>
             </div>
         </div>
         <button class="btn-gold" onclick="saveEventAnchor()">SAVE AND ACTIVATE EVENT</button>
     </div>
+
+   
 
     <div class="box">
         <h3>TABLE INFRASTRUCTURE</h3>
@@ -231,6 +233,7 @@
         }
     }
 
+   
     async function setupTables() {
         const targetQty = parseInt(document.getElementById('totalTables').value);
         if(!targetQty || targetQty <= 0) return alert("Digite uma quantidade válida!");
