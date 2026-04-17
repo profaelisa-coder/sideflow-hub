@@ -266,10 +266,10 @@
         const { error } = await _supabase.from('tournament_history').upsert(payload, { onConflict: 'event_id, tournament_id' });
         if(!error) { alert("Event Activated!"); location.reload(); }
     }
-
-    async function saveCatalog() {
+   async function saveCatalog() {
         const type = document.getElementById('catType').value;
-        const payload = {
+        const totalTablesEvent = parseInt(document.getElementById('totalTables').value) || 9999;
+	const payload = {
             event_id: eventPrefix, item_type: type,
             game: document.getElementById('catGame').value,
             tname: document.getElementById('catName').value.trim(),
