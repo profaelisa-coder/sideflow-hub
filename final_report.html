@@ -108,9 +108,9 @@
         try {
             const pdfBlob = await html2pdf().set(opt).from(elemento).output('blob');
             const fileName = `report_${eventPrefix}_${Date.now()}.pdf`;
-            const { data, error } = await _supabase.storage.from('PAYOUTS').upload(fileName, pdfBlob, { contentType: 'application/pdf', upsert: true });
+            const { data, error } = await _supabase.storage.from('payouts').upload(fileName, pdfBlob, { contentType: 'application/pdf', upsert: true });
             if (error) throw error;
-            const { data: urlData } = _supabase.storage.from('PAYOUTS').getPublicUrl(fileName);
+            const { data: urlData } = _supabase.storage.from('payouts').getPublicUrl(fileName);
             return urlData.publicUrl;
         } catch (err) { alert('Erro ao gerar PDF: ' + err.message); return null; }
     }
