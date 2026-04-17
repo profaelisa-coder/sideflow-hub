@@ -75,7 +75,7 @@
                 <label>Logo Type</label>
                 <select id="logoType">
                     <option value="REGIONAL">Regional Logo</option>
-                    <option value="IC">Premier Logo</option>
+                    <option value="PREMIER">IC Logo</option>
                 </select>
             </div>
         </div>
@@ -144,6 +144,15 @@
             </div>
         </div>
         <div class="row">
+		<div class="col">
+                	<label>Min Table</label>
+                	<input type="number" id="catMinTable">
+            	</div>
+            	<div class="col">
+                <label>Max Table</label>
+                <input type="number" id="catMaxTable">
+            </div>
+
             <div class="col">
                 <label>Entry Fee ($)</label>
                 <input type="number" id="catFee">
@@ -265,7 +274,9 @@
             game: document.getElementById('catGame').value,
             tname: document.getElementById('catName').value.trim(),
             tfee: parseFloat(document.getElementById('catFee').value) || 0,
-            tcost: parseFloat(document.getElementById('catCost').value) || 0
+            tcost: parseFloat(document.getElementById('catCost').value) || 0,
+	    min_table: parseInt(document.getElementById('catMinTable').value) || 0,
+            max_table: parseInt(document.getElementById('catMaxTable').value) || 0
         };
         if(!type || !payload.game || !payload.tname) return alert("Fill mandatory fields");
         if(type === 'ODE') {
@@ -288,7 +299,8 @@
         if (data) {
             data.forEach(item => {
                 const dayInfo = item.tday ? ` - ${item.tday}` : "";
-                listDiv.innerHTML += `<div class="catalog-item"><div class="catalog-info"><strong>${item.item_type}</strong> [${item.game}] ${item.tname}${dayInfo}</div><button class="btn-del" onclick="deleteCatalogItem(${item.id})">DEL</button></div>`;
+		const tables = item.min_table ? ` [Tables ${item.min_table}-${item.max_table}]` : "";
+                listDiv.innerHTML += `<div class="catalog-item"><div class="catalog-info"><strong>${item.item_type}</strong> [${item.game}] ${item.tname}${dayInfo} ${tables}</div><button class="btn-del" onclick="deleteCatalogItem(${item.id})">DEL</button></div>`;
             });
         }
     }
