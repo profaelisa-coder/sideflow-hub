@@ -82,8 +82,6 @@
         <button class="btn-gold" onclick="saveEventAnchor()">SAVE AND ACTIVATE EVENT</button>
     </div>
 
-   
-
     <div class="box">
         <h3>TABLE INFRASTRUCTURE</h3>
         <div class="row">
@@ -144,15 +142,14 @@
             </div>
         </div>
         <div class="row">
-		<div class="col">
-                	<label>Min Table</label>
-                	<input type="number" id="catMinTable">
-            	</div>
-            	<div class="col">
+            <div class="col ode-field">
+                <label>Min Table</label>
+                <input type="number" id="catMinTable">
+            </div>
+            <div class="col ode-field">
                 <label>Max Table</label>
                 <input type="number" id="catMaxTable">
             </div>
-
             <div class="col">
                 <label>Entry Fee ($)</label>
                 <input type="number" id="catFee">
@@ -218,7 +215,6 @@
     window.onload = async () => {
         if(!eventPrefix) return document.body.innerHTML = "<h2 style='color:red; text-align:center;'>ACCESS DENIED</h2>";
         document.getElementById('eventId').value = eventPrefix;
-        
         const { data: identity } = await _supabase.from('tournament_history').select('*').eq('event_id', eventPrefix).eq('tournament_id', 0).single();
         if(identity) {
             document.getElementById('eventName').value = identity.event_name || "";
@@ -242,19 +238,17 @@
         }
     }
 
-   
     async function setupTables() {
         const targetQty = parseInt(document.getElementById('totalTables').value);
         if(!targetQty || targetQty <= 0) return alert("Digite uma quantidade válida!");
         const { data: existingTables } = await _supabase.from('event_tables').select('table_number').eq('event_id', eventPrefix).order('table_number', { ascending: false });
         const lastTable = existingTables && existingTables.length > 0 ? existingTables[0].table_number : 0;
-        if (targetQty <= lastTable) return alert(`Você já tem ${lastTable} mesas.`);
         const newTables = [];
         for(let i = lastTable + 1; i <= targetQty; i++) {
             newTables.push({ event_id: eventPrefix, table_number: i, status: 'FREE', tournament_name: null });
         }
-        const { error } = await _supabase.from('event_tables').insert(newTables);
-        if(!error) { alert("Mesas adicionadas!"); loadCatalog(); }
+        await _supabase.from('event_tables').insert(newTables);
+        loadCatalog();
     }
 
     async function saveEventAnchor() {
@@ -267,42 +261,34 @@
         if(!error) { alert("Event Activated!"); location.reload(); }
     }
 
-   async function saveCatalog() {
-    const type = document.getElementById('catType').value;
-    const totalTablesEvent = parseInt(document.getElementById('totalTables').value) || 9999;
+    async function saveCatalog() {
+        const type = document.getElementById('catType').value;
+        const totalTablesEvent = parseInt(document.getElementById('totalTables').value) || 9999;
+        const payload = {
+            event_id: eventPrefix, item_type: type,
+            game: document.getElementById('catGame').value,
+            tname: document.getElementById('catName').value.trim(),
+            tfee: parseFloat(document.getElementById('catFee').value) || 0,
+            tcost: parseFloat(document.getElementById('catCost').value) || 0
+        };
 
-    const payload = {
-        event_id: eventPrefix, 
-        item_type: type,
-        game: document.getElementById('catGame').value,
-        tname: document.getElementById('catName').value.trim(),
-        tfee: parseFloat(document.getElementById('catFee').value) || 0,
-        tcost: parseFloat(document.getElementById('catCost').value) || 0,
-        table_min: parseInt(document.getElementById('catMinTable').value) || 1,
-        table_max: parseInt(document.getElementById('catMaxTable').value) || totalTablesEvent
-    };
+        if(type === 'ODE') {
+            payload.table_min = parseInt(document.getElementById('catMinTable').value) || 1;
+            payload.table_max = parseInt(document.getElementById('catMaxTable').value) || totalTablesEvent;
+            payload.pod_size = parseInt(document.getElementById('catPodSize').value) || 4;
+            payload.tickets_per_pod = parseInt(document.getElementById('catTickets').value) || 0;
+        } else {
+            payload.table_min = 1;
+            payload.table_max = totalTablesEvent;
+            payload.tday = document.getElementById('catDay').value;
+            payload.thour = document.getElementById('catHour').value.trim();
+            payload.tax = parseFloat(document.getElementById('catTax').value) || 0;
+            payload.spread = parseFloat(document.getElementById('catSpread').value) || 2.0;
+        }
 
-    if(!type || !payload.game || !payload.tname) return alert("Fill mandatory fields");
-
-    if(type === 'ODE') {
-        payload.pod_size = parseInt(document.getElementById('catPodSize').value) || 4;
-        payload.tickets_per_pod = parseInt(document.getElementById('catTickets').value) || 0;
-    } else {
-        payload.tday = document.getElementById('catDay').value;
-        payload.thour = document.getElementById('catHour').value.trim();
-        payload.tax = parseFloat(document.getElementById('catTax').value) || 0;
-        payload.spread = parseFloat(document.getElementById('catSpread').value) || 2.0;
+        const { error } = await _supabase.from('tournament_catalog').insert([payload]);
+        if(!error) { alert("Tournament saved successfully!"); location.reload(); }
     }
-
-    const { error } = await _supabase.from('tournament_catalog').insert([payload]);
-
-    if(!error) { 
-        alert("Tournament saved successfully!");
-        location.reload(); 
-    } else {
-        alert("Error saving: " + error.message);
-    }
-}
 
     async function loadCatalog() {
         const { data } = await _supabase.from('tournament_catalog').select('*').eq('event_id', eventPrefix).order('id', { ascending: false });
@@ -311,29 +297,19 @@
         if (data) {
             data.forEach(item => {
                 const dayInfo = item.tday ? ` - ${item.tday}` : "";
-		const tables = item.table_min ? ` [Tables ${item.table_min}-${item.table_max}]` : "";
-                listDiv.innerHTML += `<div class="catalog-item"><div class="catalog-info"><strong>${item.item_type}</strong> [${item.game}] ${item.tname}${dayInfo} ${tables}</div><button class="btn-del" onclick="deleteCatalogItem(${item.id})">DEL</button></div>`;
+                const tables = item.item_type === 'ODE' ? ` [Tables ${item.table_min}-${item.table_max}]` : " [Auto-Allocated]";
+                listDiv.innerHTML += `<div class="catalog-item"><div class="catalog-info"><strong>${item.item_type}</strong> [${item.game}] ${item.tname}${dayInfo}${tables}</div><button class="btn-del" onclick="deleteCatalogItem(${item.id})">DEL</button></div>`;
             });
         }
     }
 
-    async function deleteCatalogItem(id) {
-        if(confirm("Delete item?")) { await _supabase.from('tournament_catalog').delete().eq('id', id); loadCatalog(); }
-    }
+    async function deleteCatalogItem(id) { if(confirm("Delete?")) { await _supabase.from('tournament_catalog').delete().eq('id', id); loadCatalog(); } }
 
     async function sendFinalReport() {
         const emails = document.getElementById('reportEmails').value.trim();
-        const eventName = document.getElementById('eventName').value.trim();
-        
-        if(!emails) return alert("Please enter at least one email.");
-
+        if(!emails) return alert("Emails required.");
         sessionStorage.setItem('report_recipients', emails);
-        
-        const reportUrl = `final_report.html?event=${eventPrefix}&autoSend=true`;
-        
-        if(confirm(`Redirecting to generate PDF for ${eventName}. Proceed?`)) {
-            window.location.href = reportUrl;
-        }
+        window.location.href = `final_report.html?event=${eventPrefix}&autoSend=true`;
     }
 
     function navTo(page) {
@@ -342,28 +318,16 @@
         window.location.href = `${page}?event=${eventPrefix}`;
     }
 
-    function openResetModal() {
-        document.getElementById('resetModal').style.display = 'flex';
-    }
-
-    function closeResetModal() {
-        document.getElementById('resetModal').style.display = 'none';
-        document.getElementById('resetPassField').value = "";
-    }
-
+    function openResetModal() { document.getElementById('resetModal').style.display = 'flex'; }
+    function closeResetModal() { document.getElementById('resetModal').style.display = 'none'; }
     async function confirmReset() {
         const pass = document.getElementById('resetPassField').value.toUpperCase().trim();
         if (pass === eventPrefix.toUpperCase() + "_LEAD") {
-            try {
-                await _supabase.from('tournament_history').delete().eq('event_id', eventPrefix);
-                await _supabase.from('tournament_catalog').delete().eq('event_id', eventPrefix);
-                await _supabase.from('ode_registrations').delete().eq('event_id', eventPrefix);
-                await _supabase.from('event_tables').delete().eq('event_id', eventPrefix);
-                alert("Wiped. Redirecting.");
-                window.location.href = "index.html";
-            } catch (err) { alert("Error: " + err.message); }
-        } else {
-            alert("Incorrect password.");
+            await _supabase.from('tournament_history').delete().eq('event_id', eventPrefix);
+            await _supabase.from('tournament_catalog').delete().eq('event_id', eventPrefix);
+            await _supabase.from('ode_registrations').delete().eq('event_id', eventPrefix);
+            await _supabase.from('event_tables').delete().eq('event_id', eventPrefix);
+            window.location.href = "index.html";
         }
     }
 </script>
