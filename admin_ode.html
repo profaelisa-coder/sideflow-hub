@@ -112,8 +112,7 @@
     
     <div class="live-label"><div class="live-dot"></div> WAITING QUEUE</div>
     <div id="waitingList" class="card-container"></div>
-    <div class="live-label"><div class="live-dot green"></div> ACTIVE PODS ON TABLES</div>
-    <div id="activePodsList" class="card-container"></div>
+    
 </div>
 
 <div class="nav-footer">
@@ -160,10 +159,10 @@
         currentCatalog = catalog || [];
         filterTournaments();
         updateWaitingList();
-        updateActivePods();
     }
 
     function filterTournaments() {
+        const currentSelection = document.getElementById('tourSelect').value;
         const game = document.getElementById('gameSelect').value;
         const select = document.getElementById('tourSelect');
         select.innerHTML = '<option value="">-- SELECT TOURNAMENT --</option>';
@@ -171,12 +170,15 @@
         const filtered = game ? currentCatalog.filter(c => c.game === game) : currentCatalog;
         
         filtered.forEach(t => select.innerHTML += `<option value="${t.tname}" data-size="${t.pod_size || 4}">${t.tname}</option>`);
+        
+        if(currentSelection) select.value = currentSelection;
         updateGroupSizeOptions();
     }
 
     function updateGroupSizeOptions() {
         const tname = document.getElementById('tourSelect').value;
         const groupSelect = document.getElementById('groupSizeSelect');
+        const currentGroupSize = groupSelect.value;
         groupSelect.innerHTML = "";
         
         if(!tname) {
@@ -191,14 +193,16 @@
             groupSelect.innerHTML += `<option value="${i}">${i} Player${i > 1 ? 's' : ''}</option>`;
         }
         groupSelect.disabled = false;
+        if(currentGroupSize && currentGroupSize <= size) groupSelect.value = currentGroupSize;
         renderPlayerInputs();
     }
 
     function renderPlayerInputs() {
         const qty = parseInt(document.getElementById('groupSizeSelect').value) || 0;
         const container = document.getElementById('playersContainer');
+        if(container.children.length === qty) return;
+
         container.innerHTML = "";
-        
         for(let i = 1; i <= qty; i++) {
             container.innerHTML += `
                 <div class="row" style="background: rgba(0,0,0,0.1); padding: 10px; border-radius: 8px; margin-bottom: 10px;">
@@ -235,8 +239,6 @@
             players.push({ id: ids[i].value, name: names[i].value, phone: phones[i].value });
         }
 
-        const tour = currentCatalog.find(c => c.tname === tname);
-
         const { data: podNum } = await _supabase.rpc('get_pod_for_group', { p_event_id: eventPrefix, p_tname: tname, p_pod_limit: podLimit, p_group_size: groupSize });
 
         const inserts = players.map(p => ({
@@ -247,11 +249,11 @@
         const { error } = await _supabase.from('ode_registrations').insert(inserts);
         if(!error) {
             updateWaitingList();
+            document.getElementById('playersContainer').innerHTML = "";
+            document.getElementById('tourSelect').value = "";
+            updateGroupSizeOptions();
+            alert("Registration Successful!");
         }
-        
-        document.getElementById('gameSelect').value = "";
-        filterTournaments();
-        alert("Registration Successful!");
     }
 
     async function updateWaitingList() {
@@ -275,31 +277,21 @@
         }
     }
 
-    async function updateActivePods() {
-        const { data: active } = await _supabase.from('ode_registrations').select('*').eq('event_id', eventPrefix).eq('status', 'allocated').order('assigned_table', { ascending: true });
-        const listDiv = document.getElementById('activePodsList');
-        listDiv.innerHTML = "";
-        if(!active || active.length === 0) { listDiv.innerHTML = "<p style='opacity:0.5; text-align:center;'>No active pods on tables.</p>"; return; }
-        const uniquePods = {};
-        active.forEach(r => {
-            const key = `${r.tname}|${r.pod_number}`;
-            if(!uniquePods[key]) uniquePods[key] = { tname: r.tname, pod_number: r.pod_number, table: r.assigned_table };
-        });
-        for (const info of Object.values(uniquePods)) {
-            listDiv.innerHTML += `
-                <div class="pod-card-3d">
-                    <div class="pod-info-3d">
-                        <b>${info.tname}</b>
-                        <small>POD #${info.pod_number}</small>
-                    </div>
-                    <div class="pill-green">TABLE ${info.table}</div>
-                </div>`;
-        }
+    function navToTables() { 
+        window.location.href = `admin_tables.html?event=${eventPrefix}`; 
     }
 
-    function navToTables() { window.location.href = `admin_tables.html?event=${eventPrefix}`; }
-    _supabase.channel('any').on('postgres_changes', { event: '*', schema: 'public', table: 'ode_registrations' }, () => { updateWaitingList(); updateActivePods(); }).subscribe();
-    _supabase.channel('catalog_sync').on('postgres_changes', { event: '*', schema: 'public', table: 'tournament_catalog' }, loadData).subscribe();
+    _supabase.channel('any')
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'ode_registrations' }, updateWaitingList)
+        .subscribe();
+
+    _supabase.channel('catalog_sync')
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'tournament_catalog' }, loadData)
+        .subscribe();
+
+    setInterval(() => {
+        updateWaitingList();
+    }, 30000); 
 </script>
 </body>
 </html>
