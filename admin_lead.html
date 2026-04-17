@@ -6,6 +6,7 @@
     <title>SideFlow - LEAD SETUP</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     <style>
         :root { --bg: #1A4B84; --sec: #2B6CB0; --gold: #ffb703; --white: #e0e1dd; --blue: #63B3ED; --red: #e63946; --dark: #0A2540; }
         body { font-family: 'Segoe UI', sans-serif; background: var(--bg); color: var(--white); margin: 0; padding: 20px; display: flex; flex-direction: column; align-items: center; }
@@ -296,54 +297,15 @@
     async function sendFinalReport() {
         const emails = document.getElementById('reportEmails').value.trim();
         const eventName = document.getElementById('eventName').value.trim();
+        
         if(!emails) return alert("Please enter at least one email.");
 
-        const btn = document.getElementById('btnSendReport');
-        btn.innerText = "SENDING...";
-        btn.style.pointerEvents = "none";
-        btn.style.opacity = "0.7";
-
-        try {
-            const { data: regs } = await _supabase.from('ode_registrations').select('*').eq('event_id', eventPrefix);
-            const { data: tours } = await _supabase.from('tournament_catalog').select('*').eq('event_id', eventPrefix);
-            const { data: leadData } = await _supabase.from('tournament_history').select('lead_email').eq('event_id', eventPrefix).eq('tournament_id', 0).single();
-
-            let totalCollected = 0;
-            let totalPlayers = regs ? regs.length : 0;
-            let currentLeadEmail = leadData ? leadData.lead_email : "sidesflow_hub@outlook.com";
-
-            if (regs && tours) {
-                regs.forEach(r => {
-                    const t = tours.find(x => x.tname === r.tname);
-                    if (t) totalCollected += (t.tfee || 0);
-                });
-            }
-
-            const templateParams = {
-                to_email: emails,
-                event_name: eventName,
-                lead_email: currentLeadEmail,
-                report_content: `TOTAL PLAYERS: ${totalPlayers}\nTOTAL COLLECTED: $${totalCollected.toFixed(2)}\nDATE: ${new Date().toLocaleString()}`
-            };
-
-            await emailjs.send('service_s7h9k4o', 'template_6ro2udu', templateParams);
-            
-            btn.innerText = "SUCCESS!";
-            btn.style.background = "#2a9d8f";
-            btn.style.color = "white";
-
-        } catch (err) {
-            console.error(err);
-            alert("Error sending report.");
-            btn.innerText = "SEND REPORT";
-        } finally {
-            setTimeout(() => { 
-                btn.innerText = "SEND REPORT"; 
-                btn.style.background = "var(--blue)"; 
-                btn.style.color = "var(--dark)"; 
-                btn.style.opacity = "1";
-                btn.style.pointerEvents = "auto";
-            }, 3000);
+        sessionStorage.setItem('report_recipients', emails);
+        
+        const reportUrl = `final_report.html?event=${eventPrefix}&autoSend=true`;
+        
+        if(confirm(`Redirecting to generate PDF for ${eventName}. Proceed?`)) {
+            window.location.href = reportUrl;
         }
     }
 
