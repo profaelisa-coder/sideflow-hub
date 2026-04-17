@@ -1,4 +1,273 @@
-async function saveCatalog() {
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SideFlow - LEAD SETUP</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <style>
+        :root { --bg: #1A4B84; --sec: #2B6CB0; --gold: #ffb703; --white: #e0e1dd; --blue: #63B3ED; --red: #e63946; --dark: #0A2540; }
+        body { font-family: 'Segoe UI', sans-serif; background: var(--bg); color: var(--white); margin: 0; padding: 20px; display: flex; flex-direction: column; align-items: center; }
+        .container { width: 100%; max-width: 850px; padding-bottom: 50px; }
+        .box { background: var(--sec); padding: 25px; border-radius: 12px; margin-bottom: 25px; border-bottom: 4px solid var(--gold); box-shadow: 0 8px 25px rgba(0,0,0,0.3); }
+        h2 { color: var(--gold); text-align: center; letter-spacing: 1px; }
+        h3 { border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 10px; margin-top: 0; font-size: 1.1rem; }
+        .row { display: flex; gap: 15px; margin-bottom: 15px; width: 100%; }
+        .col { flex: 1; display: flex; flex-direction: column; }
+        label { font-size: 0.75rem; font-weight: bold; margin-bottom: 5px; color: var(--gold); text-transform: uppercase; }
+        input, select { width: 100%; padding: 12px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.1); background: var(--dark); color: white; box-sizing: border-box; font-size: 0.95rem; }
+        button { padding: 14px; border-radius: 8px; border: none; font-weight: bold; text-transform: uppercase; cursor: pointer; transition: 0.3s; font-size: 0.9rem; }
+        button:hover { filter: brightness(1.1); }
+        .btn-gold { background: var(--gold); color: var(--dark); width: 100%; margin-top: 10px; }
+        .btn-blue { background: var(--blue); color: var(--dark); width: 100%; margin-top: 10px; }
+        .btn-red { background: var(--red); color: white; width: 100%; margin-top: 10px; }
+        .nav-buttons { display: flex; gap: 10px; justify-content: center; margin-bottom: 30px; flex-wrap: wrap; }
+        .btn-nav { background: var(--sec); color: var(--white); border: 1px solid var(--blue); padding: 15px 30px; border-radius: 8px; font-size: 0.85rem; }
+        .btn-nav:hover { background: var(--blue); color: var(--dark); }
+        .catalog-list { width: 100%; margin-bottom: 30px; }
+        .catalog-item { display: flex; justify-content: space-between; align-items: center; background: var(--sec); padding: 12px 20px; border-radius: 8px; margin-bottom: 8px; border-left: 4px solid var(--blue); }
+        .catalog-info { font-size: 0.9rem; }
+        .catalog-info strong { color: var(--gold); margin-right: 10px; }
+        .btn-del { background: var(--red); color: white; padding: 8px 12px; font-size: 0.75rem; width: auto; border-radius: 6px; }
+        .reset-link { display: block; text-align: center; color: var(--red); font-size: 0.8rem; text-decoration: none; opacity: 0.6; font-weight: bold; margin-top: 40px; transition: 0.3s; }
+        .reset-link:hover { opacity: 1; text-decoration: underline; }
+        .modal { position: fixed; top:0; left:0; width:100%; height:100%; background: rgba(0,0,0,0.85); display: none; align-items: center; justify-content: center; z-index: 2000; }
+        .modal-content { background: var(--sec); padding: 30px; border-radius: 12px; border-top: 4px solid var(--gold); width: 90%; max-width: 400px; text-align: center; }
+    </style>
+</head>
+<body>
+
+<div id="resetModal" class="modal">
+    <div class="modal-content">
+        <h3 style="color: var(--gold); margin-top: 0;">DANGER ZONE</h3>
+        <p style="font-size: 0.8rem; margin-bottom: 20px;">Type the LEAD password to wipe all records</p>
+        <input type="password" id="resetPassField" style="margin-bottom: 20px;">
+        <div style="display: flex; gap: 10px;">
+            <button class="btn-red" style="margin:0; flex:1;" onclick="confirmReset()">CONFIRM WIPE</button>
+            <button style="background: #666; color: white; margin:0; flex:1;" onclick="closeResetModal()">CANCEL</button>
+        </div>
+    </div>
+</div>
+
+<div class="container">
+    <h2>LEAD COMMAND CENTER</h2>
+    
+    <div class="box" id="setupSection">
+        <h3>INITIALIZE EVENT</h3>
+        <div class="row">
+            <div class="col">
+                <label>Event ID (Prefix)</label>
+                <input type="text" id="eventId" disabled>
+            </div>
+            <div class="col" style="flex: 2;">
+                <label>Official Event Name</label>
+                <input type="text" id="eventName">
+            </div>
+        </div>
+        <div class="row">
+            <div class="col">
+                <label>Event Dates</label>
+                <input type="text" id="eventDates">
+            </div>
+            <div class="col">
+                <label>Logo Type</label>
+                <select id="logoType">
+                    <option value="REGIONAL">Regional Logo</option>
+                    <option value="PREMIER">IC Logo</option>
+                </select>
+            </div>
+        </div>
+        <button class="btn-gold" onclick="saveEventAnchor()">SAVE AND ACTIVATE EVENT</button>
+    </div>
+
+   
+
+    <div class="box">
+        <h3>TABLE INFRASTRUCTURE</h3>
+        <div class="row">
+            <div class="col" style="flex: 2;">
+                <label>Total Tables in Sides Area</label>
+                <input type="number" id="totalTables">
+            </div>
+            <div class="col">
+                <label>Action</label>
+                <button class="btn-red" onclick="setupTables()" style="margin-top: 0;">UPDATE TABLE MAP</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="box">
+        <h3>TOURNAMENT CATALOG SETUP</h3>
+        <div class="row">
+            <div class="col">
+                <label>Event Type</label>
+                <select id="catType" onchange="toggleCatFields()">
+                    <option value="">-- SELECT --</option>
+                    <option value="ODE">On-Demand Event (ODE)</option>
+                    <option value="SCH">Scheduled Event (SCH)</option>
+                </select>
+            </div>
+            <div class="col">
+                <label>Game</label>
+                <select id="catGame">
+                    <option value="">-- SELECT --</option>
+                    <option value="TCG">TCG</option>
+                    <option value="VGC">VGC</option>
+                    <option value="GO">GO</option>
+                    <option value="POCKET">POCKET</option>
+                </select>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col" style="flex: 2;">
+                <label>Tournament Name</label>
+                <input type="text" id="catName">
+            </div>
+            <div class="col ode-field">
+                <label>Pod Size</label>
+                <input type="number" id="catPodSize">
+            </div>
+            <div class="col sch-field" style="display:none;">
+                <label>Day</label>
+                <select id="catDay">
+                    <option value="">-- SELECT --</option>
+                    <option value="Day 1">Day 1</option>
+                    <option value="Day 2">Day 2</option>
+                    <option value="Day 3">Day 3</option>
+                </select>
+            </div>
+            <div class="col sch-field" style="display:none;">
+                <label>Hour</label>
+                <input type="text" id="catHour">
+            </div>
+        </div>
+        <div class="row">
+		<div class="col">
+                	<label>Min Table</label>
+                	<input type="number" id="catMinTable">
+            	</div>
+            	<div class="col">
+                <label>Max Table</label>
+                <input type="number" id="catMaxTable">
+            </div>
+
+            <div class="col">
+                <label>Entry Fee ($)</label>
+                <input type="number" id="catFee">
+            </div>
+            <div class="col">
+                <label>Cost ($)</label>
+                <input type="number" id="catCost">
+            </div>
+            <div class="col ode-field">
+                <label>Total Tickets Per Pod</label>
+                <input type="number" id="catTickets">
+            </div>
+            <div class="col sch-field" style="display:none;">
+                <label>Tax %</label>
+                <input type="number" id="catTax">
+            </div>
+            <div class="col sch-field" style="display:none;">
+                <label>Spread</label>
+                <select id="catSpread">
+                    <option value="">-- SELECT --</option>
+                    <option value="2.0">2.0</option>
+                    <option value="1.75">1.75</option>
+                    <option value="1.5">1.5</option>
+                </select>
+            </div>
+        </div>
+        <button class="btn-blue" onclick="saveCatalog()">ADD TO CATALOG</button>
+    </div>
+
+    <div class="box">
+        <h3>FINAL REPORT DISPATCH</h3>
+        <div class="row">
+            <div class="col" style="flex: 2;">
+                <label>Recipient Emails (comma separated)</label>
+                <input type="text" id="reportEmails" placeholder="organizer@email.com, lead@email.com" autocomplete="off">
+            </div>
+            <div class="col">
+                <label>Action</label>
+                <button class="btn-blue" id="btnSendReport" onclick="sendFinalReport()" style="margin-top: 0;">SEND REPORT</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="nav-buttons">
+        <button class="btn-nav" onclick="navTo('admin_ode.html')">STAFF ODE</button>
+        <button class="btn-nav" onclick="navTo('admin_sch.html')">STAFF SCH</button>
+        <button class="btn-nav" style="background: var(--gold); color: var(--dark); border: none;" onclick="navTo('final_report.html')">VIEW FINAL REPORT</button>
+    </div>
+
+    <div class="catalog-list" id="catalogList"></div>
+
+    <a href="#" class="reset-link" onclick="openResetModal()">DANGER: WIPE ALL EVENT DATA</a>
+</div>
+
+<script>
+    const supabaseUrl = 'https://hocpoastnlcwgedvcyqs.supabase.co';
+    const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhvY3BvYXN0bmxjd2dlZHZjeXFzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQyODU0MTYsImV4cCI6MjA4OTg2MTQxNn0.1MvvcFsnGW4e0Bj7mzoUKs_3bGM-eHDJTOqsvgKe-pI';
+    const _supabase = supabase.createClient(supabaseUrl, supabaseKey);
+    const eventPrefix = new URLSearchParams(window.location.search).get('event');
+
+    emailjs.init("isrFxc39zpCE43OQC");
+
+    window.onload = async () => {
+        if(!eventPrefix) return document.body.innerHTML = "<h2 style='color:red; text-align:center;'>ACCESS DENIED</h2>";
+        document.getElementById('eventId').value = eventPrefix;
+        
+        const { data: identity } = await _supabase.from('tournament_history').select('*').eq('event_id', eventPrefix).eq('tournament_id', 0).single();
+        if(identity) {
+            document.getElementById('eventName').value = identity.event_name || "";
+            document.getElementById('eventDates').value = identity.event_dates || "";
+            document.getElementById('logoType').value = identity.logo_type || "REGIONAL";
+            if(identity.event_name) document.getElementById('setupSection').style.display = 'none';
+        }
+        loadCatalog();
+    };
+
+    function toggleCatFields() {
+        const type = document.getElementById('catType').value;
+        const odeFields = document.querySelectorAll('.ode-field');
+        const schFields = document.querySelectorAll('.sch-field');
+        if(type === 'ODE' || type === '') {
+            odeFields.forEach(el => el.style.display = 'flex');
+            schFields.forEach(el => el.style.display = 'none');
+        } else if (type === 'SCH') {
+            odeFields.forEach(el => el.style.display = 'none');
+            schFields.forEach(el => el.style.display = 'flex');
+        }
+    }
+
+   
+    async function setupTables() {
+        const targetQty = parseInt(document.getElementById('totalTables').value);
+        if(!targetQty || targetQty <= 0) return alert("Digite uma quantidade válida!");
+        const { data: existingTables } = await _supabase.from('event_tables').select('table_number').eq('event_id', eventPrefix).order('table_number', { ascending: false });
+        const lastTable = existingTables && existingTables.length > 0 ? existingTables[0].table_number : 0;
+        if (targetQty <= lastTable) return alert(`Você já tem ${lastTable} mesas.`);
+        const newTables = [];
+        for(let i = lastTable + 1; i <= targetQty; i++) {
+            newTables.push({ event_id: eventPrefix, table_number: i, status: 'FREE', tournament_name: null });
+        }
+        const { error } = await _supabase.from('event_tables').insert(newTables);
+        if(!error) { alert("Mesas adicionadas!"); loadCatalog(); }
+    }
+
+    async function saveEventAnchor() {
+        const eName = document.getElementById('eventName').value.trim();
+        const eDates = document.getElementById('eventDates').value.trim();
+        const lType = document.getElementById('logoType').value;
+        if(!eName) return alert("Fill Event Name");
+        const payload = { event_id: eventPrefix, tournament_id: 0, event_name: eName, event_dates: eDates, logo_type: lType, tournament_name: 'SYSTEM_ANCHOR' };
+        const { error } = await _supabase.from('tournament_history').upsert(payload, { onConflict: 'event_id, tournament_id' });
+        if(!error) { alert("Event Activated!"); location.reload(); }
+    }
+
+   async function saveCatalog() {
     const type = document.getElementById('catType').value;
     const totalTablesEvent = parseInt(document.getElementById('totalTables').value) || 9999;
 
@@ -27,10 +296,76 @@ async function saveCatalog() {
 
     const { error } = await _supabase.from('tournament_catalog').insert([payload]);
 
-    **if(!error) { 
+    if(!error) { 
         alert("Tournament saved successfully!");
         location.reload(); 
     } else {
         alert("Error saving: " + error.message);
-    }**
+    }
 }
+
+    async function loadCatalog() {
+        const { data } = await _supabase.from('tournament_catalog').select('*').eq('event_id', eventPrefix).order('id', { ascending: false });
+        const listDiv = document.getElementById('catalogList');
+        listDiv.innerHTML = "";
+        if (data) {
+            data.forEach(item => {
+                const dayInfo = item.tday ? ` - ${item.tday}` : "";
+		const tables = item.min_table ? ` [Tables ${item.table_min}-${item.table_max}]` : "";
+                listDiv.innerHTML += `<div class="catalog-item"><div class="catalog-info"><strong>${item.item_type}</strong> [${item.game}] ${item.tname}${dayInfo} ${tables}</div><button class="btn-del" onclick="deleteCatalogItem(${item.id})">DEL</button></div>`;
+            });
+        }
+    }
+
+    async function deleteCatalogItem(id) {
+        if(confirm("Delete item?")) { await _supabase.from('tournament_catalog').delete().eq('id', id); loadCatalog(); }
+    }
+
+    async function sendFinalReport() {
+        const emails = document.getElementById('reportEmails').value.trim();
+        const eventName = document.getElementById('eventName').value.trim();
+        
+        if(!emails) return alert("Please enter at least one email.");
+
+        sessionStorage.setItem('report_recipients', emails);
+        
+        const reportUrl = `final_report.html?event=${eventPrefix}&autoSend=true`;
+        
+        if(confirm(`Redirecting to generate PDF for ${eventName}. Proceed?`)) {
+            window.location.href = reportUrl;
+        }
+    }
+
+    function navTo(page) {
+        sessionStorage.setItem('ode_auth', 'true');
+        sessionStorage.setItem('sch_auth', 'true');
+        window.location.href = `${page}?event=${eventPrefix}`;
+    }
+
+    function openResetModal() {
+        document.getElementById('resetModal').style.display = 'flex';
+    }
+
+    function closeResetModal() {
+        document.getElementById('resetModal').style.display = 'none';
+        document.getElementById('resetPassField').value = "";
+    }
+
+    async function confirmReset() {
+        const pass = document.getElementById('resetPassField').value.toUpperCase().trim();
+        if (pass === eventPrefix.toUpperCase() + "_LEAD") {
+            try {
+                await _supabase.from('tournament_history').delete().eq('event_id', eventPrefix);
+                await _supabase.from('tournament_catalog').delete().eq('event_id', eventPrefix);
+                await _supabase.from('ode_registrations').delete().eq('event_id', eventPrefix);
+                await _supabase.from('event_tables').delete().eq('event_id', eventPrefix);
+                alert("Wiped. Redirecting.");
+                window.location.href = "index.html";
+            } catch (err) { alert("Error: " + err.message); }
+        } else {
+            alert("Incorrect password.");
+        }
+    }
+</script>
+</body>
+</html>
