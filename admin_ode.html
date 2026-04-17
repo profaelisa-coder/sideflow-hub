@@ -28,22 +28,11 @@
         @keyframes blink { 0% { opacity: 1; } 50% { opacity: 0.3; } 100% { opacity: 1; } }
         
         .card-container { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 15px; width: 100%; margin-bottom: 20px; }
-        .pod-card-3d {
-            background: var(--dark);
-            border-radius: 8px;
-            padding: 15px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            box-shadow: inset 1px 1px 0px rgba(255,255,255,0.1), inset -2px -2px 0px rgba(0,0,0,0.4), 2px 2px 6px rgba(0,0,0,0.3);
-            box-sizing: border-box;
-            width: 100%;
-        }
+        .pod-card-3d { background: var(--dark); border-radius: 8px; padding: 15px; display: flex; justify-content: space-between; align-items: center; box-shadow: inset 1px 1px 0px rgba(255,255,255,0.1), inset -2px -2px 0px rgba(0,0,0,0.4), 2px 2px 6px rgba(0,0,0,0.3); box-sizing: border-box; width: 100%; }
         .pod-info-3d { display: flex; flex-direction: column; gap: 3px; }
         .pod-info-3d b { color: var(--gold); font-size: 1.05rem; margin: 0; line-height: 1; }
         .pod-info-3d small { color: var(--white); font-size: 0.75rem; margin: 0; line-height: 1; opacity: 0.8; }
         .pill-blue { background: var(--blue); color: var(--dark); padding: 5px 12px; border-radius: 20px; font-weight: bold; font-size: 0.8rem; box-shadow: 1px 1px 3px rgba(0,0,0,0.3); }
-        .pill-green { background: var(--green); color: var(--dark); padding: 5px 12px; border-radius: 4px; font-weight: bold; font-size: 0.8rem; box-shadow: 1px 1px 3px rgba(0,0,0,0.3); text-transform: uppercase; }
         
         .modal { position: fixed; top:0; left:0; width:100%; height:100%; background: rgba(0,0,0,0.85); display: none; align-items: center; justify-content: center; z-index: 2000; }
         .modal-content { background: var(--sec); padding: 30px; border-radius: 12px; border-top: 4px solid var(--gold); width: 90%; max-width: 450px; text-align: center; }
@@ -106,13 +95,11 @@
         </div>
         
         <div id="playersContainer"></div>
-
         <button class="btn-reg" style="width: 100%; margin-top: 15px;" onclick="submitRegistration()">REGISTER TO POD</button>
     </div>
     
     <div class="live-label"><div class="live-dot"></div> WAITING QUEUE</div>
     <div id="waitingList" class="card-container"></div>
-    
 </div>
 
 <div class="nav-footer">
@@ -166,11 +153,8 @@
         const game = document.getElementById('gameSelect').value;
         const select = document.getElementById('tourSelect');
         select.innerHTML = '<option value="">-- SELECT TOURNAMENT --</option>';
-        
         const filtered = game ? currentCatalog.filter(c => c.game === game) : currentCatalog;
-        
         filtered.forEach(t => select.innerHTML += `<option value="${t.tname}" data-size="${t.pod_size || 4}">${t.tname}</option>`);
-        
         if(currentSelection) select.value = currentSelection;
         updateGroupSizeOptions();
     }
@@ -180,14 +164,12 @@
         const groupSelect = document.getElementById('groupSizeSelect');
         const currentGroupSize = groupSelect.value;
         groupSelect.innerHTML = "";
-        
         if(!tname) {
             groupSelect.innerHTML = '<option value="1">1 Player</option>';
             groupSelect.disabled = true;
             document.getElementById('playersContainer').innerHTML = "";
             return;
         }
-
         const size = parseInt(document.querySelector(`#tourSelect option[value="${tname}"]`).dataset.size);
         for(let i = 1; i <= size; i++) {
             groupSelect.innerHTML += `<option value="${i}">${i} Player${i > 1 ? 's' : ''}</option>`;
@@ -201,54 +183,33 @@
         const qty = parseInt(document.getElementById('groupSizeSelect').value) || 0;
         const container = document.getElementById('playersContainer');
         if(container.children.length === qty) return;
-
         container.innerHTML = "";
         for(let i = 1; i <= qty; i++) {
-            container.innerHTML += `
-                <div class="row" style="background: rgba(0,0,0,0.1); padding: 10px; border-radius: 8px; margin-bottom: 10px;">
-                    <div class="col" style="margin-bottom: 0;">
-                        <label style="font-size: 0.65rem;">Player ${i} ID</label>
-                        <input type="number" class="dyn-id" autocomplete="off" style="padding: 10px;">
-                    </div>
-                    <div class="col" style="margin-bottom: 0;">
-                        <label style="font-size: 0.65rem;">Player ${i} Name</label>
-                        <input type="text" class="dyn-name" autocomplete="off" style="padding: 10px;">
-                    </div>
-                    <div class="col" style="margin-bottom: 0;">
-                        <label style="font-size: 0.65rem;">WhatsApp (Opt)</label>
-                        <input type="number" class="dyn-phone" autocomplete="off" style="padding: 10px;">
-                    </div>
-                </div>`;
+            container.innerHTML += `<div class="row" style="background: rgba(0,0,0,0.1); padding: 10px; border-radius: 8px; margin-bottom: 10px;"><div class="col" style="margin-bottom: 0;"><label style="font-size: 0.65rem;">Player ${i} ID</label><input type="number" class="dyn-id" autocomplete="off" style="padding: 10px;"></div><div class="col" style="margin-bottom: 0;"><label style="font-size: 0.65rem;">Player ${i} Name</label><input type="text" class="dyn-name" autocomplete="off" style="padding: 10px;"></div><div class="col" style="margin-bottom: 0;"><label style="font-size: 0.65rem;">WhatsApp (Opt)</label><input type="number" class="dyn-phone" autocomplete="off" style="padding: 10px;"></div></div>`;
         }
     }
 
     async function submitRegistration() {
         const tname = document.getElementById('tourSelect').value;
         if(!tname) return alert("Select tournament first.");
-        
+        const tour = currentCatalog.find(c => c.tname === tname);
+        if(!tour) return alert("Tournament data not found in catalog.");
         const podLimit = parseInt(document.querySelector(`#tourSelect option[value="${tname}"]`).dataset.size);
         const groupSize = parseInt(document.getElementById('groupSizeSelect').value);
-        
         const ids = document.querySelectorAll('.dyn-id');
         const names = document.querySelectorAll('.dyn-name');
         const phones = document.querySelectorAll('.dyn-phone');
-        
         const players = [];
         for(let i = 0; i < groupSize; i++) {
             if(!ids[i].value || !names[i].value) return alert("Fill ID and Name for all players.");
             players.push({ id: ids[i].value, name: names[i].value, phone: phones[i].value });
         }
-
-        const { data: podNum } = await _supabase.rpc('get_pod_for_group', { p_event_id: eventPrefix, p_tname: tname, p_pod_limit: podLimit, p_group_size: groupSize });
-
-        const inserts = players.map(p => ({
-            event_id: eventPrefix, player_id: p.id, player_name: p.name, player_phone: p.phone,
-            tname: tname, status: 'waiting', pod_number: podNum
-        }));
-
+        const { data: podNum, error: rpcError } = await _supabase.rpc('get_pod_for_group', { p_event_id: eventPrefix, p_tname: tname, p_pod_limit: podLimit, p_group_size: groupSize, p_min_table: tour.table_min || 1, p_max_table: tour.table_max || 9999 });
+        if(rpcError) return alert("Error finding pod/table: " + rpcError.message);
+        const inserts = players.map(p => ({ event_id: eventPrefix, player_id: p.id, player_name: p.name, player_phone: p.phone, tname: tname, status: 'waiting', pod_number: podNum }));
         const { error } = await _supabase.from('ode_registrations').insert(inserts);
         if(!error) {
-            updateWaitingList();
+            loadData(); // Agora carrega tudo para garantir sincronia
             document.getElementById('playersContainer').innerHTML = "";
             document.getElementById('tourSelect').value = "";
             updateGroupSizeOptions();
@@ -265,33 +226,18 @@
         regs.forEach(r => { const key = `${r.tname}|${r.pod_number}`; groups[key] = (groups[key] || 0) + 1; });
         for (const [key, count] of Object.entries(groups)) {
             const [tname, podNum] = key.split('|');
-            const targetSize = currentCatalog.find(c => c.tname === tname)?.pod_size || 4;
-            listDiv.innerHTML += `
-                <div class="pod-card-3d">
-                    <div class="pod-info-3d">
-                        <b>${tname}</b>
-                        <small>POD #${podNum}</small>
-                    </div>
-                    <div class="pill-blue">${count} / ${targetSize}</div>
-                </div>`;
+            const tourInfo = currentCatalog.find(c => c.tname === tname);
+            const targetSize = tourInfo ? tourInfo.pod_size : 4;
+            listDiv.innerHTML += `<div class="pod-card-3d"><div class="pod-info-3d"><b>${tname}</b><small>POD #${podNum}</small></div><div class="pill-blue">${count} / ${targetSize}</div></div>`;
         }
     }
 
-    function navToTables() { 
-        window.location.href = `admin_tables.html?event=${eventPrefix}`; 
-    }
+    function navToTables() { window.location.href = `admin_tables.html?event=${eventPrefix}`; }
 
-    _supabase.channel('any')
-        .on('postgres_changes', { event: '*', schema: 'public', table: 'ode_registrations' }, updateWaitingList)
-        .subscribe();
+    _supabase.channel('any').on('postgres_changes', { event: '*', schema: 'public', table: 'ode_registrations' }, loadData).subscribe();
+    _supabase.channel('catalog_sync').on('postgres_changes', { event: '*', schema: 'public', table: 'tournament_catalog' }, loadData).subscribe();
 
-    _supabase.channel('catalog_sync')
-        .on('postgres_changes', { event: '*', schema: 'public', table: 'tournament_catalog' }, loadData)
-        .subscribe();
-
-    setInterval(() => {
-        updateWaitingList();
-    }, 30000); 
+    setInterval(() => { loadData(); }, 30000); 
 </script>
 </body>
 </html>
