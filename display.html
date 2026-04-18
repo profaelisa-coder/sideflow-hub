@@ -28,14 +28,19 @@
 
         .sidebar { flex: 2.5; max-width: 380px; background: rgba(0,0,0,0.3); border-left: 3px solid var(--gold); display: flex; flex-direction: column; padding: 20px; box-sizing: border-box; z-index: 10; box-shadow: -5px 0 20px rgba(0,0,0,0.5); }
         
-        /* AJUSTES NA SIDEBAR PARA CABER MAIS CARDS */
         .sidebar-title { color: var(--gold); font-weight: 900; font-size: 1.4rem; text-transform: uppercase; text-align: center; margin-bottom: 15px; letter-spacing: 2px; border-bottom: 2px solid var(--gold); padding-bottom: 10px; }
         .sidebar-item { background: var(--sec); padding: 12px; border-radius: 10px; margin-bottom: 10px; border-left: 6px solid var(--blue); }
         .sidebar-item.new-call { border-left-color: var(--gold); animation: pulse-new 2s infinite; }
         
         .pulse-gold { animation: border-pulse 1.5s infinite; }
         @keyframes border-pulse { 0% { border-color: rgba(255,183,3,0.2); } 50% { border-color: rgba(255,183,3,1); box-shadow: 0 0 20px rgba(255,183,3,0.6); } 100% { border-color: rgba(255,183,3,0.2); } }
-        @keyframes pulse-new { 0% { box-shadow: 0 0 0px var(--gold); } 50% { box-shadow: 0 0 15px var(--gold); } 100% { box-shadow: 0 0 0px var(--gold); } }
+        
+        /* EFEITO DE NEON/SOMBRA EXPANDIDO AQUI */
+        @keyframes pulse-new { 
+            0% { box-shadow: 0 0 5px rgba(255,183,3,0.2); } 
+            50% { box-shadow: 0 0 35px 8px rgba(255,183,3,1); } 
+            100% { box-shadow: 0 0 5px rgba(255,183,3,0.2); } 
+        }
     </style>
 </head>
 <body>
@@ -142,14 +147,14 @@
             return b.pod_number - a.pod_number;
         });
 
-        const topCalls = unique.slice(0, 6);
+        // ALTERAÇÃO PARA 7 CARDS AQUI
+        const topCalls = unique.slice(0, 7);
 
         if(topCalls.length === 0) {
             callsArea.innerHTML = "<p style='opacity:0.5; font-style: italic; text-align:center;'>WAITING FOR ASSIGNMENTS...</p>";
             return;
         }
 
-        // FONTES REDUZIDAS AQUI PARA CABER NA SIDEBAR
         const html = topCalls.map((r, index) => {
             const tourInfo = tours.find(t => t.tname === r.tname);
             const game = tourInfo ? tourInfo.game : 'GAME';
