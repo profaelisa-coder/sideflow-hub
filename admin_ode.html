@@ -26,6 +26,10 @@
         button:hover { filter: brightness(1.1); }
         .btn-reg { background: var(--gold); color: var(--dark); margin-top: 5px; }
         
+        /* NOVOS BOTÕES MODO EDIÇÃO */
+        .btn-cancel-edit { background: var(--red); color: white; margin-top: 5px; display: none; }
+        .btn-edit-pod { background: var(--gold); color: var(--dark); padding: 5px 10px; border-radius: 6px; border: none; font-weight: bold; cursor: pointer; font-size: 0.7rem; margin-left: 10px; width: auto; }
+
         /* Estilos dos jogadores compactados */
         #playersContainer .row { background: rgba(0,0,0,0.1); padding: 8px; border-radius: 6px; margin-bottom: 6px; }
         
@@ -105,7 +109,8 @@
         
         <div id="playersContainer"></div>
         
-        <button class="btn-reg" onclick="submitRegistration()">REGISTER TO POD</button>
+        <button class="btn-reg" id="btnMainSubmit" onclick="submitRegistration()">REGISTER TO POD</button>
+        <button class="btn-cancel-edit" id="btnCancelEdit" onclick="cancelEditMode()">CANCEL EDIT</button>
     </div>
     
     <div class="live-label"><div class="live-dot"></div> WAITING QUEUE</div>
@@ -123,6 +128,9 @@
     const urlParams = new URLSearchParams(window.location.search);
     let eventPrefix = urlParams.get('event') || localStorage.getItem('active_event_id');
     let currentCatalog = [];
+    
+    // A MEMÓRIA SECRETA DO POD (Chefão)
+    let editingPod = null; 
 
     window.onload = () => {
         if(!eventPrefix) return;
@@ -154,7 +162,10 @@
     async function loadData() {
         const { data: catalog } = await _supabase.from('tournament_catalog').select('*').eq('event_id', eventPrefix).eq('item_type', 'ODE');
         currentCatalog = catalog || [];
-        filterTournaments();
+        // Só atualiza os dropdowns se não estivermos editando ativamente
+        if (!editingPod) {
+            filterTournaments();
+        }
         updateWaitingList();
     }
 
@@ -213,6 +224,80 @@
         }
     }
 
+    /* === O REWIND DE EDIÇÃO === */
+    async function editPod(tname, podNum) {
+        // Busca todos os jogadores que pertencem a esse Pod
+        const { data: players } = await _supabase
+            .from('ode_registrations')
+            .select('*')
+            .eq('event_id', eventPrefix)
+            .eq('tname', tname)
+            .eq('pod_number', podNum)
+            .eq('status', 'waiting')
+            .order('id', { ascending: true });
+
+        if (!players || players.length === 0) return alert("Pod not found or already allocated.");
+
+        // Guarda os dados na memória secreta
+        editingPod = { tname, podNum, players };
+
+        // Força a tela a selecionar o jogo e torneio corretos
+        const tour = currentCatalog.find(c => c.tname === tname);
+        if (tour) {
+            document.getElementById('gameSelect').value = tour.game;
+            filterTournaments();
+        }
+        document.getElementById('tourSelect').value = tname;
+        
+        // Trava Jogo e Torneio para evitar confusões de alocação de mesa
+        document.getElementById('gameSelect').disabled = true;
+        document.getElementById('tourSelect').disabled = true;
+
+        // Atualiza a quantidade e preenche os campos vazios
+        updateGroupSizeOptions();
+        document.getElementById('groupSizeSelect').value = players.length;
+        renderPlayerInputs();
+
+        // Insere os dados reais nos campos
+        const ids = document.querySelectorAll('.dyn-id');
+        const names = document.querySelectorAll('.dyn-name');
+        const phones = document.querySelectorAll('.dyn-phone');
+
+        for (let i = 0; i < players.length; i++) {
+            ids[i].value = players[i].player_id || '';
+            names[i].value = players[i].player_name || '';
+            phones[i].value = players[i].player_phone || '';
+        }
+
+        // Muda os Botões
+        const btnReg = document.getElementById('btnMainSubmit');
+        btnReg.innerText = "UPDATE POD";
+        btnReg.style.backgroundColor = "var(--blue)";
+        btnReg.style.color = "white";
+        
+        document.getElementById('btnCancelEdit').style.display = 'block';
+
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    function cancelEditMode() {
+        editingPod = null;
+        document.getElementById('gameSelect').disabled = false;
+        document.getElementById('tourSelect').disabled = false;
+        
+        document.getElementById('playersContainer').innerHTML = "";
+        document.getElementById('tourSelect').value = "";
+        document.getElementById('gameSelect').value = "";
+        filterTournaments();
+        
+        const btnReg = document.getElementById('btnMainSubmit');
+        btnReg.innerText = "REGISTER TO POD";
+        btnReg.style.backgroundColor = "var(--gold)";
+        btnReg.style.color = "var(--dark)";
+        
+        document.getElementById('btnCancelEdit').style.display = 'none';
+    }
+
     async function submitRegistration() {
         const tname = document.getElementById('tourSelect').value;
         if(!tname) return alert("Select tournament first.");
@@ -224,36 +309,72 @@
         const ids = document.querySelectorAll('.dyn-id');
         const names = document.querySelectorAll('.dyn-name');
         const phones = document.querySelectorAll('.dyn-phone');
-        const players = [];
+        const formPlayers = [];
         
         for(let i = 0; i < groupSize; i++) {
             if(!ids[i].value || !names[i].value) return alert("Fill ID and Name for all players.");
-            players.push({ id: ids[i].value, name: names[i].value, phone: phones[i].value });
+            formPlayers.push({ id: ids[i].value, name: names[i].value, phone: phones[i].value });
         }
         
-        // Chamada da RPC atualizada (A Etapa 1 entra em ação aqui)
-        const { data: podNum, error: rpcError } = await _supabase.rpc('get_pod_for_group', { 
-            p_event_id: eventPrefix, 
-            p_tname: tname, 
-            p_pod_limit: podLimit, 
-            p_group_size: groupSize, 
-            p_min_table: tour.table_min || 1, 
-            p_max_table: tour.table_max || 9999 
-        });
-        
-        if(rpcError) return alert("Error finding pod/table: " + rpcError.message);
-        
-        const inserts = players.map(p => ({ event_id: eventPrefix, player_id: p.id, player_name: p.name, player_phone: p.phone, tname: tname, status: 'waiting', pod_number: podNum }));
-        const { error } = await _supabase.from('ode_registrations').insert(inserts);
-        
-        if(!error) {
-            loadData(); 
-            document.getElementById('playersContainer').innerHTML = "";
-            document.getElementById('tourSelect').value = "";
-            updateGroupSizeOptions();
-            alert("Registration Successful!");
+        // BIFURCAÇÃO (EDIÇÃO VS NOVO POD)
+        if (editingPod) {
+            const dbPlayers = editingPod.players;
+            const podNum = editingPod.podNum;
+
+            // Bloqueia botão durante a ação
+            document.getElementById('btnMainSubmit').disabled = true;
+
+            for (let i = 0; i < formPlayers.length; i++) {
+                const p = formPlayers[i];
+                if (i < dbPlayers.length) {
+                    // Atualiza quem já existia no banco
+                    await _supabase.from('ode_registrations')
+                        .update({ player_id: p.id, player_name: p.name, player_phone: p.phone })
+                        .eq('id', dbPlayers[i].id);
+                } else {
+                    // Insere os novatos que foram adicionados nesse mesmo Pod
+                    await _supabase.from('ode_registrations')
+                        .insert([{ event_id: eventPrefix, player_id: p.id, player_name: p.name, player_phone: p.phone, tname: tname, status: 'waiting', pod_number: podNum }]);
+                }
+            }
+
+            // Se diminuiu a quantidade, apaga o restante do banco
+            if (formPlayers.length < dbPlayers.length) {
+                for (let i = formPlayers.length; i < dbPlayers.length; i++) {
+                    await _supabase.from('ode_registrations').delete().eq('id', dbPlayers[i].id);
+                }
+            }
+
+            document.getElementById('btnMainSubmit').disabled = false;
+            alert("Pod Updated Successfully!");
+            cancelEditMode();
+            loadData();
+
         } else {
-            alert("Error registering: " + error.message);
+            // LÓGICA ORIGINAL DE CRIAÇÃO (Intacta)
+            const { data: podNum, error: rpcError } = await _supabase.rpc('get_pod_for_group', { 
+                p_event_id: eventPrefix, 
+                p_tname: tname, 
+                p_pod_limit: podLimit, 
+                p_group_size: groupSize, 
+                p_min_table: tour.table_min || 1, 
+                p_max_table: tour.table_max || 9999 
+            });
+            
+            if(rpcError) return alert("Error finding pod/table: " + rpcError.message);
+            
+            const inserts = formPlayers.map(p => ({ event_id: eventPrefix, player_id: p.id, player_name: p.name, player_phone: p.phone, tname: tname, status: 'waiting', pod_number: podNum }));
+            const { error } = await _supabase.from('ode_registrations').insert(inserts);
+            
+            if(!error) {
+                loadData(); 
+                document.getElementById('playersContainer').innerHTML = "";
+                document.getElementById('tourSelect').value = "";
+                updateGroupSizeOptions();
+                alert("Registration Successful!");
+            } else {
+                alert("Error registering: " + error.message);
+            }
         }
     }
 
@@ -268,7 +389,15 @@
             const [tname, podNum] = key.split('|');
             const tourInfo = currentCatalog.find(c => c.tname === tname);
             const targetSize = tourInfo ? tourInfo.pod_size : 4;
-            listDiv.innerHTML += `<div class="pod-card-3d"><div class="pod-info-3d"><b>${tname}</b><small>POD #${podNum}</small></div><div class="pill-blue">${count} / ${targetSize}</div></div>`;
+            // BOTÃO DE EDITAR ADICIONADO AO CARD DO POD
+            listDiv.innerHTML += `
+                <div class="pod-card-3d">
+                    <div class="pod-info-3d"><b>${tname}</b><small>POD #${podNum}</small></div>
+                    <div style="display:flex; align-items:center;">
+                        <div class="pill-blue">${count} / ${targetSize}</div>
+                        <button class="btn-edit-pod" onclick="editPod('${tname}', ${podNum})">EDIT</button>
+                    </div>
+                </div>`;
         }
     }
 
