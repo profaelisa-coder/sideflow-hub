@@ -6,54 +6,52 @@
     <title>SideFlow - Table Map</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
-        :root { --bg: #1A4B84; --sec: #2B6CB0; --gold: #ffb703; --blue: #63B3ED; --red: #e63946; --green: #2ecc71; --white: #e0e1dd; --dark: #0A2540; --blocked: #666666; }
-        body { font-family: 'Segoe UI', sans-serif; background: var(--bg); color: var(--white); margin: 0; padding: 20px; display: flex; flex-direction: column; height: 100vh; box-sizing: border-box; }
-        h2 { color: var(--gold); text-transform: uppercase; letter-spacing: 2px; text-align: center; margin: 0 0 20px 0; }
+        :root { --bg: #1A4B84; --sec: #2B6CB0; --gold: #ffb703; --white: #e0e1dd; --red: #e63946; --dark: #0A2540; --blue: #63B3ED; }
+        body { font-family: 'Segoe UI', sans-serif; background: var(--bg); color: var(--white); margin: 0; padding: 20px; display: flex; flex-direction: column; align-items: center; }
+        .container { width: 100%; max-width: 1000px; }
         
-        .layout { display: flex; gap: 20px; flex: 1; overflow: hidden; }
-        .sidebar { width: 300px; background: var(--sec); border-radius: 12px; padding: 15px; display: flex; flex-direction: column; border-top: 4px solid var(--gold); overflow-y: auto; }
-        .sidebar h3 { margin-top: 0; color: var(--gold); font-size: 1rem; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 10px; }
+        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; }
+        h2 { color: var(--gold); margin: 0; text-transform: uppercase; letter-spacing: 2px; }
         
-        .pod-card { background: var(--bg); padding: 15px; border-radius: 8px; margin-bottom: 10px; border-left: 4px solid var(--green); }
-        .pod-card h4 { margin: 0 0 5px 0; color: white; }
-        
-        .btn-alloc { width: 100%; background: var(--gold); color: var(--dark); border: none; padding: 10px; border-radius: 6px; font-weight: bold; cursor: pointer; text-transform: uppercase; }
-        .btn-wa { width: 100%; background: var(--green); color: white; border: none; padding: 10px; border-radius: 6px; font-weight: bold; cursor: pointer; text-transform: uppercase; margin-top: 10px; display: none; }
-        
-        .map-area { flex: 1; background: var(--sec); border-radius: 12px; padding: 20px; overflow-y: auto; border: 1px solid rgba(255,255,255,0.1); }
-        .grid-tables { display: grid; grid-template-columns: repeat(auto-fill, minmax(65px, 1fr)); gap: 12px; }
-        
-        .table-box { aspect-ratio: 1; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 1.1rem; cursor: pointer; transition: 0.2s; box-shadow: 0 4px 6px rgba(0,0,0,0.3); flex-direction: column; background: var(--dark); border: 1px solid var(--blue); position: relative; }
-        .table-box span { font-size: 0.55rem; margin-top: 4px; opacity: 0.8; text-align: center; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; width: 90%; }
-        
-        .free-state { background: rgba(255,255,255,0.05); color: white; border: 1px solid rgba(255,255,255,0.2); }
-        .occupied-state { background: var(--red); color: white; border: 2px solid #a30000; }
-        .blocked-state { background: var(--blocked); color: white; border: 2px solid #333333; cursor: not-allowed; }
-        
-        .btn-block-table { position: absolute; top: 2px; right: 2px; background: rgba(0,0,0,0.5); color: white; border: none; font-size: 0.5rem; cursor: pointer; border-radius: 4px; padding: 2px 4px; }
-        .btn-block-table:hover { background: var(--red); }
+        .btn-back { background: transparent; color: var(--gold); border: 1px solid var(--gold); padding: 8px 15px; border-radius: 6px; cursor: pointer; font-weight: bold; }
+        .btn-back:hover { background: var(--gold); color: var(--dark); }
 
-        .nav-footer { margin-top: 20px; text-align: center; }
-        .nav-footer button { background: rgba(255,255,255,0.1); color: white; border: 1px solid rgba(255,255,255,0.2); padding: 10px 25px; border-radius: 6px; cursor: pointer; font-size: 0.8rem; text-transform: uppercase; font-weight: bold; }
-        .nav-footer button:hover { background: rgba(255,255,255,0.2); }
+        /* Grade de Mesas */
+        .table-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); gap: 12px; width: 100%; }
+        
+        .table-card { 
+            background: var(--dark); border-radius: 8px; padding: 15px; text-align: center; 
+            border-bottom: 4px solid #555; transition: 0.3s; position: relative;
+        }
+        
+        /* Cores de Status */
+        .table-card.FREE { border-bottom-color: #2ecc71; }
+        .table-card.OCCUPIED { border-bottom-color: var(--red); background: #2d1a1a; }
+        
+        .table-num { font-size: 1.5rem; font-weight: bold; display: block; margin-bottom: 5px; }
+        .table-status { font-size: 0.65rem; text-transform: uppercase; font-weight: bold; opacity: 0.8; }
+        .table-tour { font-size: 0.7rem; color: var(--blue); margin-top: 5px; font-weight: bold; display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+        .legend { display: flex; gap: 20px; margin-bottom: 20px; background: rgba(0,0,0,0.2); padding: 10px; border-radius: 8px; font-size: 0.8rem; }
+        .leg-item { display: flex; align-items: center; gap: 8px; }
+        .dot { width: 12px; height: 12px; border-radius: 2px; }
     </style>
 </head>
 <body>
 
-<h2>TOURNAMENT TABLE MAP</h2>
-
-<div class="layout">
-    <div class="sidebar">
-        <h3>READY TO ALLOCATE</h3>
-        <div id="readyPodsList"></div>
+<div class="container">
+    <div class="header">
+        <h2>TABLE INFRASTRUCTURE MAP</h2>
+        <button class="btn-back" onclick="history.back()">RETURN</button>
     </div>
-    <div class="map-area">
-        <div class="grid-tables" id="tablesGrid"></div>
-    </div>
-</div>
 
-<div class="nav-footer">
-    <button onclick="window.history.back()">BACK</button>
+    <div class="legend">
+        <div class="leg-item"><div class="dot" style="background: #2ecc71;"></div> FREE</div>
+        <div class="leg-item"><div class="dot" style="background: var(--red);"></div> OCCUPIED (SCH/ODE)</div>
+    </div>
+
+    <div id="tableGrid" class="table-grid">
+        </div>
 </div>
 
 <script>
@@ -61,160 +59,54 @@
     const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhvY3BvYXN0bmxjd2dlZHZjeXFzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQyODU0MTYsImV4cCI6MjA4OTg2MTQxNn0.1MvvcFsnGW4e0Bj7mzoUKs_3bGM-eHDJTOqsvgKe-pI';
     const _supabase = supabase.createClient(supabaseUrl, supabaseKey);
     const urlParams = new URLSearchParams(window.location.search);
-    let eventPrefix = urlParams.get('event') || localStorage.getItem('active_event_id');
-    let allTables = [];
-    let catalogSizes = {}; 
-    let pendingWA = {};
-    let subscription = null;
+    const eventPrefix = urlParams.get('event');
 
-    window.onload = async () => {
-        if(!eventPrefix) return;
-        await loadCatalog();
-        await loadTables();
-        await loadReadyPods();
+    window.onload = () => {
+        if(!eventPrefix) return alert("NO EVENT PREFIX FOUND");
+        loadTables();
         
-        setupRealtime();
-        
-        document.addEventListener('visibilitychange', () => {
-            if (document.visibilityState === 'visible') {
+        // Ativa o Realtime para monitorar mudanças nas mesas
+        _supabase.channel('table_updates')
+            .on('postgres_changes', { 
+                event: '*', 
+                schema: 'public', 
+                table: 'event_tables',
+                filter: `event_id=eq.${eventPrefix}` 
+            }, () => {
                 loadTables();
-                loadReadyPods();
-                setupRealtime();
-            }
-        });
+            })
+            .subscribe();
     };
 
-    function setupRealtime() {
-        if (subscription) {
-            _supabase.removeChannel(subscription);
-        }
-        subscription = _supabase.channel('custom-all-channel')
-            .on('postgres_changes', { event: '*', schema: 'public', table: 'ode_registrations' }, loadReadyPods)
-            .on('postgres_changes', { event: '*', schema: 'public', table: 'event_tables' }, loadTables)
-            .subscribe();
-    }
-
-    async function loadCatalog() {
-        const { data } = await _supabase.from('tournament_catalog').select('tname, pod_size, table_min, table_max').eq('event_id', eventPrefix);
-        if(data) data.forEach(t => catalogSizes[t.tname] = { size: parseInt(t.pod_size), min: t.table_min, max: t.table_max });
-    }
-
     async function loadTables() {
-        const { data } = await _supabase.from('event_tables').select('*').eq('event_id', eventPrefix).order('table_number', { ascending: true });
-        allTables = data || [];
-        const grid = document.getElementById('tablesGrid');
-        grid.innerHTML = "";
-        allTables.forEach(t => {
-            let stateClass = 'free-state';
-            let statusText = 'FREE';
-            
-            if (t.status === 'OCCUPIED') {
-                stateClass = 'occupied-state';
-                statusText = t.tournament_name;
-            } else if (t.status === 'BLOCKED') {
-                stateClass = 'blocked-state';
-                statusText = 'BLOCKED';
-            }
-
-            const isFree = t.status === 'FREE';
-            
-            let blockBtn = '';
-            if (isFree) {
-                blockBtn = `<button class="btn-block-table" onclick="event.stopPropagation(); toggleBlockTable('${t.id}', 'BLOCK')">X</button>`;
-            } else if (t.status === 'BLOCKED') {
-                 blockBtn = `<button class="btn-block-table" onclick="event.stopPropagation(); toggleBlockTable('${t.id}', 'FREE')">O</button>`;
-            }
-
-            grid.innerHTML += `<div class="table-box ${stateClass}" onclick="clearTable('${t.id}', '${t.status}', ${t.table_number})">
-                ${blockBtn}
-                ${t.table_number}<span>${statusText}</span>
-            </div>`;
-        });
-    }
-
-    async function loadReadyPods() {
-        const { data: regs } = await _supabase.from('ode_registrations').select('*').eq('event_id', eventPrefix).eq('status', 'waiting');
-        const listDiv = document.getElementById('readyPodsList');
-        if(!regs || regs.length === 0) { listDiv.innerHTML = "<p style='opacity:0.5; font-size:0.8rem; text-align:center;'>No pods ready.</p>"; return; }
-        const groups = {};
-        regs.forEach(r => { 
-            const key = `${r.tname}|${r.pod_number}`;
-            if(!groups[key]) groups[key] = { tname: r.tname, pod_number: r.pod_number, players: [] };
-            groups[key].players.push({id: r.id, phone: r.player_phone});
-        });
-        listDiv.innerHTML = "";
-        for (const [key, info] of Object.entries(groups)) {
-            const targetSize = catalogSizes[info.tname] ? catalogSizes[info.tname].size : 4; 
-            if(info.players.length >= targetSize) {
-                const safeKey = key.replace(/[^a-zA-Z0-9]/g, '');
-                const isPending = pendingWA[key];
-                listDiv.innerHTML += `
-                    <div class="pod-card">
-                        <h4>${info.tname} #${info.pod_number}</h4>
-                        <button class="btn-alloc" id="alloc-${safeKey}" style="display:${isPending?'none':'block'}" onclick="allocate('${info.tname}', '${safeKey}', '${key}')">ALLOCATE</button>
-                        <button class="btn-wa" id="wa-${safeKey}" style="display:${isPending?'block':'none'}" onclick="sendBulkWA('${key}', '${safeKey}')">SEND WHATSAPP</button>
-                    </div>`;
-            }
-        }
-    }
-
-    async function allocate(tname, safeKey, groupKey) {
-        const minT = catalogSizes[tname] ? catalogSizes[tname].min : null;
-        const maxT = catalogSizes[tname] ? catalogSizes[tname].max : null;
-        const { data: tableData } = await _supabase.rpc('assign_table_smart', { target_event_id: eventPrefix, min_t: minT, max_t: maxT });
-        if (!tableData || tableData.length === 0) return alert("NO FREE TABLES IN THIS SECTION!");
-        const tableNum = tableData[0].table_number;
-        await _supabase.from('event_tables').update({ tournament_name: tname, status: 'OCCUPIED' }).eq('event_id', eventPrefix).eq('table_number', tableNum);
-        pendingWA[groupKey] = { table: tableNum };
-        document.getElementById(`alloc-${safeKey}`).style.display = 'none';
-        document.getElementById(`wa-${safeKey}`).style.display = 'block';
-        loadTables();
-    }
-
-    async function sendBulkWA(groupKey, safeKey) {
-        const info = pendingWA[groupKey];
-        const [tname, podNum] = groupKey.split('|');
-        
-        const { data: players } = await _supabase
-            .from('ode_registrations')
-            .select('id, player_name, player_phone')
+        const { data: tables, error } = await _supabase
+            .from('event_tables')
+            .select('*')
             .eq('event_id', eventPrefix)
-            .eq('tname', tname)
-            .eq('pod_number', podNum)
-            .eq('status', 'waiting');
+            .order('table_number', { ascending: true });
 
-        if(players && players.length > 0) {
-            for (const p of players) {
-                if(p.player_phone) {
-                    const msg = encodeURIComponent(`SIDEFLOW: Your Pod ${tname} #${podNum} is READY! Please proceed to Table ${info.table}.`);
-                    if(confirm(`Send WhatsApp to ${p.player_name} (${p.player_phone})?`)) {
-                        window.open(`https://wa.me/${p.player_phone}?text=${msg}`, '_blank');
-                    }
-                }
-            }
-
-            await _supabase.from('ode_registrations')
-                .update({ status: 'allocated', assigned_table: info.table })
-                .in('id', players.map(p => p.id));
-        }
-
-        delete pendingWA[groupKey];
-        loadReadyPods();
+        if(error) return console.error("Error loading tables:", error);
+        renderTables(tables);
     }
 
-    async function clearTable(id, status, num) {
-        if(status === 'FREE' || status === 'BLOCKED') return; 
-        if(confirm(`Free Table ${num}?`)) {
-            await _supabase.from('event_tables').update({ status: 'FREE', tournament_name: null }).eq('id', id);
-            loadTables();
-        }
+    function renderTables(tables) {
+        const grid = document.getElementById('tableGrid');
+        grid.innerHTML = "";
+        
+        tables.forEach(t => {
+            const statusClass = t.status.toUpperCase();
+            const tourName = t.tournament_name || "";
+            
+            grid.innerHTML += `
+                <div class="table-card ${statusClass}">
+                    <span class="table-num">${t.table_number}</span>
+                    <span class="table-status">${statusClass}</span>
+                    <span class="table-tour">${tourName}</span>
+                </div>
+            `;
+        });
     }
 
-    async function toggleBlockTable(id, action) {
-        const newStatus = action === 'BLOCK' ? 'BLOCKED' : 'FREE';
-        await _supabase.from('event_tables').update({ status: newStatus, tournament_name: null }).eq('id', id);
-        loadTables();
-    }
 </script>
 </body>
 </html>
