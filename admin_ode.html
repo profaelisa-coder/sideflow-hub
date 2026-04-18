@@ -38,7 +38,9 @@
         .live-dot.green { background: var(--green); }
         @keyframes blink { 0% { opacity: 1; } 50% { opacity: 0.3; } 100% { opacity: 1; } }
         
-        .card-container { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 15px; width: 100%; margin-bottom: 20px; }
+        /* ALTERAÇÃO: Lista esticada em uma coluna */
+        .card-container { display: flex; flex-direction: column; gap: 12px; width: 100%; margin-bottom: 20px; }
+        
         .pod-card-3d { background: var(--dark); border-radius: 8px; padding: 15px; display: flex; justify-content: space-between; align-items: center; box-shadow: inset 1px 1px 0px rgba(255,255,255,0.1), inset -2px -2px 0px rgba(0,0,0,0.4), 2px 2px 6px rgba(0,0,0,0.3); box-sizing: border-box; width: 100%; }
         .pod-info-3d { display: flex; flex-direction: column; gap: 3px; }
         .pod-info-3d b { color: var(--gold); font-size: 1.05rem; margin: 0; line-height: 1; }
@@ -198,18 +200,15 @@
         renderPlayerInputs();
     }
 
-    // NOVA FUNÇÃO RENDER: AGORA ELA FAZ BACKUP ANTES DE PASSAR A BORRACHA
     function renderPlayerInputs() {
         const qty = parseInt(document.getElementById('groupSizeSelect').value) || 0;
         const container = document.getElementById('playersContainer');
         if(container.children.length === qty) return;
 
-        // 1. O BACKUP: Salva o que já está digitado nos campos
         const currentIds = Array.from(document.querySelectorAll('.dyn-id')).map(el => el.value);
         const currentNames = Array.from(document.querySelectorAll('.dyn-name')).map(el => el.value);
         const currentPhones = Array.from(document.querySelectorAll('.dyn-phone')).map(el => el.value);
 
-        // 2. A BORRACHA: Limpa e recria a quantidade correta de campos
         container.innerHTML = "";
         for(let i = 1; i <= qty; i++) {
             container.innerHTML += `
@@ -229,7 +228,6 @@
                 </div>`;
         }
 
-        // 3. A RESTAURAÇÃO: Devolve os dados salvos para os campos recém-criados
         const newIds = document.querySelectorAll('.dyn-id');
         const newNames = document.querySelectorAll('.dyn-name');
         const newPhones = document.querySelectorAll('.dyn-phone');
