@@ -129,7 +129,6 @@
     let eventPrefix = urlParams.get('event') || localStorage.getItem('active_event_id');
     let currentCatalog = [];
     
-    // A MEMÓRIA SECRETA DO POD (Chefão)
     let editingPod = null; 
 
     window.onload = () => {
@@ -162,7 +161,6 @@
     async function loadData() {
         const { data: catalog } = await _supabase.from('tournament_catalog').select('*').eq('event_id', eventPrefix).eq('item_type', 'ODE');
         currentCatalog = catalog || [];
-        // Só atualiza os dropdowns se não estivermos editando ativamente
         if (!editingPod) {
             filterTournaments();
         }
@@ -200,10 +198,18 @@
         renderPlayerInputs();
     }
 
+    // NOVA FUNÇÃO RENDER: AGORA ELA FAZ BACKUP ANTES DE PASSAR A BORRACHA
     function renderPlayerInputs() {
         const qty = parseInt(document.getElementById('groupSizeSelect').value) || 0;
         const container = document.getElementById('playersContainer');
         if(container.children.length === qty) return;
+
+        // 1. O BACKUP: Salva o que já está digitado nos campos
+        const currentIds = Array.from(document.querySelectorAll('.dyn-id')).map(el => el.value);
+        const currentNames = Array.from(document.querySelectorAll('.dyn-name')).map(el => el.value);
+        const currentPhones = Array.from(document.querySelectorAll('.dyn-phone')).map(el => el.value);
+
+        // 2. A BORRACHA: Limpa e recria a quantidade correta de campos
         container.innerHTML = "";
         for(let i = 1; i <= qty; i++) {
             container.innerHTML += `
@@ -222,11 +228,20 @@
                     </div>
                 </div>`;
         }
+
+        // 3. A RESTAURAÇÃO: Devolve os dados salvos para os campos recém-criados
+        const newIds = document.querySelectorAll('.dyn-id');
+        const newNames = document.querySelectorAll('.dyn-name');
+        const newPhones = document.querySelectorAll('.dyn-phone');
+
+        for(let i = 0; i < Math.min(qty, currentIds.length); i++) {
+            newIds[i].value = currentIds[i] || '';
+            newNames[i].value = currentNames[i] || '';
+            newPhones[i].value = currentPhones[i] || '';
+        }
     }
 
-    /* === O REWIND DE EDIÇÃO === */
     async function editPod(tname, podNum) {
-        // Busca todos os jogadores que pertencem a esse Pod
         const { data: players } = await _supabase
             .from('ode_registrations')
             .select('*')
@@ -238,10 +253,8 @@
 
         if (!players || players.length === 0) return alert("Pod not found or already allocated.");
 
-        // Guarda os dados na memória secreta
         editingPod = { tname, podNum, players };
 
-        // Força a tela a selecionar o jogo e torneio corretos
         const tour = currentCatalog.find(c => c.tname === tname);
         if (tour) {
             document.getElementById('gameSelect').value = tour.game;
@@ -249,16 +262,13 @@
         }
         document.getElementById('tourSelect').value = tname;
         
-        // Trava Jogo e Torneio para evitar confusões de alocação de mesa
         document.getElementById('gameSelect').disabled = true;
         document.getElementById('tourSelect').disabled = true;
 
-        // Atualiza a quantidade e preenche os campos vazios
         updateGroupSizeOptions();
         document.getElementById('groupSizeSelect').value = players.length;
         renderPlayerInputs();
 
-        // Insere os dados reais nos campos
         const ids = document.querySelectorAll('.dyn-id');
         const names = document.querySelectorAll('.dyn-name');
         const phones = document.querySelectorAll('.dyn-phone');
@@ -269,7 +279,6 @@
             phones[i].value = players[i].player_phone || '';
         }
 
-        // Muda os Botões
         const btnReg = document.getElementById('btnMainSubmit');
         btnReg.innerText = "UPDATE POD";
         btnReg.style.backgroundColor = "var(--blue)";
@@ -316,29 +325,24 @@
             formPlayers.push({ id: ids[i].value, name: names[i].value, phone: phones[i].value });
         }
         
-        // BIFURCAÇÃO (EDIÇÃO VS NOVO POD)
         if (editingPod) {
             const dbPlayers = editingPod.players;
             const podNum = editingPod.podNum;
 
-            // Bloqueia botão durante a ação
             document.getElementById('btnMainSubmit').disabled = true;
 
             for (let i = 0; i < formPlayers.length; i++) {
                 const p = formPlayers[i];
                 if (i < dbPlayers.length) {
-                    // Atualiza quem já existia no banco
                     await _supabase.from('ode_registrations')
                         .update({ player_id: p.id, player_name: p.name, player_phone: p.phone })
                         .eq('id', dbPlayers[i].id);
                 } else {
-                    // Insere os novatos que foram adicionados nesse mesmo Pod
                     await _supabase.from('ode_registrations')
                         .insert([{ event_id: eventPrefix, player_id: p.id, player_name: p.name, player_phone: p.phone, tname: tname, status: 'waiting', pod_number: podNum }]);
                 }
             }
 
-            // Se diminuiu a quantidade, apaga o restante do banco
             if (formPlayers.length < dbPlayers.length) {
                 for (let i = formPlayers.length; i < dbPlayers.length; i++) {
                     await _supabase.from('ode_registrations').delete().eq('id', dbPlayers[i].id);
@@ -351,7 +355,6 @@
             loadData();
 
         } else {
-            // LÓGICA ORIGINAL DE CRIAÇÃO (Intacta)
             const { data: podNum, error: rpcError } = await _supabase.rpc('get_pod_for_group', { 
                 p_event_id: eventPrefix, 
                 p_tname: tname, 
@@ -389,7 +392,6 @@
             const [tname, podNum] = key.split('|');
             const tourInfo = currentCatalog.find(c => c.tname === tname);
             const targetSize = tourInfo ? tourInfo.pod_size : 4;
-            // BOTÃO DE EDITAR ADICIONADO AO CARD DO POD
             listDiv.innerHTML += `
                 <div class="pod-card-3d">
                     <div class="pod-info-3d"><b>${tname}</b><small>POD #${podNum}</small></div>
