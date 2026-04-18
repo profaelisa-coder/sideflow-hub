@@ -31,6 +31,7 @@
         .catalog-info { font-size: 0.9rem; }
         .catalog-info strong { color: var(--gold); margin-right: 10px; }
         .btn-del { background: var(--red); color: white; padding: 8px 12px; font-size: 0.75rem; width: auto; border-radius: 6px; }
+        .btn-edit { background: var(--gold); color: var(--dark); padding: 8px 12px; font-size: 0.75rem; width: auto; border-radius: 6px; margin-right: 5px; } /* NOVO CSS DO BOTÃO EDIT */
         .reset-link { display: block; text-align: center; color: var(--red); font-size: 0.8rem; text-decoration: none; opacity: 0.6; font-weight: bold; margin-top: 40px; transition: 0.3s; }
         .reset-link:hover { opacity: 1; text-decoration: underline; }
         .modal { position: fixed; top:0; left:0; width:100%; height:100%; background: rgba(0,0,0,0.85); display: none; align-items: center; justify-content: center; z-index: 2000; }
@@ -96,8 +97,7 @@
         </div>
     </div>
 
-    <div class="box">
-        <h3>TOURNAMENT CATALOG SETUP</h3>
+    <div class="box" id="catalogBox"> <h3 id="catalogTitle">TOURNAMENT CATALOG SETUP</h3>
         <div class="row">
             <div class="col">
                 <label>Event Type</label>
@@ -176,7 +176,8 @@
                 </select>
             </div>
         </div>
-        <button class="btn-blue" onclick="saveCatalog()">ADD TO CATALOG</button>
+        <button class="btn-blue" id="btnSaveCatalog" onclick="saveCatalog()">ADD TO CATALOG</button>
+        <button class="btn-red" id="btnCancelEdit" style="display:none; margin-top:10px;" onclick="cancelEdit()">CANCEL EDIT</button>
     </div>
 
     <div class="nav-buttons">
@@ -209,6 +210,10 @@
     const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhvY3BvYXN0bmxjd2dlZHZjeXFzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQyODU0MTYsImV4cCI6MjA4OTg2MTQxNn0.1MvvcFsnGW4e0Bj7mzoUKs_3bGM-eHDJTOqsvgKe-pI';
     const _supabase = supabase.createClient(supabaseUrl, supabaseKey);
     const eventPrefix = new URLSearchParams(window.location.search).get('event');
+
+    // A MEMÓRIA SECRETA
+    let editCatalogId = null;
+    let catalogDataBackup = [];
 
     emailjs.init("isrFxc39zpCE43OQC");
 
@@ -264,10 +269,15 @@
     async function saveCatalog() {
         const type = document.getElementById('catType').value;
         const totalTablesEvent = parseInt(document.getElementById('totalTables').value) || 9999;
+        
+        // Proteção: não permitir salvar sem nome
+        const tname = document.getElementById('catName').value.trim();
+        if(!tname) return alert("Please fill the Tournament Name.");
+
         const payload = {
             event_id: eventPrefix, item_type: type,
             game: document.getElementById('catGame').value,
-            tname: document.getElementById('catName').value.trim(),
+            tname: tname,
             tfee: parseFloat(document.getElementById('catFee').value) || 0,
             tcost: parseFloat(document.getElementById('catCost').value) || 0
         };
@@ -277,6 +287,8 @@
             payload.table_max = parseInt(document.getElementById('catMaxTable').value) || totalTablesEvent;
             payload.pod_size = parseInt(document.getElementById('catPodSize').value) || 4;
             payload.tickets_per_pod = parseInt(document.getElementById('catTickets').value) || 0;
+            // Limpa os campos de SCH se existirem no objeto
+            payload.tday = null; payload.thour = null; payload.tax = null; payload.spread = null;
         } else {
             payload.table_min = 1;
             payload.table_max = totalTablesEvent;
@@ -284,23 +296,126 @@
             payload.thour = document.getElementById('catHour').value.trim();
             payload.tax = parseFloat(document.getElementById('catTax').value) || 0;
             payload.spread = parseFloat(document.getElementById('catSpread').value) || 2.0;
+            // Limpa os campos de ODE
+            payload.pod_size = null; payload.tickets_per_pod = null;
         }
 
-        const { error } = await _supabase.from('tournament_catalog').insert([payload]);
-        if(!error) { alert("Tournament saved successfully!"); location.reload(); }
+        // A BIFURCAÇÃO (Insert vs Update)
+        let errorResult;
+        if (editCatalogId) {
+            // Modo Edição
+            const { error } = await _supabase.from('tournament_catalog').update(payload).eq('id', editCatalogId);
+            errorResult = error;
+            if(!error) alert("Tournament updated successfully!");
+        } else {
+            // Modo Criação
+            const { error } = await _supabase.from('tournament_catalog').insert([payload]);
+            errorResult = error;
+            if(!error) alert("Tournament saved successfully!");
+        }
+
+        if(!errorResult) {
+            cancelEdit(); // Limpa a memória e os campos
+            loadCatalog(); // Recarrega a lista
+        } else {
+            alert("Database Error: " + errorResult.message);
+        }
     }
 
     async function loadCatalog() {
         const { data } = await _supabase.from('tournament_catalog').select('*').eq('event_id', eventPrefix).order('id', { ascending: false });
         const listDiv = document.getElementById('catalogList');
         listDiv.innerHTML = "";
+        
         if (data) {
+            catalogDataBackup = data; // Atualiza a memória
             data.forEach(item => {
                 const dayInfo = item.tday ? ` - ${item.tday}` : "";
                 const tables = item.item_type === 'ODE' ? ` [Tables ${item.table_min}-${item.table_max}]` : " [Auto-Allocated]";
-                listDiv.innerHTML += `<div class="catalog-item"><div class="catalog-info"><strong>${item.item_type}</strong> [${item.game}] ${item.tname}${dayInfo}${tables}</div><button class="btn-del" onclick="deleteCatalogItem(${item.id})">DEL</button></div>`;
+                listDiv.innerHTML += `
+                    <div class="catalog-item">
+                        <div class="catalog-info"><strong>${item.item_type}</strong> [${item.game}] ${item.tname}${dayInfo}${tables}</div>
+                        <div>
+                            <button class="btn-edit" onclick="editCatalogItem(${item.id})">EDIT</button>
+                            <button class="btn-del" onclick="deleteCatalogItem(${item.id})">DEL</button>
+                        </div>
+                    </div>`;
             });
         }
+    }
+
+    // A FUNÇÃO REWIND (Puxar os dados para edição)
+    function editCatalogItem(id) {
+        const item = catalogDataBackup.find(c => c.id === id);
+        if(!item) return;
+
+        editCatalogId = item.id; // Marca que estamos editando
+        
+        // Povoar os campos
+        document.getElementById('catType').value = item.item_type || "";
+        toggleCatFields(); // Atualiza a visibilidade das colunas
+        
+        document.getElementById('catGame').value = item.game || "";
+        document.getElementById('catName').value = item.tname || "";
+        document.getElementById('catFee').value = item.tfee || "";
+        document.getElementById('catCost').value = item.tcost || "";
+        
+        if (item.item_type === 'ODE') {
+            document.getElementById('catMinTable').value = item.table_min || "";
+            document.getElementById('catMaxTable').value = item.table_max || "";
+            document.getElementById('catPodSize').value = item.pod_size || "";
+            document.getElementById('catTickets').value = item.tickets_per_pod || "";
+        } else {
+            document.getElementById('catDay').value = item.tday || "";
+            document.getElementById('catHour').value = item.thour || "";
+            document.getElementById('catTax').value = item.tax || "";
+            document.getElementById('catSpread').value = item.spread || "";
+        }
+
+        // Alterar visual para Modo Edição
+        document.getElementById('catalogTitle').innerText = "EDITING TOURNAMENT...";
+        document.getElementById('catalogTitle').style.color = "var(--red)";
+        
+        const btnSave = document.getElementById('btnSaveCatalog');
+        btnSave.innerText = "UPDATE TOURNAMENT";
+        btnSave.className = "btn-gold"; // Muda cor do botão
+        
+        document.getElementById('btnCancelEdit').style.display = 'block';
+
+        // Rola a tela suavemente para a caixa de edição
+        document.getElementById('catalogBox').scrollIntoView({ behavior: 'smooth' });
+    }
+
+    // FUNÇÃO PARA LIMPAR TUDO E SAIR DO MODO EDIÇÃO
+    function cancelEdit() {
+        editCatalogId = null;
+        
+        // Limpar campos
+        document.getElementById('catType').value = "";
+        document.getElementById('catGame').value = "";
+        document.getElementById('catName').value = "";
+        document.getElementById('catFee').value = "";
+        document.getElementById('catCost').value = "";
+        document.getElementById('catMinTable').value = "";
+        document.getElementById('catMaxTable').value = "";
+        document.getElementById('catPodSize').value = "";
+        document.getElementById('catTickets').value = "";
+        document.getElementById('catDay').value = "";
+        document.getElementById('catHour').value = "";
+        document.getElementById('catTax').value = "";
+        document.getElementById('catSpread').value = "";
+        
+        toggleCatFields(); // Volta os campos ao normal
+
+        // Volta o visual ao normal
+        document.getElementById('catalogTitle').innerText = "TOURNAMENT CATALOG SETUP";
+        document.getElementById('catalogTitle').style.color = "var(--gold)";
+        
+        const btnSave = document.getElementById('btnSaveCatalog');
+        btnSave.innerText = "ADD TO CATALOG";
+        btnSave.className = "btn-blue";
+        
+        document.getElementById('btnCancelEdit').style.display = 'none';
     }
 
     async function deleteCatalogItem(id) { if(confirm("Delete?")) { await _supabase.from('tournament_catalog').delete().eq('id', id); loadCatalog(); } }
