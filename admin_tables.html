@@ -9,14 +9,14 @@
         :root { --bg: #1A4B84; --sec: #2B6CB0; --gold: #ffb703; --blue: #63B3ED; --red: #e63946; --green: #2ecc71; --white: #e0e1dd; --dark: #0A2540; --blocked: #666666; }
         body { font-family: 'Segoe UI', sans-serif; background: var(--bg); color: var(--white); margin: 0; padding: 20px; display: flex; flex-direction: column; height: 100vh; box-sizing: border-box; }
         
-        /* NOVO CABEÇALHO */
+        /* CABEÇALHO */
         .header-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 10px; }
         h2 { color: var(--gold); text-transform: uppercase; letter-spacing: 2px; margin: 0; }
         .btn-top-back { background: transparent; color: var(--gold); border: 1px solid var(--gold); padding: 8px 20px; border-radius: 6px; cursor: pointer; font-weight: bold; text-transform: uppercase; transition: 0.3s; font-size: 0.8rem; }
         .btn-top-back:hover { background: var(--gold); color: var(--dark); }
         
         .layout { display: flex; gap: 20px; flex: 1; overflow: hidden; }
-        .sidebar { width: 300px; background: var(--sec); border-radius: 12px; padding: 15px; display: flex; flex-direction: column; border-top: 4px solid var(--gold); overflow-y: auto; }
+        .sidebar { width: 300px; background: var(--sec); border-radius: 12px; padding: 15px; display: flex; flex-direction: column; border-top: 4px solid var(--gold); }
         .sidebar h3 { margin-top: 0; color: var(--gold); font-size: 1rem; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 10px; }
         
         .pod-card { background: var(--bg); padding: 15px; border-radius: 8px; margin-bottom: 10px; border-left: 4px solid var(--green); }
@@ -25,6 +25,15 @@
         .btn-alloc { width: 100%; background: var(--gold); color: var(--dark); border: none; padding: 10px; border-radius: 6px; font-weight: bold; cursor: pointer; text-transform: uppercase; }
         .btn-wa { width: 100%; background: var(--green); color: white; border: none; padding: 10px; border-radius: 6px; font-weight: bold; cursor: pointer; text-transform: uppercase; margin-top: 10px; display: none; }
         
+        /* BOTOES NOVOS PARA MASS ACTION */
+        .btn-red { width: 100%; background: var(--red); color: white; border: none; padding: 12px; border-radius: 6px; font-weight: bold; cursor: pointer; text-transform: uppercase; transition: 0.2s; }
+        .btn-red:hover { filter: brightness(1.2); }
+        
+        /* MODAL DE MASS FREE */
+        .modal { position: fixed; top:0; left:0; width:100%; height:100%; background: rgba(0,0,0,0.85); display: none; align-items: center; justify-content: center; z-index: 2000; }
+        .modal-content { background: var(--sec); padding: 30px; border-radius: 12px; border-top: 4px solid var(--red); width: 90%; max-width: 400px; text-align: center; }
+        .modal-content select { width: 100%; padding: 12px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.2); background: var(--dark); color: white; margin-bottom: 20px; font-size: 1rem; }
+
         .map-area { flex: 1; background: var(--sec); border-radius: 12px; padding: 20px; overflow-y: auto; border: 1px solid rgba(255,255,255,0.1); }
         .grid-tables { display: grid; grid-template-columns: repeat(auto-fill, minmax(65px, 1fr)); gap: 12px; }
         
@@ -41,6 +50,22 @@
 </head>
 <body>
 
+<div id="massFreeModal" class="modal">
+    <div class="modal-content">
+        <h3 style="color: var(--gold); margin-top: 0; border-bottom: none; padding-bottom: 0;">MASS FREE TABLES</h3>
+        <p style="font-size: 0.85rem; margin-bottom: 20px; opacity: 0.8;">Select the tournament you want to close and clear from the map.</p>
+        
+        <select id="massFreeSelect">
+            <option value="">-- LOADING EVENTS --</option>
+        </select>
+        
+        <div style="display: flex; gap: 10px;">
+            <button class="btn-red" style="margin:0; flex:1;" onclick="confirmMassFree()">CONFIRM FREE</button>
+            <button style="background: #666; color: white; border: none; border-radius: 6px; font-weight: bold; margin:0; flex:1; cursor: pointer;" onclick="closeMassFreeModal()">CANCEL</button>
+        </div>
+    </div>
+</div>
+
 <div class="header-top">
     <h2>TOURNAMENT TABLE MAP</h2>
     <button class="btn-top-back" onclick="window.history.back()">BACK</button>
@@ -49,7 +74,11 @@
 <div class="layout">
     <div class="sidebar">
         <h3>READY TO ALLOCATE</h3>
-        <div id="readyPodsList"></div>
+        <div id="readyPodsList" style="flex: 1; overflow-y: auto;"></div>
+        
+        <div style="margin-top: 15px; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 15px;">
+            <button class="btn-red" onclick="openMassFreeModal()">MASS FREE TABLES</button>
+        </div>
     </div>
     <div class="map-area">
         <div class="grid-tables" id="tablesGrid"></div>
@@ -223,6 +252,52 @@
         const newStatus = action === 'BLOCK' ? 'BLOCKED' : 'FREE';
         await _supabase.from('event_tables').update({ status: newStatus, tournament_name: null }).eq('id', id);
         loadTables();
+    }
+
+    /* === FUNÇÕES NOVAS DE MASS FREE === */
+    function openMassFreeModal() {
+        const occupiedTables = allTables.filter(t => (t.status || '').trim().toUpperCase() === 'OCCUPIED' && t.tournament_name);
+        const uniqueTournaments = [...new Set(occupiedTables.map(t => t.tournament_name))];
+        
+        const select = document.getElementById('massFreeSelect');
+        select.innerHTML = '<option value="">-- SELECT EVENT --</option>';
+        
+        uniqueTournaments.forEach(name => {
+            const count = occupiedTables.filter(t => t.tournament_name === name).length;
+            select.innerHTML += `<option value="${name}">${name} (${count} tables in use)</option>`;
+        });
+        
+        document.getElementById('massFreeModal').style.display = 'flex';
+    }
+
+    function closeMassFreeModal() {
+        document.getElementById('massFreeModal').style.display = 'none';
+        document.getElementById('massFreeSelect').value = "";
+    }
+
+    async function confirmMassFree() {
+        const tname = document.getElementById('massFreeSelect').value;
+        if(!tname) return alert("Please select a tournament first.");
+        
+        const count = allTables.filter(t => t.tournament_name === tname && (t.status || '').trim().toUpperCase() === 'OCCUPIED').length;
+        
+        const isConfirmed = confirm(`⚠️ DANGER ZONE ⚠️\n\nYou are about to free ${count} tables assigned to "${tname}".\n\nThis action will immediately change all these tables to FREE on the map.\n\nAre you ABSOLUTELY sure?`);
+        
+        if(isConfirmed) {
+            const { error } = await _supabase
+                .from('event_tables')
+                .update({ status: 'FREE', tournament_name: null })
+                .eq('event_id', eventPrefix)
+                .eq('tournament_name', tname);
+                
+            if(error) {
+                alert("Error freeing tables: " + error.message);
+            } else {
+                alert(`${count} tables successfully freed!`);
+                closeMassFreeModal();
+                loadTables();
+            }
+        }
     }
 </script>
 </body>
