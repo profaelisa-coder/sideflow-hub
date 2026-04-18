@@ -38,7 +38,6 @@
         .live-dot.green { background: var(--green); }
         @keyframes blink { 0% { opacity: 1; } 50% { opacity: 0.3; } 100% { opacity: 1; } }
         
-        /* ALTERAÇÃO: Lista esticada em uma coluna */
         .card-container { display: flex; flex-direction: column; gap: 12px; width: 100%; margin-bottom: 20px; }
         
         .pod-card-3d { background: var(--dark); border-radius: 8px; padding: 15px; display: flex; justify-content: space-between; align-items: center; box-shadow: inset 1px 1px 0px rgba(255,255,255,0.1), inset -2px -2px 0px rgba(0,0,0,0.4), 2px 2px 6px rgba(0,0,0,0.3); box-sizing: border-box; width: 100%; }
@@ -390,11 +389,15 @@
             const [tname, podNum] = key.split('|');
             const tourInfo = currentCatalog.find(c => c.tname === tname);
             const targetSize = tourInfo ? tourInfo.pod_size : 4;
+            
+            // NOVA LÓGICA: Injeta o prefixo do jogo
+            const gamePrefix = tourInfo && tourInfo.game ? `[${tourInfo.game}] ` : '';
+
             listDiv.innerHTML += `
                 <div class="pod-card-3d">
-                    <div class="pod-info-3d"><b>${tname}</b><small>POD #${podNum}</small></div>
+                    <div class="pod-info-3d"><b>${gamePrefix}${tname}</b><small>POD #${podNum}</small></div>
                     <div style="display:flex; align-items:center;">
-                        <div class="pill-blue">${count} / ${targetSize}</div>
+                        <div class="pill-blue">${count} / ${targetSize} PLAYERS</div>
                         <button class="btn-edit-pod" onclick="editPod('${tname}', ${podNum})">EDIT</button>
                     </div>
                 </div>`;
