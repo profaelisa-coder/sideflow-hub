@@ -8,7 +8,12 @@
     <style>
         :root { --bg: #1A4B84; --sec: #2B6CB0; --gold: #ffb703; --blue: #63B3ED; --red: #e63946; --green: #2ecc71; --white: #e0e1dd; --dark: #0A2540; --blocked: #666666; }
         body { font-family: 'Segoe UI', sans-serif; background: var(--bg); color: var(--white); margin: 0; padding: 20px; display: flex; flex-direction: column; height: 100vh; box-sizing: border-box; }
-        h2 { color: var(--gold); text-transform: uppercase; letter-spacing: 2px; text-align: center; margin: 0 0 20px 0; }
+        
+        /* NOVO CABEÇALHO */
+        .header-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 10px; }
+        h2 { color: var(--gold); text-transform: uppercase; letter-spacing: 2px; margin: 0; }
+        .btn-top-back { background: transparent; color: var(--gold); border: 1px solid var(--gold); padding: 8px 20px; border-radius: 6px; cursor: pointer; font-weight: bold; text-transform: uppercase; transition: 0.3s; font-size: 0.8rem; }
+        .btn-top-back:hover { background: var(--gold); color: var(--dark); }
         
         .layout { display: flex; gap: 20px; flex: 1; overflow: hidden; }
         .sidebar { width: 300px; background: var(--sec); border-radius: 12px; padding: 15px; display: flex; flex-direction: column; border-top: 4px solid var(--gold); overflow-y: auto; }
@@ -32,15 +37,14 @@
         
         .btn-block-table { position: absolute; top: 2px; right: 2px; background: rgba(0,0,0,0.5); color: white; border: none; font-size: 0.5rem; cursor: pointer; border-radius: 4px; padding: 2px 4px; }
         .btn-block-table:hover { background: var(--red); }
-
-        .nav-footer { margin-top: 20px; text-align: center; }
-        .nav-footer button { background: rgba(255,255,255,0.1); color: white; border: 1px solid rgba(255,255,255,0.2); padding: 10px 25px; border-radius: 6px; cursor: pointer; font-size: 0.8rem; text-transform: uppercase; font-weight: bold; }
-        .nav-footer button:hover { background: rgba(255,255,255,0.2); }
     </style>
 </head>
 <body>
 
-<h2>TOURNAMENT TABLE MAP</h2>
+<div class="header-top">
+    <h2>TOURNAMENT TABLE MAP</h2>
+    <button class="btn-top-back" onclick="window.history.back()">BACK</button>
+</div>
 
 <div class="layout">
     <div class="sidebar">
@@ -50,10 +54,6 @@
     <div class="map-area">
         <div class="grid-tables" id="tablesGrid"></div>
     </div>
-</div>
-
-<div class="nav-footer">
-    <button onclick="window.history.back()">BACK</button>
 </div>
 
 <script>
@@ -84,7 +84,6 @@
         });
     };
 
-    // ALTERAÇÃO 1: Realtime agora filtra pelo event_id
     function setupRealtime() {
         if (subscription) {
             _supabase.removeChannel(subscription);
@@ -107,7 +106,6 @@
         grid.innerHTML = "";
         
         allTables.forEach(t => {
-            // ALTERAÇÃO 2: Normalização do Status para evitar que maiúsculas/minúsculas quebrem o visual
             const upperStatus = t.status ? t.status.trim().toUpperCase() : '';
             let stateClass = 'free-state';
             let statusText = 'FREE';
@@ -163,7 +161,6 @@
     }
 
     async function allocate(tname, safeKey, groupKey) {
-        // ALTERAÇÃO 3: Garantindo que o min e max nunca vão vazios para o banco
         const minT = catalogSizes[tname] ? parseInt(catalogSizes[tname].min) || 1 : 1;
         const maxT = catalogSizes[tname] ? parseInt(catalogSizes[tname].max) || 9999 : 9999;
         
