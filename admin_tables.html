@@ -84,13 +84,14 @@
         });
     };
 
+    // ALTERAÇÃO 1: Realtime agora filtra pelo event_id
     function setupRealtime() {
         if (subscription) {
             _supabase.removeChannel(subscription);
         }
         subscription = _supabase.channel('custom-all-channel')
-            .on('postgres_changes', { event: '*', schema: 'public', table: 'ode_registrations' }, loadReadyPods)
-            .on('postgres_changes', { event: '*', schema: 'public', table: 'event_tables' }, loadTables)
+            .on('postgres_changes', { event: '*', schema: 'public', table: 'ode_registrations', filter: `event_id=eq.${eventPrefix}` }, loadReadyPods)
+            .on('postgres_changes', { event: '*', schema: 'public', table: 'event_tables', filter: `event_id=eq.${eventPrefix}` }, loadTables)
             .subscribe();
     }
 
@@ -104,28 +105,31 @@
         allTables = data || [];
         const grid = document.getElementById('tablesGrid');
         grid.innerHTML = "";
+        
         allTables.forEach(t => {
+            // ALTERAÇÃO 2: Normalização do Status para evitar que maiúsculas/minúsculas quebrem o visual
+            const upperStatus = t.status ? t.status.trim().toUpperCase() : '';
             let stateClass = 'free-state';
             let statusText = 'FREE';
             
-            if (t.status === 'OCCUPIED') {
+            if (upperStatus === 'OCCUPIED') {
                 stateClass = 'occupied-state';
-                statusText = t.tournament_name;
-            } else if (t.status === 'BLOCKED') {
+                statusText = t.tournament_name || 'OCCUPIED';
+            } else if (upperStatus === 'BLOCKED') {
                 stateClass = 'blocked-state';
                 statusText = 'BLOCKED';
             }
 
-            const isFree = t.status === 'FREE';
+            const isFree = upperStatus === 'FREE';
             
             let blockBtn = '';
             if (isFree) {
                 blockBtn = `<button class="btn-block-table" onclick="event.stopPropagation(); toggleBlockTable('${t.id}', 'BLOCK')">X</button>`;
-            } else if (t.status === 'BLOCKED') {
+            } else if (upperStatus === 'BLOCKED') {
                  blockBtn = `<button class="btn-block-table" onclick="event.stopPropagation(); toggleBlockTable('${t.id}', 'FREE')">O</button>`;
             }
 
-            grid.innerHTML += `<div class="table-box ${stateClass}" onclick="clearTable('${t.id}', '${t.status}', ${t.table_number})">
+            grid.innerHTML += `<div class="table-box ${stateClass}" onclick="clearTable('${t.id}', '${upperStatus}', ${t.table_number})">
                 ${blockBtn}
                 ${t.table_number}<span>${statusText}</span>
             </div>`;
@@ -159,10 +163,17 @@
     }
 
     async function allocate(tname, safeKey, groupKey) {
-        const minT = catalogSizes[tname] ? catalogSizes[tname].min : null;
-        const maxT = catalogSizes[tname] ? catalogSizes[tname].max : null;
-        const { data: tableData } = await _supabase.rpc('assign_table_smart', { target_event_id: eventPrefix, min_t: minT, max_t: maxT });
-        if (!tableData || tableData.length === 0) return alert("NO FREE TABLES IN THIS SECTION!");
+        // ALTERAÇÃO 3: Garantindo que o min e max nunca vão vazios para o banco
+        const minT = catalogSizes[tname] ? parseInt(catalogSizes[tname].min) || 1 : 1;
+        const maxT = catalogSizes[tname] ? parseInt(catalogSizes[tname].max) || 9999 : 9999;
+        
+        const { data: tableData, error } = await _supabase.rpc('assign_table_smart', { target_event_id: eventPrefix, min_t: minT, max_t: maxT });
+        
+        if (error || !tableData || tableData.length === 0) {
+            console.error(error);
+            return alert("NO FREE TABLES IN THIS SECTION!");
+        }
+        
         const tableNum = tableData[0].table_number;
         await _supabase.from('event_tables').update({ tournament_name: tname, status: 'OCCUPIED' }).eq('event_id', eventPrefix).eq('table_number', tableNum);
         pendingWA[groupKey] = { table: tableNum };
@@ -203,7 +214,8 @@
     }
 
     async function clearTable(id, status, num) {
-        if(status === 'FREE' || status === 'BLOCKED') return; 
+        const safeStatus = status ? status.trim().toUpperCase() : '';
+        if(safeStatus === 'FREE' || safeStatus === 'BLOCKED') return; 
         if(confirm(`Free Table ${num}?`)) {
             await _supabase.from('event_tables').update({ status: 'FREE', tournament_name: null }).eq('id', id);
             loadTables();
