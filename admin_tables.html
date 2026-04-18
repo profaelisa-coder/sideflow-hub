@@ -9,6 +9,11 @@
         :root { --bg: #1A4B84; --sec: #2B6CB0; --gold: #ffb703; --blue: #63B3ED; --red: #e63946; --green: #2ecc71; --white: #e0e1dd; --dark: #0A2540; --blocked: #666666; }
         body { font-family: 'Segoe UI', sans-serif; background: var(--bg); color: var(--white); margin: 0; padding: 20px; display: flex; flex-direction: column; height: 100vh; box-sizing: border-box; }
         
+        /* BANNER DO MODO DE SELEÇÃO MANUAL */
+        .selection-banner { background: var(--gold); color: var(--dark); padding: 15px 20px; border-radius: 8px; margin-bottom: 20px; display: none; justify-content: space-between; align-items: center; font-weight: bold; font-size: 1.1rem; box-shadow: 0 4px 15px rgba(0,0,0,0.4); border: 2px solid white; }
+        .btn-cancel-sel { background: var(--red); color: white; border: none; padding: 8px 20px; border-radius: 6px; cursor: pointer; font-weight: bold; text-transform: uppercase; }
+        .btn-cancel-sel:hover { filter: brightness(1.2); }
+
         /* CABEÇALHO */
         .header-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 10px; }
         h2 { color: var(--gold); text-transform: uppercase; letter-spacing: 2px; margin: 0; }
@@ -23,6 +28,7 @@
         .pod-card h4 { margin: 0 0 5px 0; color: white; }
         
         .btn-alloc { width: 100%; background: var(--gold); color: var(--dark); border: none; padding: 10px; border-radius: 6px; font-weight: bold; cursor: pointer; text-transform: uppercase; }
+        .btn-choose { width: 100%; background: var(--blue); color: var(--dark); border: none; padding: 10px; border-radius: 6px; font-weight: bold; cursor: pointer; text-transform: uppercase; margin-top: 8px; }
         .btn-wa { width: 100%; background: var(--green); color: white; border: none; padding: 10px; border-radius: 6px; font-weight: bold; cursor: pointer; text-transform: uppercase; margin-top: 10px; display: none; }
         
         /* BOTOES NOVOS PARA MASS ACTION */
@@ -44,11 +50,20 @@
         .occupied-state { background: var(--red); color: white; border: 2px solid #a30000; }
         .blocked-state { background: var(--blocked); color: white; border: 2px solid #333333; cursor: not-allowed; }
         
+        /* ANIMAÇÃO DAS MESAS PISCANDO NO MODO CAÇA */
+        @keyframes pulse-blink { 0% { opacity: 1; border-color: var(--gold); } 50% { opacity: 0.4; border-color: transparent; } 100% { opacity: 1; border-color: var(--gold); } }
+        .blink-mode { animation: pulse-blink 1.2s infinite; box-shadow: 0 0 10px rgba(255, 183, 3, 0.5); }
+
         .btn-block-table { position: absolute; top: 2px; right: 2px; background: rgba(0,0,0,0.5); color: white; border: none; font-size: 0.5rem; cursor: pointer; border-radius: 4px; padding: 2px 4px; }
         .btn-block-table:hover { background: var(--red); }
     </style>
 </head>
 <body>
+
+<div class="selection-banner" id="selectionBanner">
+    <span id="selectionText">SELECT A FREE TABLE</span>
+    <button class="btn-cancel-sel" onclick="cancelSelectionMode()">CANCEL</button>
+</div>
 
 <div id="massFreeModal" class="modal">
     <div class="modal-content">
@@ -95,6 +110,9 @@
     let catalogSizes = {}; 
     let pendingWA = {};
     let subscription = null;
+    
+    // VARIÁVEL DO MODO DE SELEÇÃO
+    let selectionModeData = null;
 
     window.onload = async () => {
         if(!eventPrefix) return;
@@ -150,13 +168,23 @@
             const isFree = upperStatus === 'FREE';
             
             let blockBtn = '';
-            if (isFree) {
-                blockBtn = `<button class="btn-block-table" onclick="event.stopPropagation(); toggleBlockTable('${t.id}', 'BLOCK')">X</button>`;
-            } else if (upperStatus === 'BLOCKED') {
-                 blockBtn = `<button class="btn-block-table" onclick="event.stopPropagation(); toggleBlockTable('${t.id}', 'FREE')">O</button>`;
+            let onClickAction = `clearTable('${t.id}', '${upperStatus}', ${t.table_number})`;
+
+            // SE A TELA ESTIVER NO MODO DE CAÇA (CHOOSE TABLE)
+            if (selectionModeData && isFree) {
+                stateClass += ' blink-mode'; // Faz a mesa piscar
+                onClickAction = `forceAllocateTable('${t.id}', ${t.table_number})`; // Ignora o block, força a alocação
+            } 
+            // SE ESTIVER NO MODO NORMAL
+            else {
+                if (isFree) {
+                    blockBtn = `<button class="btn-block-table" onclick="event.stopPropagation(); toggleBlockTable('${t.id}', 'BLOCK')">X</button>`;
+                } else if (upperStatus === 'BLOCKED') {
+                    blockBtn = `<button class="btn-block-table" onclick="event.stopPropagation(); toggleBlockTable('${t.id}', 'FREE')">O</button>`;
+                }
             }
 
-            grid.innerHTML += `<div class="table-box ${stateClass}" onclick="clearTable('${t.id}', '${upperStatus}', ${t.table_number})">
+            grid.innerHTML += `<div class="table-box ${stateClass}" onclick="${onClickAction}">
                 ${blockBtn}
                 ${t.table_number}<span>${statusText}</span>
             </div>`;
@@ -179,10 +207,15 @@
             if(info.players.length >= targetSize) {
                 const safeKey = key.replace(/[^a-zA-Z0-9]/g, '');
                 const isPending = pendingWA[key];
+                
+                // MUDANÇA: Os botões de Allocate e Choose Table agora estão agrupados numa div action-grp
                 listDiv.innerHTML += `
                     <div class="pod-card">
                         <h4>${info.tname} #${info.pod_number}</h4>
-                        <button class="btn-alloc" id="alloc-${safeKey}" style="display:${isPending?'none':'block'}" onclick="allocate('${info.tname}', '${safeKey}', '${key}')">ALLOCATE</button>
+                        <div id="action-grp-${safeKey}" style="display:${isPending?'none':'block'}">
+                            <button class="btn-alloc" onclick="allocate('${info.tname}', '${safeKey}', '${key}')">AUTO ALLOCATE</button>
+                            <button class="btn-choose" onclick="startSelectionMode('${info.tname}', '${info.pod_number}', '${safeKey}', '${key}')">CHOOSE TABLE</button>
+                        </div>
                         <button class="btn-wa" id="wa-${safeKey}" style="display:${isPending?'block':'none'}" onclick="sendBulkWA('${key}', '${safeKey}')">SEND WHATSAPP</button>
                     </div>`;
             }
@@ -203,9 +236,50 @@
         const tableNum = tableData[0].table_number;
         await _supabase.from('event_tables').update({ tournament_name: tname, status: 'OCCUPIED' }).eq('event_id', eventPrefix).eq('table_number', tableNum);
         pendingWA[groupKey] = { table: tableNum };
-        document.getElementById(`alloc-${safeKey}`).style.display = 'none';
+        
+        // Esconde o grupo de ações inteiro (os dois botões)
+        document.getElementById(`action-grp-${safeKey}`).style.display = 'none';
         document.getElementById(`wa-${safeKey}`).style.display = 'block';
         loadTables();
+    }
+
+    /* === FUNÇÕES DO MODO DE SELEÇÃO MANUAL (CHOOSE TABLE) === */
+    function startSelectionMode(tname, podNum, safeKey, groupKey) {
+        selectionModeData = { tname, safeKey, groupKey };
+        document.getElementById('selectionText').innerText = `SELECT A FREE TABLE FOR ${tname} #${podNum}`;
+        document.getElementById('selectionBanner').style.display = 'flex';
+        loadTables(); // Recarrega as mesas para elas começarem a piscar
+    }
+
+    function cancelSelectionMode() {
+        selectionModeData = null;
+        document.getElementById('selectionBanner').style.display = 'none';
+        loadTables(); // Recarrega as mesas para voltar ao normal
+    }
+
+    async function forceAllocateTable(tableId, tableNum) {
+        if (!selectionModeData) return;
+
+        const { tname, safeKey, groupKey } = selectionModeData;
+
+        // Atualiza a mesa clicada diretamente pelo ID ignorando restrições
+        const { error } = await _supabase
+            .from('event_tables')
+            .update({ status: 'OCCUPIED', tournament_name: tname })
+            .eq('id', tableId);
+
+        if (error) {
+            console.error(error);
+            return alert("Error allocating table!");
+        }
+
+        // Coloca o Pod na fila de WhatsApp com a mesa escolhida
+        pendingWA[groupKey] = { table: tableNum };
+        
+        document.getElementById(`action-grp-${safeKey}`).style.display = 'none';
+        document.getElementById(`wa-${safeKey}`).style.display = 'block';
+
+        cancelSelectionMode(); // Desliga o modo e atualiza o mapa
     }
 
     async function sendBulkWA(groupKey, safeKey) {
