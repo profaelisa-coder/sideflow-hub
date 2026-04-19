@@ -24,6 +24,10 @@
             display: flex;
             flex-direction: column;
             height: 100vh;
+            /* NOVA MOLDURA LATERAL E INFERIOR */
+            border: 15px solid var(--pikachu-yellow);
+            border-top: 0; /* O topo já tem a barra grossa */
+            box-sizing: border-box;
         }
 
         /* BARRA TOPO SÓ AMARELA */
@@ -32,9 +36,9 @@
             background: var(--pikachu-yellow);
             display: flex;
             align-items: center;
-            justify-content: flex-start;
+            justify-content: center; /* CENTRALIZADO CONFORME PEDIDO */
             padding: 0 40px;
-            border-bottom: 3px solid var(--text-black);
+            /* Borda preta inferior removida */
             box-sizing: border-box;
             box-shadow: 0 2px 10px rgba(0,0,0,0.1);
             z-index: 50;
@@ -247,7 +251,6 @@
         let unique = Array.from(latestPodsMap.values());
         unique.sort((a, b) => new Date(b.created_at || 0) - new Date(a.created_at || 0));
 
-        // FATIA PARA OS 8 ULTIMOS CARDS
         const topCalls = unique.slice(0, 8);
 
         if(topCalls.length === 0) {
