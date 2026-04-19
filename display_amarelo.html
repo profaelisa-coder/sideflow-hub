@@ -3,42 +3,22 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SideFlow Hub - DISPLAY</title>
+    <title>SideFlow Hub - DISPLAY V2</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         :root {
-            --bg-dark-moldura: #0A2540; /* Fundo escuro original para a moldura externa */
-            --bg-white-content: #ffffff; /* Fundo branco puro para o conteúdo */
-            --pikachu-yellow: #FBD712; /* Vibrante Pikachu Yellow */
-            --blue-acesso: #63B3ED; /* Blue original para outras referencias se houver */
-            --white: #333333; /* Texto branco agora é escuro/preto */
-            --red: #e63946;
-            --accent-orange: #FF8C00;
-            --accent-lima: #32CD32;
-
-            /* MANTENDO VARS ORIGINAIS PARA JS COMPATIBILIDADE, VISUALMENTE SUBSTITUÍDAS ABAIXO */
-            --bg: #0A2540; --sec: #1A4B84; --gold: #ffb703; --blue: #63B3ED; --white: #e0e1dd; --red: #e63946; 
+            --bg-white: #ffffff;
+            --pikachu-yellow: #FBD712;
+            --text-black: #111111;
+            --accent-orange: #d96600; /* Laranja escurecido para contraste em fundo branco */
+            --border-color: #e0e0e0;
+            --card-border: #222222; /* Linhas pretas não muito grossas */
         }
-
-        /* VISUAL VISUALMENTE OVERRIDDEN - VISUAL CLEAR THEME ABAIXO */
-        :root { --gold: #FBD712; --blue: #FBD712; } /* visually blue is now Pikachu yellow for borders */
-        .pod-card { background: #fff !important; border-left: 6px solid var(--pikachu-yellow) !important; color: #000 !important; box-shadow: 0 4px 15px rgba(0,0,0,0.1) !important; border: 1px solid rgba(0,0,0,0.05) !important;}
-        .pod-category, .pod-number-top { color: var(--pikachu-yellow) !important; font-weight: 900 !important; }
-        .pod-name, .pod-status { color: #000 !important; text-shadow: none !important; font-weight: 800 !important; }
-        .progress-bar { background: var(--pikachu-yellow) !important; }
-        .progress-container { background: rgba(0,0,0,0.1) !important; border: 1px solid #ccc !important; }
-        .sidebar { background: #fff !important; border-left: 4px solid var(--pikachu-yellow) !important; color: #000 !important; }
-        .sidebar-title { color: #000 !important; border-bottom: 2px solid var(--pikachu-yellow) !important; background: var(--pikachu-yellow) !important; padding: 10px !important; margin: -20px -20px 20px -20px !important; border-top-left-radius: 12px !important;}
-        .sidebar-item { background: #fff !important; color: #000 !important; border-left: 8px solid var(--pikachu-yellow) !important; box-shadow: 0 4px 10px rgba(0,0,0,0.1) !important; }
-        .sidebar-item div { color: #000 !important; }
-        .sidebar-item [style*="color: var(--gold)"] { color: var(--pikachu-yellow) !important; }
-        @keyframes pulse-new { 0% { box-shadow: 0 0 5px rgba(251,215,18,0.2); } 50% { box-shadow: 0 0 35px 8px rgba(251,215,18,1); } 100% { box-shadow: 0 0 5px rgba(251,215,18,0.2); } }
-        .pod-card.pulse-gold { border-left-color: var(--pikachu-yellow) !important; box-shadow: 0 0 15px rgba(251,215,18,0.4) !important; }
 
         body {
             font-family: 'Segoe UI', sans-serif;
-            background: var(--bg-dark-moldura);
-            color: #000;
+            background: var(--bg-white);
+            color: var(--text-black);
             margin: 0;
             overflow: hidden;
             display: flex;
@@ -46,42 +26,26 @@
             height: 100vh;
         }
 
-        /* NOVA BARRA DE TOPO MOLDURA IC/REGIONAL */
+        /* BARRA TOPO SÓ AMARELA */
         .top-moldura {
             height: 70px;
             background: var(--pikachu-yellow);
             display: flex;
             align-items: center;
-            justify-content: space-between;
+            justify-content: flex-start;
             padding: 0 40px;
-            border-bottom: 3px solid #000;
+            border-bottom: 3px solid var(--text-black);
             box-sizing: border-box;
-            position: relative;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            z-index: 50;
         }
         .top-moldura .moldura-title {
-            color: #000;
+            color: var(--text-black);
             font-weight: 900;
-            font-size: 1.8rem;
+            font-size: 2rem;
             text-transform: uppercase;
             letter-spacing: 2px;
             margin: 0;
-        }
-        .top-moldura .moldura-stripes-pattern {
-            position: absolute;
-            right: 40px;
-            top: 0;
-            height: 100%;
-            width: 150px;
-            /* Aproximação das faixas IC/REGIONAL near title */
-            background: linear-gradient(135deg,
-                var(--accent-orange) 0%, var(--accent-orange) 15%,
-                #fff 15%, #fff 30%,
-                var(--pikachu-yellow) 30%, var(--pikachu-yellow) 45%,
-                #fff 45%, #fff 60%,
-                var(--accent-lima) 60%, var(--accent-lima) 75%,
-                #fff 75%, #fff 90%,
-                var(--accent-orange) 90%);
-            background-size: cover;
         }
 
         .main-layout {
@@ -90,65 +54,96 @@
             overflow: hidden;
             display: flex;
             flex-direction: row;
-            background: #FDFDFD; /* Novo fundo branco para conteúdo */
+            background: var(--bg-white);
             box-sizing: border-box;
-            border: 2px solid var(--pikachu-yellow); /* Borda ao redor do conteúdo, dentro da moldura */
         }
         
-        #scrollWrapper { flex: 7; overflow: hidden; position: relative; background: #fff; }
-        .hype-container { background: #fff; display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px; padding: 30px; position: absolute; top: 0; left: 0; will-change: transform; box-sizing: border-box; }
+        #scrollWrapper { flex: 7; overflow: hidden; position: relative; background: var(--bg-white); }
         
-        /* CARDS ODE REESTILIZADOS: COMPACTADOS E CLEAR THEME */
+        /* FORÇANDO 3 COLUNAS */
+        .hype-container { 
+            background: var(--bg-white); 
+            display: grid; 
+            grid-template-columns: repeat(3, 1fr); 
+            gap: 15px; 
+            padding: 25px; 
+            position: absolute; 
+            top: 0; 
+            left: 0; 
+            width: 100%;
+            will-change: transform; 
+            box-sizing: border-box; 
+        }
+        
+        /* CARDS ROLANTES */
         .pod-card {
             background: #fff;
-            border-radius: 12px;
-            padding: 15px; /* Compactado */
-            border: 1px solid rgba(0,0,0,0.05);
-            border-left: 6px solid var(--pikachu-yellow);
+            border-radius: 8px;
+            padding: 15px;
+            border: 2px solid var(--card-border);
             display: flex;
             flex-direction: column;
             justify-content: flex-start;
-            min-height: 120px; /* Compactado */
+            min-height: 125px;
             box-sizing: border-box;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
-            color: #000;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
         }
-        .pod-category-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 2px; }
-        .pod-category { font-size: 0.85rem; color: var(--gold); font-weight: 900; text-transform: uppercase; letter-spacing: 1px; }
-        .pod-name { font-size: 1.4rem; font-weight: 800; color: #000; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; width: 100%; margin: 0 0 5px 0; }
-        /* WAITING QUEUE removido do HTML via JS template */
-        .pod-number { display: none; }
-        .pod-number-top { font-size: 0.95rem; color: var(--gold); font-weight: 600; margin: 0; text-transform: uppercase; }
+        .pod-category-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px; }
+        .pod-category { font-size: 1.1rem; color: var(--accent-orange); font-weight: 900; text-transform: uppercase; letter-spacing: 1px; }
+        .pod-number-top { font-size: 1.1rem; color: var(--accent-orange); font-weight: 900; margin: 0; text-transform: uppercase; }
+        .pod-name { font-size: 1.5rem; font-weight: 900; color: var(--text-black); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; width: 100%; margin: 0 0 10px 0; }
         
-        .progress-container { background: rgba(0,0,0,0.08); height: 35px; border-radius: 8px; border: 1px solid #ccc; margin-top: auto; }
+        /* PROGRESS BAR COM TEXTO DENTRO */
+        .progress-container { background: #f0f0f0; height: 38px; border-radius: 6px; border: 1px solid var(--card-border); position: relative; margin-top: auto; overflow: hidden; }
         .progress-bar { height: 100%; background: var(--pikachu-yellow); width: 0%; transition: width 0.5s ease-in-out; }
-        .pod-status { position: absolute; width: 100%; text-align: center; top: 50%; transform: translateY(-50%); font-weight: 900; font-size: 1rem; text-shadow: none; color: #000; }
+        .pod-status { position: absolute; width: 100%; text-align: center; top: 50%; transform: translateY(-50%); font-weight: 900; font-size: 1.1rem; color: var(--text-black); z-index: 2;}
 
+        /* SIDEBAR DIREITA */
         .sidebar {
             flex: 2.5;
-            max-width: 380px;
-            background: #fff; /* Fundo branco para sidebar */
-            border-left: 4px solid var(--pikachu-yellow);
+            max-width: 400px;
+            background: #fcfcfc;
+            border-left: 3px solid var(--card-border);
             display: flex;
             flex-direction: column;
-            padding: 20px;
+            padding: 15px 20px;
             box-sizing: border-box;
             z-index: 10;
-            box-shadow: -4px 0 15px rgba(0,0,0,0.05);
         }
         
-        .sidebar-title { color: var(--gold); font-weight: 900; font-size: 1.25rem; text-transform: uppercase; text-align: center; margin-bottom: 10px; letter-spacing: 2px; border-bottom: 2px solid var(--gold); padding-bottom: 6px; }
-        .sidebar-item { background: #fff; padding: 12px; border-radius: 10px; margin-bottom: 8px; border-left: 8px solid var(--blue); box-shadow: 0 2px 6px rgba(0,0,0,0.05); }
-        .sidebar-item.new-call { border-left-color: var(--gold); animation: pulse-new 2s infinite; }
+        .sidebar-title { color: var(--text-black); font-weight: 900; font-size: 1.4rem; text-transform: uppercase; text-align: center; margin-bottom: 12px; border-bottom: 3px solid var(--pikachu-yellow); padding-bottom: 8px; }
         
-        .pulse-gold { animation: border-pulse 1.5s infinite; }
-        @keyframes border-pulse { 0% { border-color: rgba(255,183,3,0.2); } 50% { border-color: rgba(255,183,3,1); box-shadow: 0 0 20px rgba(255,183,3,0.6); } 100% { border-color: rgba(255,183,3,0.2); } }
+        /* ITENS DA SIDEBAR (8 CARDS) */
+        .sidebar-item { 
+            background: #fff; 
+            padding: 10px 15px; 
+            border-radius: 6px; 
+            margin-bottom: 8px; 
+            border: 2px solid var(--border-color); 
+            box-shadow: 0 2px 4px rgba(0,0,0,0.02); 
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
         
-        /* EFEITO DE NEON/SOMBRA EXPANDIDO AQUI - PULSE-NEW */
-        @keyframes pulse-new { 
-            0% { box-shadow: 0 0 5px rgba(251,215,18,0.2); } 
-            50% { box-shadow: 0 0 35px 8px rgba(251,215,18,1); } 
-            100% { box-shadow: 0 0 5px rgba(251,215,18,0.2); } 
+        .sidebar-item .game-title { font-size: 0.95rem; color: var(--text-black); font-weight: 800; text-transform: uppercase; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;}
+        .sidebar-item .game-title span { color: var(--accent-orange); font-weight: 900;}
+        
+        .sidebar-item .pod-table-row { display: flex; justify-content: space-between; align-items: baseline; }
+        .sidebar-item .pod-table-row .pod-num { font-size: 1.2rem; font-weight: 900; color: var(--text-black); }
+        .sidebar-item .pod-table-row .table-num { font-size: 1.5rem; font-weight: 900; color: var(--accent-orange); }
+
+        /* DESTAQUE PISCANTE PARA O PRIMEIRO DA LISTA */
+        .sidebar-item.new-call { 
+            border: 3px solid var(--pikachu-yellow); 
+            animation: pulse-neon 2s infinite; 
+            background: #fffefa;
+        }
+        
+        @keyframes pulse-neon { 
+            0% { box-shadow: 0 0 5px rgba(217, 102, 0, 0.2); } 
+            50% { box-shadow: 0 0 25px 5px rgba(217, 102, 0, 0.8); } 
+            100% { box-shadow: 0 0 5px rgba(217, 102, 0, 0.2); } 
         }
     </style>
 </head>
@@ -156,7 +151,6 @@
 
 <div class="top-moldura">
     <h1 class="moldura-title">ON DEMAND EVENTS</h1>
-    <div class="moldura-stripes-pattern"></div>
 </div>
 
 <div class="main-layout">
@@ -168,7 +162,7 @@
     <div class="sidebar">
         <div class="sidebar-title">LAST PODS STARTED</div>
         <div id="callsArea">
-            <p style="opacity:0.5; font-style: italic; text-align:center; margin-top: 30px;">WAITING FOR ASSIGNMENTS...</p>
+            <p style="opacity:0.5; font-style: italic; text-align:center; margin-top: 30px; color: black;">WAITING FOR ASSIGNMENTS...</p>
         </div>
     </div>
 </div>
@@ -181,14 +175,13 @@
     let eventPrefix = new URLSearchParams(window.location.search).get('event') || localStorage.getItem('active_event_id');
     
     let scrollPos = 0;
-    const scrollSpeed = 0.1; // VELOCIDADE REDUZIDA PARA MELHOR LEITURA EM TVs GRANDES
+    const scrollSpeed = 0.1;
 
     async function initDisplay() {
         if(!eventPrefix) return;
         
         await updateData();
         
-        // Polling de segurança + Realtime
         setInterval(updateData, 15000);
 
         _supabase.channel('tv_realtime_events')
@@ -211,7 +204,6 @@
             let count = currentPodPlayers.length;
             const target = t.pod_size || 4;
 
-            // Se o pod atual já foi alocado, mostramos o próximo na lista de espera
             if (count > 0 && currentPodPlayers.every(p => p.status === 'allocated')) {
                 maxPod++; 
                 count = 0; 
@@ -219,9 +211,8 @@
 
             const percentage = Math.min((count / target) * 100, 100);
             
-            // Texto WAITING QUEUE removido da estrutura do template abaixo
             return `
-                <div class="pod-card ${count === (target - 1) ? 'pulse-gold' : ''}">
+                <div class="pod-card">
                     <div class="pod-category-row">
                         <div class="pod-category">[${t.game}]</div>
                         <div class="pod-number-top">POD #${maxPod}</div>
@@ -244,7 +235,6 @@
         const allocated = regs.filter(r => r.status === 'allocated');
         const callsArea = document.getElementById('callsArea');
         
-        // Pegamos apenas o último registro de cada Pod/Torneio para não repetir jogadores
         const latestPodsMap = new Map();
         for (const r of allocated) {
             const key = `${r.tname}-${r.pod_number}`;
@@ -257,11 +247,11 @@
         let unique = Array.from(latestPodsMap.values());
         unique.sort((a, b) => new Date(b.created_at || 0) - new Date(a.created_at || 0));
 
-        // ALTERAÇÃO PARA 7 CARDS AQUI - PREPARANDO PARA TVs MAIORES
-        const topCalls = unique.slice(0, 7);
+        // FATIA PARA OS 8 ULTIMOS CARDS
+        const topCalls = unique.slice(0, 8);
 
         if(topCalls.length === 0) {
-            callsArea.innerHTML = "<p style='opacity:0.5; font-style: italic; text-align:center; margin-top: 30px;'>WAITING FOR ASSIGNMENTS...</p>";
+            callsArea.innerHTML = "<p style='opacity:0.5; font-style: italic; text-align:center; margin-top: 30px; color: black;'>WAITING FOR ASSIGNMENTS...</p>";
             return;
         }
 
@@ -270,10 +260,10 @@
             const game = tourInfo ? tourInfo.game : 'GAME';
             return `
             <div class="sidebar-item ${index === 0 ? 'new-call' : ''}">
-                <div style="font-size: 0.85rem; color: var(--gold); margin-bottom: 4px; font-weight: 800; text-transform: uppercase;">[${game}] ${r.tname}</div>
-                <div style="font-size: 1.3rem; font-weight: 900; color: white; display: flex; justify-content: space-between; align-items: center;">
-                    <span>POD #${r.pod_number}</span>
-                    <span style="color: var(--gold); font-size: 1.2rem;">➔ TABLE ${r.assigned_table}</span>
+                <div class="game-title"><span>[${game}]</span> ${r.tname}</div>
+                <div class="pod-table-row">
+                    <div class="pod-num">POD #${r.pod_number}</div>
+                    <div class="table-num">➔ TABLE ${r.assigned_table}</div>
                 </div>
             </div>
             `;
