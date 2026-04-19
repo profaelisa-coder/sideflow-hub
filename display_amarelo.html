@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SideFlow Hub - DISPLAY</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        :root {
+            --bg-dark-moldura: #0A2540; /* Fundo escuro original para a moldura externa */
+            --bg-white-content: #ffffff; /* Fundo branco puro para o conteúdo */
+            --pikachu-yellow: #FBD712; /* Vibrante Pikachu Yellow */
+            --blue-acesso: #63B3ED; /* Blue original para outras referencias se houver */
+            --white: #333333; /* Texto branco agora é escuro/preto */
+            --red: #e63946;
+            --accent-orange: #FF8C00;
+            --accent-lima: #32CD32;
+
+            /* MANTENDO VARS ORIGINAIS PARA JS COMPATIBILIDADE, VISUALMENTE SUBSTITUÍDAS ABAIXO */
+            --bg: #0A2540; --sec: #1A4B84; --gold: #ffb703; --blue: #63B3ED; --white: #e0e1dd; --red: #e63946; 
+        }
+
+        /* VISUAL VISUALMENTE OVERRIDDEN - VISUAL CLEAR THEME ABAIXO */
+        :root { --gold: #FBD712; --blue: #FBD712; } /* visually blue is now Pikachu yellow for borders */
+        .pod-card { background: #fff !important; border-left: 6px solid var(--pikachu-yellow) !important; color: #000 !important; box-shadow: 0 4px 15px rgba(0,0,0,0.1) !important; border: 1px solid rgba(0,0,0,0.05) !important;}
+        .pod-category, .pod-number-top { color: var(--pikachu-yellow) !important; font-weight: 900 !important; }
+        .pod-name, .pod-status { color: #000 !important; text-shadow: none !important; font-weight: 800 !important; }
+        .progress-bar { background: var(--pikachu-yellow) !important; }
+        .progress-container { background: rgba(0,0,0,0.1) !important; border: 1px solid #ccc !important; }
+        .sidebar { background: #fff !important; border-left: 4px solid var(--pikachu-yellow) !important; color: #000 !important; }
+        .sidebar-title { color: #000 !important; border-bottom: 2px solid var(--pikachu-yellow) !important; background: var(--pikachu-yellow) !important; padding: 10px !important; margin: -20px -20px 20px -20px !important; border-top-left-radius: 12px !important;}
+        .sidebar-item { background: #fff !important; color: #000 !important; border-left: 8px solid var(--pikachu-yellow) !important; box-shadow: 0 4px 10px rgba(0,0,0,0.1) !important; }
+        .sidebar-item div { color: #000 !important; }
+        .sidebar-item [style*="color: var(--gold)"] { color: var(--pikachu-yellow) !important; }
+        @keyframes pulse-new { 0% { box-shadow: 0 0 5px rgba(251,215,18,0.2); } 50% { box-shadow: 0 0 35px 8px rgba(251,215,18,1); } 100% { box-shadow: 0 0 5px rgba(251,215,18,0.2); } }
+        .pod-card.pulse-gold { border-left-color: var(--pikachu-yellow) !important; box-shadow: 0 0 15px rgba(251,215,18,0.4) !important; }
+
+        body {
+            font-family: 'Segoe UI', sans-serif;
+            background: var(--bg-dark-moldura);
+            color: #000;
+            margin: 0;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+        }
+
+        /* NOVA BARRA DE TOPO MOLDURA IC/REGIONAL */
+        .top-moldura {
+            height: 70px;
+            background: var(--pikachu-yellow);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 40px;
+            border-bottom: 3px solid #000;
+            box-sizing: border-box;
+            position: relative;
+        }
+        .top-moldura .moldura-title {
+            color: #000;
+            font-weight: 900;
+            font-size: 1.8rem;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            margin: 0;
+        }
+        .top-moldura .moldura-stripes-pattern {
+            position: absolute;
+            right: 40px;
+            top: 0;
+            height: 100%;
+            width: 150px;
+            /* Aproximação das faixas IC/REGIONAL near title */
+            background: linear-gradient(135deg,
+                var(--accent-orange) 0%, var(--accent-orange) 15%,
+                #fff 15%, #fff 30%,
+                var(--pikachu-yellow) 30%, var(--pikachu-yellow) 45%,
+                #fff 45%, #fff 60%,
+                var(--accent-lima) 60%, var(--accent-lima) 75%,
+                #fff 75%, #fff 90%,
+                var(--accent-orange) 90%);
+            background-size: cover;
+        }
+
+        .main-layout {
+            flex: 1;
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            flex-direction: row;
+            background: #FDFDFD; /* Novo fundo branco para conteúdo */
+            box-sizing: border-box;
+            border: 2px solid var(--pikachu-yellow); /* Borda ao redor do conteúdo, dentro da moldura */
+        }
+        
+        #scrollWrapper { flex: 7; overflow: hidden; position: relative; background: #fff; }
+        .hype-container { background: #fff; display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px; padding: 30px; position: absolute; top: 0; left: 0; will-change: transform; box-sizing: border-box; }
+        
+        /* CARDS ODE REESTILIZADOS: COMPACTADOS E CLEAR THEME */
+        .pod-card {
+            background: #fff;
+            border-radius: 12px;
+            padding: 15px; /* Compactado */
+            border: 1px solid rgba(0,0,0,0.05);
+            border-left: 6px solid var(--pikachu-yellow);
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-start;
+            min-height: 120px; /* Compactado */
+            box-sizing: border-box;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+            color: #000;
+        }
+        .pod-category-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 2px; }
+        .pod-category { font-size: 0.85rem; color: var(--gold); font-weight: 900; text-transform: uppercase; letter-spacing: 1px; }
+        .pod-name { font-size: 1.4rem; font-weight: 800; color: #000; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; width: 100%; margin: 0 0 5px 0; }
+        /* WAITING QUEUE removido do HTML via JS template */
+        .pod-number { display: none; }
+        .pod-number-top { font-size: 0.95rem; color: var(--gold); font-weight: 600; margin: 0; text-transform: uppercase; }
+        
+        .progress-container { background: rgba(0,0,0,0.08); height: 35px; border-radius: 8px; border: 1px solid #ccc; margin-top: auto; }
+        .progress-bar { height: 100%; background: var(--pikachu-yellow); width: 0%; transition: width 0.5s ease-in-out; }
+        .pod-status { position: absolute; width: 100%; text-align: center; top: 50%; transform: translateY(-50%); font-weight: 900; font-size: 1rem; text-shadow: none; color: #000; }
+
+        .sidebar {
+            flex: 2.5;
+            max-width: 380px;
+            background: #fff; /* Fundo branco para sidebar */
+            border-left: 4px solid var(--pikachu-yellow);
+            display: flex;
+            flex-direction: column;
+            padding: 20px;
+            box-sizing: border-box;
+            z-index: 10;
+            box-shadow: -4px 0 15px rgba(0,0,0,0.05);
+        }
+        
+        .sidebar-title { color: var(--gold); font-weight: 900; font-size: 1.25rem; text-transform: uppercase; text-align: center; margin-bottom: 10px; letter-spacing: 2px; border-bottom: 2px solid var(--gold); padding-bottom: 6px; }
+        .sidebar-item { background: #fff; padding: 12px; border-radius: 10px; margin-bottom: 8px; border-left: 8px solid var(--blue); box-shadow: 0 2px 6px rgba(0,0,0,0.05); }
+        .sidebar-item.new-call { border-left-color: var(--gold); animation: pulse-new 2s infinite; }
+        
+        .pulse-gold { animation: border-pulse 1.5s infinite; }
+        @keyframes border-pulse { 0% { border-color: rgba(255,183,3,0.2); } 50% { border-color: rgba(255,183,3,1); box-shadow: 0 0 20px rgba(255,183,3,0.6); } 100% { border-color: rgba(255,183,3,0.2); } }
+        
+        /* EFEITO DE NEON/SOMBRA EXPANDIDO AQUI - PULSE-NEW */
+        @keyframes pulse-new { 
+            0% { box-shadow: 0 0 5px rgba(251,215,18,0.2); } 
+            50% { box-shadow: 0 0 35px 8px rgba(251,215,18,1); } 
+            100% { box-shadow: 0 0 5px rgba(251,215,18,0.2); } 
+        }
+    </style>
+</head>
+<body>
+
+<div class="top-moldura">
+    <h1 class="moldura-title">ON DEMAND EVENTS</h1>
+    <div class="moldura-stripes-pattern"></div>
+</div>
+
+<div class="main-layout">
+    <div id="scrollWrapper">
+        <div class="hype-container" id="displayArea"></div>
+        <div class="hype-container" id="displayAreaClone" style="top: 100%"></div>
+    </div>
+    
+    <div class="sidebar">
+        <div class="sidebar-title">LAST PODS STARTED</div>
+        <div id="callsArea">
+            <p style="opacity:0.5; font-style: italic; text-align:center; margin-top: 30px;">WAITING FOR ASSIGNMENTS...</p>
+        </div>
+    </div>
+</div>
+
+<script>
+    const supabaseUrl = 'https://hocpoastnlcwgedvcyqs.supabase.co';
+    const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhvY3BvYXN0bmxjd2dlZHZjeXFzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQyODU0MTYsImV4cCI6MjA4OTg2MTQxNn0.1MvvcFsnGW4e0Bj7mzoUKs_3bGM-eHDJTOqsvgKe-pI';
+    const _supabase = supabase.createClient(supabaseUrl, supabaseKey);
+    
+    let eventPrefix = new URLSearchParams(window.location.search).get('event') || localStorage.getItem('active_event_id');
+    
+    let scrollPos = 0;
+    const scrollSpeed = 0.1; // VELOCIDADE REDUZIDA PARA MELHOR LEITURA EM TVs GRANDES
+
+    async function initDisplay() {
+        if(!eventPrefix) return;
+        
+        await updateData();
+        
+        // Polling de segurança + Realtime
+        setInterval(updateData, 15000);
+
+        _supabase.channel('tv_realtime_events')
+            .on('postgres_changes', { event: '*', schema: 'public', table: 'ode_registrations' }, updateData)
+            .subscribe();
+
+        requestAnimationFrame(renderLoop);
+    }
+
+    async function updateData() {
+        const { data: tours } = await _supabase.from('tournament_catalog').select('*').eq('event_id', eventPrefix).eq('item_type', 'ODE').order('id', { ascending: true });
+        const { data: regs } = await _supabase.from('ode_registrations').select('*').eq('event_id', eventPrefix).in('status', ['waiting', 'allocated']);
+        
+        if(!tours) return;
+
+        const html = tours.map(t => {
+            const relevantRegs = regs ? regs.filter(r => r.tname === t.tname) : [];
+            let maxPod = relevantRegs.length > 0 ? Math.max(...relevantRegs.map(r => r.pod_number)) : 1;
+            let currentPodPlayers = relevantRegs.filter(r => r.pod_number === maxPod);
+            let count = currentPodPlayers.length;
+            const target = t.pod_size || 4;
+
+            // Se o pod atual já foi alocado, mostramos o próximo na lista de espera
+            if (count > 0 && currentPodPlayers.every(p => p.status === 'allocated')) {
+                maxPod++; 
+                count = 0; 
+            }
+
+            const percentage = Math.min((count / target) * 100, 100);
+            
+            // Texto WAITING QUEUE removido da estrutura do template abaixo
+            return `
+                <div class="pod-card ${count === (target - 1) ? 'pulse-gold' : ''}">
+                    <div class="pod-category-row">
+                        <div class="pod-category">[${t.game}]</div>
+                        <div class="pod-number-top">POD #${maxPod}</div>
+                    </div>
+                    <div class="pod-name">${t.tname}</div>
+                    <div class="progress-container">
+                        <div class="progress-bar" style="width: ${percentage}%"></div>
+                        <div class="pod-status">${count} / ${target} PLAYERS</div>
+                    </div>
+                </div>
+            `;
+        }).join('');
+
+        document.getElementById('displayArea').innerHTML = html;
+        document.getElementById('displayAreaClone').innerHTML = html;
+        updateSidebar(regs, tours);
+    }
+
+    function updateSidebar(regs, tours) {
+        const allocated = regs.filter(r => r.status === 'allocated');
+        const callsArea = document.getElementById('callsArea');
+        
+        // Pegamos apenas o último registro de cada Pod/Torneio para não repetir jogadores
+        const latestPodsMap = new Map();
+        for (const r of allocated) {
+            const key = `${r.tname}-${r.pod_number}`;
+            const existing = latestPodsMap.get(key);
+            if (!existing || new Date(r.created_at) > new Date(existing.created_at)) {
+                latestPodsMap.set(key, r);
+            }
+        }
+
+        let unique = Array.from(latestPodsMap.values());
+        unique.sort((a, b) => new Date(b.created_at || 0) - new Date(a.created_at || 0));
+
+        // ALTERAÇÃO PARA 7 CARDS AQUI - PREPARANDO PARA TVs MAIORES
+        const topCalls = unique.slice(0, 7);
+
+        if(topCalls.length === 0) {
+            callsArea.innerHTML = "<p style='opacity:0.5; font-style: italic; text-align:center; margin-top: 30px;'>WAITING FOR ASSIGNMENTS...</p>";
+            return;
+        }
+
+        const html = topCalls.map((r, index) => {
+            const tourInfo = tours.find(t => t.tname === r.tname);
+            const game = tourInfo ? tourInfo.game : 'GAME';
+            return `
+            <div class="sidebar-item ${index === 0 ? 'new-call' : ''}">
+                <div style="font-size: 0.85rem; color: var(--gold); margin-bottom: 4px; font-weight: 800; text-transform: uppercase;">[${game}] ${r.tname}</div>
+                <div style="font-size: 1.3rem; font-weight: 900; color: white; display: flex; justify-content: space-between; align-items: center;">
+                    <span>POD #${r.pod_number}</span>
+                    <span style="color: var(--gold); font-size: 1.2rem;">➔ TABLE ${r.assigned_table}</span>
+                </div>
+            </div>
+            `;
+        }).join('');
+        
+        callsArea.innerHTML = html;
+    }
+
+    function renderLoop() {
+        const container = document.getElementById('displayArea');
+        const clone = document.getElementById('displayAreaClone');
+        const wrapper = document.getElementById('scrollWrapper');
+        const h = container.offsetHeight + 20;
+
+        if (h > wrapper.offsetHeight) {
+            scrollPos -= scrollSpeed;
+            if (Math.abs(scrollPos) >= h) scrollPos = 0;
+            
+            container.style.transform = `translateY(${scrollPos}px)`;
+            clone.style.transform = `translateY(${scrollPos}px)`;
+            clone.style.top = `${h}px`;
+            clone.style.display = 'grid';
+        } else {
+            scrollPos = 0;
+            container.style.transform = `translateY(0px)`;
+            clone.style.display = 'none';
+        }
+
+        requestAnimationFrame(renderLoop);
+    }
+
+    initDisplay();
+</script>
+</body>
+</html>
