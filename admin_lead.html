@@ -361,11 +361,13 @@
             document.getElementById('catDay').value = item.tday || "";
             document.getElementById('catHour').value = item.thour || "";
             document.getElementById('catTax').value = item.tax || "";
-            let formattedSpread = "";
-            if (item.spread === 2 || item.spread === 2.0) formattedSpread = "2.0";
-            else if (item.spread === 1.75) formattedSpread = "1.75";
-            else if (item.spread === 1.5 || item.spread === 1.50) formattedSpread = "1.5";
-            document.getElementById('catSpread').value = formattedSpread;
+            
+            // Correção segura do Spread independente do formato do banco
+            let numSpread = Number(item.spread);
+            if (numSpread === 2) document.getElementById('catSpread').value = "2.0";
+            else if (numSpread === 1.75) document.getElementById('catSpread').value = "1.75";
+            else if (numSpread === 1.5) document.getElementById('catSpread').value = "1.5";
+            else document.getElementById('catSpread').value = "";
         }
 
         document.getElementById('catalogTitle').innerText = "EDITING TOURNAMENT...";
