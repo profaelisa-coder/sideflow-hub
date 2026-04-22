@@ -369,16 +369,27 @@
             loadData();
 
         } else {
-            const { data: podNum, error: rpcError } = await _supabase.rpc('get_pod_for_group', { 
-                p_event_id: eventPrefix, 
-                p_tname: tname, 
-                p_pod_limit: podLimit, 
-                p_group_size: groupSize, 
-                p_min_table: tour.table_min || 1, 
-                p_max_table: tour.table_max || 9999 
-            });
-            
-            if(rpcError) return alert("Error finding pod/table: " + rpcError.message);
+            let podNum = 1;
+            const { data: existingRegs, error: fetchErr } = await _supabase
+                .from('ode_registrations')
+                .select('pod_number')
+                .eq('event_id', eventPrefix)
+                .eq('tname', tname);
+
+            if (fetchErr) return alert("Error fetching pod info: " + fetchErr.message);
+
+            if (existingRegs && existingRegs.length > 0) {
+                let maxPod = 1;
+                existingRegs.forEach(r => {
+                    if (r.pod_number > maxPod) maxPod = r.pod_number;
+                });
+                const playersInMaxPod = existingRegs.filter(r => r.pod_number === maxPod).length;
+                if (playersInMaxPod + groupSize <= podLimit) {
+                    podNum = maxPod;
+                } else {
+                    podNum = maxPod + 1;
+                }
+            }
             
             const inserts = formPlayers.map(p => ({ event_id: eventPrefix, player_id: p.id, player_name: p.name, player_phone: p.phone, tname: tname, status: 'waiting', pod_number: podNum }));
             const { error } = await _supabase.from('ode_registrations').insert(inserts);
