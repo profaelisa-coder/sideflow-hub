@@ -14,7 +14,6 @@
         .btn-return { grid-column: 3; justify-self: end; background: transparent; color: var(--gold); border: 1px solid var(--gold); padding: 5px 10px; border-radius: 6px; cursor: pointer; font-weight: bold; text-transform: uppercase; font-size: 0.7rem; width: auto; transition: 0.3s; }
         .btn-return:hover { background: var(--gold); color: var(--dark); }
         
-        /* Compactação do formulário para tablets */
         .box { background: var(--sec); padding: 15px; border-radius: 12px; box-shadow: 0 8px 25px rgba(0,0,0,0.4); margin-bottom: 20px; border-bottom: 4px solid var(--gold); }
         .row { display: flex; gap: 8px; margin-bottom: 10px; width: 100%; }
         .col { flex: 1; display: flex; flex-direction: column; }
@@ -26,11 +25,9 @@
         button:hover { filter: brightness(1.1); }
         .btn-reg { background: var(--gold); color: var(--dark); margin-top: 5px; }
         
-        /* NOVOS BOTÕES MODO EDIÇÃO */
         .btn-cancel-edit { background: var(--red); color: white; margin-top: 5px; display: none; }
         .btn-edit-pod { background: var(--gold); color: var(--dark); padding: 5px 10px; border-radius: 6px; border: none; font-weight: bold; cursor: pointer; font-size: 0.7rem; margin-left: 10px; width: auto; }
 
-        /* Estilos dos jogadores compactados */
         #playersContainer .row { background: rgba(0,0,0,0.1); padding: 8px; border-radius: 6px; margin-bottom: 6px; }
         
         .live-label { color: var(--gold); font-size: 0.9rem; font-weight: bold; margin: 15px 0 10px 0; display: flex; align-items: center; gap: 8px; }
@@ -53,7 +50,6 @@
         #loginOverlay input { width: 250px; text-align: center; margin-bottom: 20px; }
         #loginOverlay button { width: 250px; }
         
-        /* Rodapé Fixo */
         .nav-footer { position: fixed; bottom: 0; left: 0; width: 100%; background: rgba(10, 37, 64, 0.95); padding: 12px; display: flex; justify-content: center; gap: 15px; border-top: 1px solid rgba(255,255,255,0.1); z-index: 500; }
         .nav-footer button { width: auto; padding: 10px 25px; font-size: 0.8rem; background: var(--sec); color: white; border: 1px solid var(--blue); }
     </style>
@@ -214,15 +210,15 @@
                 <div class="row">
                     <div class="col" style="flex: 0.5; margin-bottom: 0;">
                         <label>ID ${i}</label>
-                        <input type="number" class="dyn-id" autocomplete="off">
+                        <input type="number" class="dyn-id" id="dyn-id-${i}" autocomplete="off" onblur="fetchPlayerData(${i})">
                     </div>
                     <div class="col" style="flex: 1.5; margin-bottom: 0;">
                         <label>Name ${i}</label>
-                        <input type="text" class="dyn-name" autocomplete="off">
+                        <input type="text" class="dyn-name" id="dyn-name-${i}" autocomplete="off">
                     </div>
                     <div class="col" style="flex: 1; margin-bottom: 0;">
                         <label>WhatsApp</label>
-                        <input type="number" class="dyn-phone" autocomplete="off">
+                        <input type="number" class="dyn-phone" id="dyn-phone-${i}" autocomplete="off">
                     </div>
                 </div>`;
         }
@@ -235,6 +231,27 @@
             newIds[i].value = currentIds[i] || '';
             newNames[i].value = currentNames[i] || '';
             newPhones[i].value = currentPhones[i] || '';
+        }
+    }
+
+    async function fetchPlayerData(index) {
+        const idField = document.getElementById(`dyn-id-${index}`);
+        const nameField = document.getElementById(`dyn-name-${index}`);
+        const phoneField = document.getElementById(`dyn-phone-${index}`);
+        const playerId = idField.value.trim();
+
+        if (!playerId) return;
+
+        const { data, error } = await _supabase
+            .from('ode_registrations')
+            .select('player_name, player_phone')
+            .eq('player_id', playerId)
+            .order('created_at', { ascending: false })
+            .limit(1);
+
+        if (!error && data && data.length > 0) {
+            if (!nameField.value) nameField.value = data[0].player_name || '';
+            if (!phoneField.value) phoneField.value = data[0].player_phone || '';
         }
     }
 
@@ -390,7 +407,6 @@
             const tourInfo = currentCatalog.find(c => c.tname === tname);
             const targetSize = tourInfo ? tourInfo.pod_size : 4;
             
-            // NOVA LÓGICA: Injeta o prefixo do jogo
             const gamePrefix = tourInfo && tourInfo.game ? `[${tourInfo.game}] ` : '';
 
             listDiv.innerHTML += `
