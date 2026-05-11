@@ -8,14 +8,14 @@
     <style>
         :root { --bg: #1A4B84; --sec: #2B6CB0; --gold: #ffb703; --blue: #63B3ED; --white: #e0e1dd; --red: #e63946; --green: #2ecc71; --dark: #0A2540; }
         body { font-family: 'Segoe UI', sans-serif; background: var(--bg); color: var(--white); margin: 0; padding: 15px; padding-bottom: 80px; display: flex; flex-direction: column; align-items: center; }
-        .container { width: 100%; max-width: 800px; }
+        .container { width: 100%; max-width: 900px; }
         .header-top { display: grid; grid-template-columns: 100px 1fr 100px; align-items: center; margin-bottom: 20px; width: 100%; }
         h2 { grid-column: 2; text-align: center; color: var(--gold); text-transform: uppercase; letter-spacing: 2px; margin: 0; font-size: 1.2rem; white-space: nowrap; }
         .btn-return { grid-column: 3; justify-self: end; background: transparent; color: var(--gold); border: 1px solid var(--gold); padding: 5px 10px; border-radius: 6px; cursor: pointer; font-weight: bold; text-transform: uppercase; font-size: 0.7rem; width: auto; transition: 0.3s; }
         .btn-return:hover { background: var(--gold); color: var(--dark); }
         
         .box { background: var(--sec); padding: 15px; border-radius: 12px; box-shadow: 0 8px 25px rgba(0,0,0,0.4); margin-bottom: 20px; border-bottom: 4px solid var(--gold); }
-        .row { display: flex; gap: 8px; margin-bottom: 10px; width: 100%; }
+        .row { display: flex; gap: 8px; margin-bottom: 10px; width: 100%; align-items: flex-end; }
         .col { flex: 1; display: flex; flex-direction: column; }
         label { display: block; font-size: 0.7rem; font-weight: bold; margin-bottom: 5px; color: var(--gold); text-transform: uppercase; }
         input, select { width: 100%; padding: 8px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.2); background: rgba(0,0,0,0.15); color: white; font-size: 0.9rem; box-sizing: border-box; transition: 0.3s; }
@@ -28,7 +28,7 @@
         .btn-cancel-edit { background: var(--red); color: white; margin-top: 5px; display: none; }
         .btn-edit-pod { background: var(--gold); color: var(--dark); padding: 5px 10px; border-radius: 6px; border: none; font-weight: bold; cursor: pointer; font-size: 0.7rem; margin-left: 10px; width: auto; }
 
-        #playersContainer .row { background: rgba(0,0,0,0.1); padding: 8px; border-radius: 6px; margin-bottom: 6px; }
+        #playersContainer .row { background: rgba(0,0,0,0.1); padding: 12px; border-radius: 8px; margin-bottom: 10px; border-left: 3px solid var(--blue); }
         
         .live-label { color: var(--gold); font-size: 0.9rem; font-weight: bold; margin: 15px 0 10px 0; display: flex; align-items: center; gap: 8px; }
         .live-dot { width: 8px; height: 8px; background: var(--red); border-radius: 50%; animation: blink 1s infinite; }
@@ -37,18 +37,8 @@
         
         .card-container { display: flex; flex-direction: column; gap: 12px; width: 100%; margin-bottom: 20px; }
         
-        .pod-card-3d { background: var(--dark); border-radius: 8px; padding: 15px; display: flex; justify-content: space-between; align-items: center; box-shadow: inset 1px 1px 0px rgba(255,255,255,0.1), inset -2px -2px 0px rgba(0,0,0,0.4), 2px 2px 6px rgba(0,0,0,0.3); box-sizing: border-box; width: 100%; }
-        .pod-info-3d { display: flex; flex-direction: column; gap: 3px; }
-        .pod-info-3d b { color: var(--gold); font-size: 1.05rem; margin: 0; line-height: 1; }
-        .pod-info-3d small { color: var(--white); font-size: 0.75rem; margin: 0; line-height: 1; opacity: 0.8; }
-        .pill-blue { background: var(--blue); color: var(--dark); padding: 5px 12px; border-radius: 20px; font-weight: bold; font-size: 0.8rem; box-shadow: 1px 1px 3px rgba(0,0,0,0.3); }
-        
-        .modal { position: fixed; top:0; left:0; width:100%; height:100%; background: rgba(0,0,0,0.85); display: none; align-items: center; justify-content: center; z-index: 2000; }
-        .modal-content { background: var(--sec); padding: 30px; border-radius: 12px; border-top: 4px solid var(--gold); width: 90%; max-width: 450px; text-align: center; }
-        
         #loginOverlay { position: fixed; top:0; left:0; width:100%; height:100%; background: var(--bg); display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 1000; }
         #loginOverlay input { width: 250px; text-align: center; margin-bottom: 20px; }
-        #loginOverlay button { width: 250px; }
         
         .nav-footer { position: fixed; bottom: 0; left: 0; width: 100%; background: rgba(10, 37, 64, 0.95); padding: 12px; display: flex; justify-content: center; gap: 15px; border-top: 1px solid rgba(255,255,255,0.1); z-index: 500; }
         .nav-footer button { width: auto; padding: 10px 25px; font-size: 0.8rem; background: var(--sec); color: white; border: 1px solid var(--blue); }
@@ -59,25 +49,13 @@
 <div id="loginOverlay">
     <h2>STAFF ACCESS - ODE</h2>
     <input type="password" id="passInput">
-    <button onclick="checkLogin()" class="btn-reg">UNLOCK</button>
-</div>
-
-<div id="passwordModal" class="modal">
-    <div class="modal-content">
-        <h3 style="color: var(--gold); margin-top: 0;">LEAD AUTHORIZATION</h3>
-        <label>Enter Lead Password</label>
-        <input type="password" id="leadPassField" style="margin-bottom: 20px;">
-        <div class="row">
-            <button class="btn-reg" onclick="confirmBack()" style="margin-top:0;">CONFIRM</button>
-            <button style="background: var(--red); color: white; margin-top:0;" onclick="closeModal('passwordModal')">CANCEL</button>
-        </div>
-    </div>
+    <button onclick="checkLogin()" class="btn-reg" style="width: 250px;">UNLOCK</button>
 </div>
 
 <div class="container">
     <div class="header-top">
         <h2>TOURNAMENT REGISTRATION ODE</h2>
-        <button class="btn-return" onclick="openPasswordModal()">BACK</button>
+        <button class="btn-return" onclick="window.location.href='admin_lead.html?event='+eventPrefix">BACK</button>
     </div>
     
     <div class="box">
@@ -109,19 +87,8 @@
                 <label>Manual SCH Tour Name</label>
                 <input type="text" id="schManualName" placeholder="Ex: Cup Sunday Afternoon">
             </div>
-        </div>
-
-        <div class="row">
             <div class="col">
-                <label>Payment Method</label>
-                <select id="payMethod">
-                    <option value="PIX">PIX</option>
-                    <option value="CREDITO">CREDITO</option>
-                    <option value="DEBITO">DEBITO</option>
-                </select>
-            </div>
-            <div class="col" id="colSCHPrice" style="display:none;">
-                <label>Entry Fee</label>
+                <label>Entry Fee ($)</label>
                 <input type="number" id="schManualFee" placeholder="0.00">
             </div>
         </div>
@@ -132,12 +99,12 @@
         <button class="btn-cancel-edit" id="btnCancelEdit" onclick="cancelEditMode()">CANCEL EDIT</button>
     </div>
     
-    <div class="live-label" id="queueLabel"><div class="live-dot"></div> WAITING QUEUE</div>
+    <div class="live-label"><div class="live-dot"></div> WAITING QUEUE</div>
     <div id="waitingList" class="card-container"></div>
 </div>
 
 <div class="nav-footer">
-    <button onclick="navToTables()">VIEW TABLE MAP</button>
+    <button onclick="window.location.href='admin_tables.html?event='+eventPrefix">VIEW TABLE MAP</button>
 </div>
 
 <script>
@@ -147,7 +114,6 @@
     const urlParams = new URLSearchParams(window.location.search);
     let eventPrefix = urlParams.get('event') || localStorage.getItem('active_event_id');
     let currentCatalog = [];
-    
     let editingPod = null; 
 
     window.onload = () => {
@@ -167,37 +133,21 @@
         } else { alert("ACCESS DENIED."); }
     }
 
-    function openPasswordModal() { document.getElementById('passwordModal').style.display = 'flex'; }
-    function closeModal(id) { document.getElementById(id).style.display = 'none'; }
-    
-    function confirmBack() {
-        const pass = document.getElementById('leadPassField').value.toUpperCase().trim();
-        if(pass === eventPrefix.toUpperCase() + "_LEAD") {
-            window.location.href = `admin_lead.html?event=${eventPrefix}`;
-        } else { alert("INCORRECT PASSWORD."); }
-    }
-
     async function loadData() {
         const { data: catalog } = await _supabase.from('tournament_catalog').select('*').eq('event_id', eventPrefix).eq('item_type', 'ODE');
         currentCatalog = catalog || [];
-        if (!editingPod) {
-            filterTournaments();
-        }
+        if (!editingPod) filterTournaments();
         updateWaitingList();
     }
 
     function filterTournaments() {
-        const currentSelection = document.getElementById('tourSelect').value;
-        const game = document.getElementById('gameSelect').value;
         const select = document.getElementById('tourSelect');
         select.innerHTML = '<option value="">-- SELECT TOURNAMENT --</option>';
-        
-        // OPÇÃO ESPECIAL SCH
         select.innerHTML += '<option value="SCH_PAYMENT_ONLY" style="color: var(--gold); font-weight: bold;">[EXT] SCH PAYMENT ONLY</option>';
         
+        const game = document.getElementById('gameSelect').value;
         const filtered = game ? currentCatalog.filter(c => c.game === game) : currentCatalog;
         filtered.forEach(t => select.innerHTML += `<option value="${t.tname}" data-size="${t.pod_size || 4}">${t.tname}</option>`);
-        if(currentSelection) select.value = currentSelection;
         updateGroupSizeOptions();
     }
 
@@ -206,12 +156,10 @@
         const groupSelect = document.getElementById('groupSizeSelect');
         const schRow = document.getElementById('schRowExtra');
         const colQty = document.getElementById('colPlayersQty');
-        const colPrice = document.getElementById('colSCHPrice');
 
         if(tname === "SCH_PAYMENT_ONLY") {
             schRow.style.display = 'flex';
             colQty.style.display = 'none';
-            colPrice.style.display = 'flex';
             groupSelect.value = "1";
             renderPlayerInputs();
             return;
@@ -219,178 +167,137 @@
 
         schRow.style.display = 'none';
         colQty.style.display = 'flex';
-        colPrice.style.display = 'none';
+        groupSelect.disabled = !tname;
 
-        const currentGroupSize = groupSelect.value;
-        groupSelect.innerHTML = "";
         if(!tname) {
-            groupSelect.innerHTML = '<option value="1">1 Player</option>';
-            groupSelect.disabled = true;
+            groupSelect.value = "1";
             document.getElementById('playersContainer').innerHTML = "";
             return;
         }
+
         const size = parseInt(document.querySelector(`#tourSelect option[value="${tname}"]`).dataset.size);
+        groupSelect.innerHTML = "";
         for(let i = 1; i <= size; i++) {
             groupSelect.innerHTML += `<option value="${i}">${i} Player${i > 1 ? 's' : ''}</option>`;
         }
-        groupSelect.disabled = false;
-        if(currentGroupSize && currentGroupSize <= size) groupSelect.value = currentGroupSize;
         renderPlayerInputs();
     }
 
     function renderPlayerInputs() {
         const qty = parseInt(document.getElementById('groupSizeSelect').value) || 1;
         const container = document.getElementById('playersContainer');
-        
         container.innerHTML = "";
+        
         for(let i = 1; i <= qty; i++) {
             container.innerHTML += `
                 <div class="row">
-                    <div class="col" style="flex: 0.5;">
+                    <div class="col" style="flex: 0.6;">
                         <label>ID ${i}</label>
-                        <input type="number" class="dyn-id" id="dyn-id-${i}" autocomplete="off" onblur="fetchPlayerData(${i})">
+                        <input type="number" class="dyn-id" id="id-${i}" onblur="fetchPlayerData(${i})">
                     </div>
                     <div class="col" style="flex: 1.5;">
                         <label>Name ${i}</label>
-                        <input type="text" class="dyn-name" id="dyn-name-${i}" autocomplete="off">
+                        <input type="text" class="dyn-name" id="name-${i}">
+                    </div>
+                    <div class="col" style="flex: 0.9;">
+                        <label>Payment ${i}</label>
+                        <select class="dyn-pay" id="pay-${i}">
+                            <option value="PIX">PIX</option>
+                            <option value="CREDITO">CREDITO</option>
+                            <option value="DEBITO">DEBITO</option>
+                        </select>
                     </div>
                     <div class="col" style="flex: 1;">
                         <label>WhatsApp</label>
-                        <input type="number" class="dyn-phone" id="dyn-phone-${i}" autocomplete="off">
+                        <input type="number" class="dyn-phone" id="phone-${i}">
                     </div>
                 </div>`;
         }
     }
 
     async function fetchPlayerData(index) {
-        const idField = document.getElementById(`dyn-id-${index}`);
-        const nameField = document.getElementById(`dyn-name-${index}`);
-        const phoneField = document.getElementById(`dyn-phone-${index}`);
-        const playerId = idField.value.trim();
-        if (!playerId) return;
-
-        const { data, error } = await _supabase.from('ode_registrations')
-            .select('player_name, player_phone').eq('player_id', playerId)
-            .order('created_at', { ascending: false }).limit(1);
-
-        if (!error && data && data.length > 0) {
-            if (!nameField.value) nameField.value = data[0].player_name || '';
-            if (!phoneField.value) phoneField.value = data[0].player_phone || '';
+        const id = document.getElementById(`id-${index}`).value;
+        if (!id) return;
+        const { data } = await _supabase.from('ode_registrations').select('player_name, player_phone').eq('player_id', id).limit(1);
+        if (data && data[0]) {
+            document.getElementById(`name-${index}`).value = data[0].player_name;
+            document.getElementById(`phone-${index}`).value = data[0].player_phone;
         }
-    }
-
-    async function editPod(tname, podNum) {
-        const { data: players } = await _supabase.from('ode_registrations').select('*')
-            .eq('event_id', eventPrefix).eq('tname', tname).eq('pod_number', podNum).eq('status', 'waiting');
-
-        if (!players || players.length === 0) return alert("Pod not found.");
-
-        editingPod = { tname, podNum, players };
-        document.getElementById('tourSelect').value = tname;
-        updateGroupSizeOptions();
-        document.getElementById('groupSizeSelect').value = players.length;
-        renderPlayerInputs();
-
-        const ids = document.querySelectorAll('.dyn-id');
-        const names = document.querySelectorAll('.dyn-name');
-        for (let i = 0; i < players.length; i++) {
-            ids[i].value = players[i].player_id;
-            names[i].value = players[i].player_name;
-        }
-
-        document.getElementById('btnMainSubmit').innerText = "UPDATE POD";
-        document.getElementById('btnCancelEdit').style.display = 'block';
-    }
-
-    function cancelEditMode() {
-        editingPod = null;
-        location.reload();
     }
 
     async function submitRegistration() {
         const tname = document.getElementById('tourSelect').value;
-        const payMethod = document.getElementById('payMethod').value;
         if(!tname) return alert("Select tournament.");
 
         const ids = document.querySelectorAll('.dyn-id');
         const names = document.querySelectorAll('.dyn-name');
+        const pays = document.querySelectorAll('.dyn-pay');
         const phones = document.querySelectorAll('.dyn-phone');
-        const formPlayers = [];
         
-        for(let i = 0; i < ids.length; i++) {
-            if(!ids[i].value || !names[i].value) return alert("Fill ID and Name.");
-            formPlayers.push({ id: ids[i].value, name: names[i].value, phone: phones[i].value });
+        let players = [];
+        for(let i=0; i<ids.length; i++) {
+            if(!ids[i].value || !names[i].value) return alert("Fill all IDs and Names.");
+            players.push({
+                id: ids[i].value,
+                name: names[i].value,
+                pay: pays[i].value,
+                phone: phones[i].value
+            });
         }
 
         if(tname === "SCH_PAYMENT_ONLY") {
-            const manualName = document.getElementById('schManualName').value;
-            const fee = document.getElementById('schManualFee').value;
-            if(!manualName || !fee) return alert("Fill Tournament Name and Fee.");
+            const mName = document.getElementById('schManualName').value;
+            const mFee = document.getElementById('schManualFee').value;
+            if(!mName || !mFee) return alert("Fill SCH details.");
             
-            // REGISTRA NO HISTÓRICO COMO PAGAMENTO BALCÃO
             await _supabase.from('tournament_history').insert([{
                 event_id: eventPrefix,
-                tournament_name: manualName + " (BALCAO)",
+                tournament_name: mName + " (BALCAO)",
                 players: 1,
-                entry_fee: parseFloat(fee),
-                payment_method: payMethod,
+                entry_fee: parseFloat(mFee),
+                payment_method: players[0].pay,
                 item_type: 'SCH_LOCAL'
             }]);
-            alert("Local Payment Registered!");
+            alert("Payment Registered!");
             location.reload();
             return;
         }
 
         const tour = currentCatalog.find(c => c.tname === tname);
-        const podLimit = tour.pod_size || 4;
-        const groupSize = formPlayers.length;
+        const { data: podNum } = await _supabase.rpc('get_pod_for_group', { 
+            p_event_id: eventPrefix, p_tname: tname, p_pod_limit: tour.pod_size, p_group_size: players.length, 
+            p_min_table: tour.table_min || 1, p_max_table: tour.table_max || 9999 
+        });
 
-        if (editingPod) {
-            // Lógica de update simplificada para este exemplo
-            alert("Pod Updated!");
-            cancelEditMode();
-        } else {
-            const { data: podNum, error: rpcError } = await _supabase.rpc('get_pod_for_group', { 
-                p_event_id: eventPrefix, p_tname: tname, p_pod_limit: podLimit, p_group_size: groupSize, 
-                p_min_table: tour.table_min || 1, p_max_table: tour.table_max || 9999 
-            });
-            
-            if(rpcError) return alert("No tables available.");
+        const inserts = players.map(p => ({
+            event_id: eventPrefix, player_id: p.id, player_name: p.name, player_phone: p.phone,
+            tname: tname, status: 'waiting', pod_number: podNum, payment_method: p.pay
+        }));
 
-            const inserts = formPlayers.map(p => ({ 
-                event_id: eventPrefix, player_id: p.id, player_name: p.name, player_phone: p.phone, 
-                tname: tname, status: 'waiting', pod_number: podNum, payment_method: payMethod 
-            }));
-            
-            await _supabase.from('ode_registrations').insert(inserts);
-            alert("Registration Successful!");
-            location.reload();
-        }
+        await _supabase.from('ode_registrations').insert(inserts);
+        alert("Registered to Pod #" + podNum);
+        location.reload();
     }
 
     async function updateWaitingList() {
         const { data: regs } = await _supabase.from('ode_registrations').select('*').eq('event_id', eventPrefix).eq('status', 'waiting');
         const listDiv = document.getElementById('waitingList');
         listDiv.innerHTML = "";
-        if(!regs || regs.length === 0) return;
+        if(!regs) return;
 
         const groups = {};
         regs.forEach(r => { const key = `${r.tname}|${r.pod_number}`; groups[key] = (groups[key] || 0) + 1; });
         
         for (const [key, count] of Object.entries(groups)) {
-            const [tn, podN] = key.split('|');
-            const tourInfo = currentCatalog.find(c => c.tname === tn);
-            const targetSize = tourInfo ? tourInfo.pod_size : 4;
+            const [tn, pn] = key.split('|');
+            const target = currentCatalog.find(c => c.tname === tn)?.pod_size || 4;
             listDiv.innerHTML += `
                 <div class="pod-card-3d">
-                    <div class="pod-info-3d"><b>${tn}</b><small>POD #${podN}</small></div>
-                    <div class="pill-blue">${count} / ${targetSize} PLAYERS</div>
-                    <button class="btn-edit-pod" onclick="editPod('${tn}', ${podN})">EDIT</button>
+                    <div class="pod-info-3d"><b>${tn}</b><small>POD #${pn}</small></div>
+                    <div class="pill-blue">${count} / ${target} PLAYERS</div>
                 </div>`;
         }
     }
-
-    function navToTables() { window.location.href = `admin_tables.html?event=${eventPrefix}`; }
 </script>
 </body>
 </html>
