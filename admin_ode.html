@@ -3,248 +3,429 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SideFlow - LEAD SETUP</title>
+    <title>SideFlow - Staff ODE</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
-        :root { --bg: #1A4B84; --sec: #2B6CB0; --gold: #ffb703; --white: #e0e1dd; --blue: #63B3ED; --red: #e63946; --dark: #0A2540; }
-        body { font-family: 'Segoe UI', sans-serif; background: var(--bg); color: var(--white); margin: 0; padding: 20px; display: flex; flex-direction: column; align-items: center; }
-        .container { width: 100%; max-width: 850px; padding-bottom: 50px; }
-        .box { background: var(--sec); padding: 25px; border-radius: 12px; margin-bottom: 25px; border-bottom: 4px solid var(--gold); box-shadow: 0 8px 25px rgba(0,0,0,0.3); }
-        h2 { color: var(--gold); text-align: center; letter-spacing: 1px; margin-bottom: 20px; }
-        h3 { border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 10px; margin-top: 0; font-size: 1.1rem; text-transform: uppercase; }
-        .row { display: flex; gap: 15px; margin-bottom: 15px; width: 100%; flex-wrap: wrap; }
-        .col { flex: 1; min-width: 150px; display: flex; flex-direction: column; }
-        label { font-size: 0.75rem; font-weight: bold; margin-bottom: 5px; color: var(--gold); text-transform: uppercase; }
-        input, select { width: 100%; padding: 12px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.1); background: var(--dark); color: white; box-sizing: border-box; font-size: 0.95rem; }
-        button { padding: 14px; border-radius: 8px; border: none; font-weight: bold; text-transform: uppercase; cursor: pointer; transition: 0.3s; font-size: 0.9rem; }
+        :root { --bg: #1A4B84; --sec: #2B6CB0; --gold: #ffb703; --blue: #63B3ED; --white: #e0e1dd; --red: #e63946; --green: #2ecc71; --dark: #0A2540; }
+        body { font-family: 'Segoe UI', sans-serif; background: var(--bg); color: var(--white); margin: 0; padding: 15px; padding-bottom: 80px; display: flex; flex-direction: column; align-items: center; }
+        .container { width: 100%; max-width: 800px; }
+        .header-top { display: grid; grid-template-columns: 100px 1fr 100px; align-items: center; margin-bottom: 20px; width: 100%; }
+        h2 { grid-column: 2; text-align: center; color: var(--gold); text-transform: uppercase; letter-spacing: 2px; margin: 0; font-size: 1.2rem; white-space: nowrap; }
+        .btn-return { grid-column: 3; justify-self: end; background: transparent; color: var(--gold); border: 1px solid var(--gold); padding: 5px 10px; border-radius: 6px; cursor: pointer; font-weight: bold; text-transform: uppercase; font-size: 0.7rem; width: auto; transition: 0.3s; }
+        .btn-return:hover { background: var(--gold); color: var(--dark); }
+        
+        .box { background: var(--sec); padding: 15px; border-radius: 12px; box-shadow: 0 8px 25px rgba(0,0,0,0.4); margin-bottom: 20px; border-bottom: 4px solid var(--gold); }
+        .row { display: flex; gap: 8px; margin-bottom: 10px; width: 100%; }
+        .col { flex: 1; display: flex; flex-direction: column; }
+        label { display: block; font-size: 0.7rem; font-weight: bold; margin-bottom: 5px; color: var(--gold); text-transform: uppercase; }
+        input, select { width: 100%; padding: 8px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.2); background: rgba(0,0,0,0.15); color: white; font-size: 0.9rem; box-sizing: border-box; transition: 0.3s; }
+        input:focus, select:focus { border-color: var(--gold); outline: none; background: rgba(0,0,0,0.3); }
+        
+        button { width: 100%; padding: 14px; border-radius: 8px; border: none; font-weight: bold; text-transform: uppercase; cursor: pointer; transition: 0.3s; font-size: 0.9rem; }
         button:hover { filter: brightness(1.1); }
-        .btn-gold { background: var(--gold); color: var(--dark); width: 100%; margin-top: 10px; }
-        .btn-blue { background: var(--blue); color: var(--dark); width: 100%; margin-top: 10px; }
-        .btn-red { background: var(--red); color: white; width: 100%; margin-top: 10px; }
-        .nav-buttons { display: flex; gap: 10px; justify-content: center; margin-bottom: 30px; flex-wrap: wrap; }
-        .btn-nav { background: var(--sec); color: var(--white); border: 1px solid var(--blue); padding: 15px 30px; border-radius: 8px; font-size: 0.85rem; min-width: 160px; }
-        .btn-nav:hover { background: var(--blue); color: var(--dark); }
-        .catalog-list { width: 100%; margin-bottom: 30px; }
-        .catalog-item { display: flex; justify-content: space-between; align-items: center; background: var(--sec); padding: 12px 20px; border-radius: 8px; margin-bottom: 8px; border-left: 4px solid var(--blue); }
-        .catalog-info { font-size: 0.9rem; }
-        .catalog-info strong { color: var(--gold); margin-right: 10px; }
-        .btn-del { background: var(--red); color: white; padding: 8px 12px; font-size: 0.75rem; width: auto; border-radius: 6px; }
-        .btn-edit { background: var(--gold); color: var(--dark); padding: 8px 12px; font-size: 0.75rem; width: auto; border-radius: 6px; margin-right: 5px; }
-        .reset-link { display: block; text-align: center; color: var(--red); font-size: 0.8rem; text-decoration: none; opacity: 0.5; font-weight: bold; margin-top: 60px; transition: 0.3s; }
-        .reset-link:hover { opacity: 1; text-decoration: underline; }
-        .prize-config-box { background: rgba(0,0,0,0.2); padding: 15px; border-radius: 8px; margin-top: 10px; border: 1px dashed var(--gold); width: 100%; }
-        .prize-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 10px; margin-top: 10px; }
+        .btn-reg { background: var(--gold); color: var(--dark); margin-top: 5px; }
+        
+        .btn-cancel-edit { background: var(--red); color: white; margin-top: 5px; display: none; }
+        .btn-edit-pod { background: var(--gold); color: var(--dark); padding: 5px 10px; border-radius: 6px; border: none; font-weight: bold; cursor: pointer; font-size: 0.7rem; margin-left: 10px; width: auto; }
+
+        #playersContainer .row { background: rgba(0,0,0,0.1); padding: 8px; border-radius: 6px; margin-bottom: 6px; }
+        
+        .live-label { color: var(--gold); font-size: 0.9rem; font-weight: bold; margin: 15px 0 10px 0; display: flex; align-items: center; gap: 8px; }
+        .live-dot { width: 8px; height: 8px; background: var(--red); border-radius: 50%; animation: blink 1s infinite; }
+        .live-dot.green { background: var(--green); }
+        @keyframes blink { 0% { opacity: 1; } 50% { opacity: 0.3; } 100% { opacity: 1; } }
+        
+        .card-container { display: flex; flex-direction: column; gap: 12px; width: 100%; margin-bottom: 20px; }
+        
+        .pod-card-3d { background: var(--dark); border-radius: 8px; padding: 15px; display: flex; justify-content: space-between; align-items: center; box-shadow: inset 1px 1px 0px rgba(255,255,255,0.1), inset -2px -2px 0px rgba(0,0,0,0.4), 2px 2px 6px rgba(0,0,0,0.3); box-sizing: border-box; width: 100%; }
+        .pod-info-3d { display: flex; flex-direction: column; gap: 3px; }
+        .pod-info-3d b { color: var(--gold); font-size: 1.05rem; margin: 0; line-height: 1; }
+        .pod-info-3d small { color: var(--white); font-size: 0.75rem; margin: 0; line-height: 1; opacity: 0.8; }
+        .pill-blue { background: var(--blue); color: var(--dark); padding: 5px 12px; border-radius: 20px; font-weight: bold; font-size: 0.8rem; box-shadow: 1px 1px 3px rgba(0,0,0,0.3); }
+        
         .modal { position: fixed; top:0; left:0; width:100%; height:100%; background: rgba(0,0,0,0.85); display: none; align-items: center; justify-content: center; z-index: 2000; }
-        .modal-content { background: var(--sec); padding: 30px; border-radius: 12px; border-top: 4px solid var(--gold); width: 90%; max-width: 400px; text-align: center; }
+        .modal-content { background: var(--sec); padding: 30px; border-radius: 12px; border-top: 4px solid var(--gold); width: 90%; max-width: 450px; text-align: center; }
+        
+        #loginOverlay { position: fixed; top:0; left:0; width:100%; height:100%; background: var(--bg); display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 1000; }
+        #loginOverlay input { width: 250px; text-align: center; margin-bottom: 20px; }
+        #loginOverlay button { width: 250px; }
+        
+        .nav-footer { position: fixed; bottom: 0; left: 0; width: 100%; background: rgba(10, 37, 64, 0.95); padding: 12px; display: flex; justify-content: center; gap: 15px; border-top: 1px solid rgba(255,255,255,0.1); z-index: 500; }
+        .nav-footer button { width: auto; padding: 10px 25px; font-size: 0.8rem; background: var(--sec); color: white; border: 1px solid var(--blue); }
     </style>
 </head>
 <body>
 
-<div id="resetModal" class="modal">
+<div id="loginOverlay">
+    <h2>STAFF ACCESS - ODE</h2>
+    <input type="password" id="passInput">
+    <button onclick="checkLogin()" class="btn-reg">UNLOCK</button>
+</div>
+
+<div id="passwordModal" class="modal">
     <div class="modal-content">
-        <h3 style="color: var(--gold); margin-top: 0;">Confirm Wipe</h3>
-        <p style="font-size: 0.85rem; margin-bottom: 20px;">To erase ALL event records, enter Lead Password:</p>
-        <input type="password" id="resetPassField" style="margin-bottom: 20px; text-align: center;">
-        <div style="display: flex; gap: 10px;">
-            <button class="btn-red" style="margin:0; flex:1;" onclick="confirmReset()">WIPE DATA</button>
-            <button style="background: #666; color: white; margin:0; flex:1;" onclick="closeResetModal()">CANCEL</button>
+        <h3 style="color: var(--gold); margin-top: 0;">LEAD AUTHORIZATION</h3>
+        <label>Enter Lead Password</label>
+        <input type="password" id="leadPassField" style="margin-bottom: 20px;">
+        <div class="row">
+            <button class="btn-reg" onclick="confirmBack()" style="margin-top:0;">CONFIRM</button>
+            <button style="background: var(--red); color: white; margin-top:0;" onclick="closeModal('passwordModal')">CANCEL</button>
         </div>
     </div>
 </div>
 
 <div class="container">
-    <h2>LEAD COMMAND CENTER</h2>
-    
-    <div class="box" id="setupSection">
-        <h3>Initialize Event</h3>
-        <div class="row">
-            <div class="col"><label>Event ID (Prefix)</label><input type="text" id="eventId" disabled></div>
-            <div class="col" style="flex: 2;"><label>Official Event Name</label><input type="text" id="eventName"></div>
-        </div>
-        <div class="row">
-            <div class="col"><label>Event Dates</label><input type="text" id="eventDates"></div>
-            <div class="col"><label>Logo Type</label><select id="logoType"><option value="REGIONAL">Regional Logo</option><option value="PREMIER">IC Logo</option></select></div>
-        </div>
-        <button class="btn-gold" onclick="saveEventAnchor()">SAVE AND ACTIVATE EVENT</button>
+    <div class="header-top">
+        <h2>TOURNAMENT REGISTRATION ODE</h2>
+        <button class="btn-return" onclick="openPasswordModal()">BACK</button>
     </div>
-
+    
     <div class="box">
-        <h3>Table Infrastructure</h3>
         <div class="row">
-            <div class="col" style="flex: 2;"><label>Total Tables in Sides Area</label><input type="number" id="totalTables"></div>
-            <div class="col"><label>Action</label><button class="btn-red" onclick="setupTables()" style="margin-top: 0;">UPDATE TABLES</button></div>
+            <div class="col">
+                <label>Game</label>
+                <select id="gameSelect" onchange="filterTournaments()">
+                    <option value="">ALL GAMES</option>
+                    <option value="TCG">TCG</option>
+                    <option value="VGC">VGC</option>
+                    <option value="GO">GO</option>
+                    <option value="POCKET">POCKET</option>
+                </select>
+            </div>
+            <div class="col">
+                <label>Tournament Pod</label>
+                <select id="tourSelect" onchange="updateGroupSizeOptions()"><option value="">LOADING...</option></select>
+            </div>
+            <div class="col">
+                <label>Players?</label>
+                <select id="groupSizeSelect" onchange="renderPlayerInputs()" disabled>
+                    <option value="1">1 Player</option>
+                </select>
+            </div>
         </div>
+        
+        <div id="playersContainer"></div>
+        
+        <button class="btn-reg" id="btnMainSubmit" onclick="submitRegistration()">REGISTER TO POD</button>
+        <button class="btn-cancel-edit" id="btnCancelEdit" onclick="cancelEditMode()">CANCEL EDIT</button>
     </div>
-
-    <div class="box" id="catalogBox"> 
-        <h3 id="catalogTitle">Tournament Catalog Setup</h3>
-        <div class="row">
-            <div class="col"><label>Event Type</label><select id="catType" onchange="toggleCatFields()"><option value="">-- SELECT --</option><option value="ODE">On-Demand Event (ODE)</option><option value="SCH">Scheduled Event (SCH)</option></select></div>
-            <div class="col"><label>Game</label><select id="catGame"><option value="">-- SELECT --</option><option value="TCG">TCG</option><option value="VGC">VGC</option><option value="GO">GO</option><option value="POCKET">POCKET</option></select></div>
-        </div>
-        <div class="row">
-            <div class="col" style="flex: 2;"><label>Tournament Name</label><input type="text" id="catName"></div>
-            <div class="col ode-field"><label>Pod Size</label><input type="number" id="catPodSize" oninput="generatePrizeInputs()"></div>
-            <div class="col sch-field" style="display:none;"><label>Day / Hour</label><input type="text" id="catHour" placeholder="Ex: Sat - 14:00"></div>
-        </div>
-        <div class="row">
-            <div class="col ode-field"><label>Min Table</label><input type="number" id="catMinTable"></div>
-            <div class="col ode-field"><label>Max Table</label><input type="number" id="catMaxTable"></div>
-            <div class="col"><label>Entry Fee ($)</label><input type="number" id="catFee"></div>
-            <div class="col"><label>Cost ($)</label><input type="number" id="catCost"></div>
-        </div>
-
-        <div id="prizeConfigArea" class="prize-config-box" style="display:none;">
-            <label style="color: white; font-size: 0.8rem;">Tickets Reward per Position</label>
-            <div id="prizeInputsGrid" class="prize-grid"></div>
-        </div>
-
-        <button class="btn-blue" id="btnSaveCatalog" onclick="saveCatalog()" style="margin-top: 20px;">ADD TO CATALOG</button>
-        <button class="btn-red" id="btnCancelEdit" style="display:none; margin-top:10px;" onclick="cancelEdit()">CANCEL EDIT</button>
-    </div>
-
-    <div class="nav-buttons">
-        <button class="btn-nav" onclick="navTo('admin_ode.html')">STAFF ODE</button>
-        <button class="btn-nav" onclick="navTo('admin_sch.html')">STAFF SCH</button>
-        <button class="btn-nav" style="background: var(--gold); color: var(--dark); border: none;" onclick="navTo('final_report.html')">VIEW FINAL REPORT</button>
-    </div>
-
-    <div class="catalog-list" id="catalogList"></div>
     
-    <a href="javascript:void(0)" class="reset-link" onclick="openResetModal()">WIPE ALL EVENT DATA</a>
+    <div class="live-label"><div class="live-dot"></div> WAITING QUEUE</div>
+    <div id="waitingList" class="card-container"></div>
+</div>
+
+<div class="nav-footer">
+    <button onclick="navToTables()">VIEW TABLE MAP</button>
 </div>
 
 <script>
     const supabaseUrl = 'https://hocpoastnlcwgedvcyqs.supabase.co';
     const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhvY3BvYXN0bmxjd2dlZHZjeXFzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQyODU0MTYsImV4cCI6MjA4OTg2MTQxNn0.1MvvcFsnGW4e0Bj7mzoUKs_3bGM-eHDJTOqsvgKe-pI';
     const _supabase = supabase.createClient(supabaseUrl, supabaseKey);
-    const eventPrefix = new URLSearchParams(window.location.search).get('event');
-    let editCatalogId = null, catalogDataBackup = [];
+    const urlParams = new URLSearchParams(window.location.search);
+    let eventPrefix = urlParams.get('event') || localStorage.getItem('active_event_id');
+    let currentCatalog = [];
+    
+    let editingPod = null; 
 
-    window.onload = async () => {
+    window.onload = () => {
         if(!eventPrefix) return;
-        document.getElementById('eventId').value = eventPrefix;
-        const { data: identity } = await _supabase.from('tournament_history').select('*').eq('event_id', eventPrefix).eq('tournament_id', 0).single();
-        if(identity) {
-            document.getElementById('eventName').value = identity.event_name || "";
-            document.getElementById('eventDates').value = identity.event_dates || "";
-            document.getElementById('logoType').value = identity.logo_type || "REGIONAL";
-            if(identity.event_name) document.getElementById('setupSection').style.display = 'none';
+        if(sessionStorage.getItem('ode_auth') === 'true') {
+            document.getElementById('loginOverlay').style.display = 'none';
+            loadData();
         }
-        loadCatalog();
     };
 
-    function toggleCatFields() {
-        const type = document.getElementById('catType').value;
-        const prizeArea = document.getElementById('prizeConfigArea');
-        document.querySelectorAll('.ode-field').forEach(el => el.style.display = (type === 'ODE' ? 'flex' : 'none'));
-        document.querySelectorAll('.sch-field').forEach(el => el.style.display = (type === 'SCH' ? 'flex' : 'none'));
-        prizeArea.style.display = (type === 'ODE' ? 'block' : 'none');
-        if(type === 'ODE') generatePrizeInputs();
+    function checkLogin() {
+        const passInput = document.getElementById('passInput').value.toUpperCase().trim();
+        const masterPass = eventPrefix.substring(0,3).toUpperCase() + eventPrefix.substring(3,5) + "ODE";
+        if(passInput === masterPass) {
+            sessionStorage.setItem('ode_auth', 'true');
+            location.reload();
+        } else { alert("ACCESS DENIED."); }
     }
 
-    function generatePrizeInputs() {
-        const size = parseInt(document.getElementById('catPodSize').value) || 0;
-        const grid = document.getElementById('prizeInputsGrid');
-        grid.innerHTML = "";
+    function openPasswordModal() { document.getElementById('passwordModal').style.display = 'flex'; }
+    function closeModal(id) { document.getElementById(id).style.display = 'none'; }
+    
+    function confirmBack() {
+        const pass = document.getElementById('leadPassField').value.toUpperCase().trim();
+        if(pass === eventPrefix.toUpperCase() + "_LEAD") {
+            window.location.href = `admin_lead.html?event=${eventPrefix}`;
+        } else { alert("INCORRECT PASSWORD."); }
+    }
+
+    async function loadData() {
+        const { data: catalog } = await _supabase.from('tournament_catalog').select('*').eq('event_id', eventPrefix).eq('item_type', 'ODE');
+        currentCatalog = catalog || [];
+        if (!editingPod) {
+            filterTournaments();
+        }
+        updateWaitingList();
+    }
+
+    function filterTournaments() {
+        const currentSelection = document.getElementById('tourSelect').value;
+        const game = document.getElementById('gameSelect').value;
+        const select = document.getElementById('tourSelect');
+        select.innerHTML = '<option value="">-- SELECT TOURNAMENT --</option>';
+        const filtered = game ? currentCatalog.filter(c => c.game === game) : currentCatalog;
+        filtered.forEach(t => select.innerHTML += `<option value="${t.tname}" data-size="${t.pod_size || 4}">${t.tname}</option>`);
+        if(currentSelection) select.value = currentSelection;
+        updateGroupSizeOptions();
+    }
+
+    function updateGroupSizeOptions() {
+        const tname = document.getElementById('tourSelect').value;
+        const groupSelect = document.getElementById('groupSizeSelect');
+        const currentGroupSize = groupSelect.value;
+        groupSelect.innerHTML = "";
+        if(!tname) {
+            groupSelect.innerHTML = '<option value="1">1 Player</option>';
+            groupSelect.disabled = true;
+            document.getElementById('playersContainer').innerHTML = "";
+            return;
+        }
+        const size = parseInt(document.querySelector(`#tourSelect option[value="${tname}"]`).dataset.size);
         for(let i = 1; i <= size; i++) {
-            grid.innerHTML += `<div class="col"><label>${i}º Place</label><input type="number" class="prize-input" data-pos="${i}" value="0"></div>`;
+            groupSelect.innerHTML += `<option value="${i}">${i} Player${i > 1 ? 's' : ''}</option>`;
+        }
+        groupSelect.disabled = false;
+        if(currentGroupSize && currentGroupSize <= size) groupSelect.value = currentGroupSize;
+        renderPlayerInputs();
+    }
+
+    function renderPlayerInputs() {
+        const qty = parseInt(document.getElementById('groupSizeSelect').value) || 0;
+        const container = document.getElementById('playersContainer');
+        if(container.children.length === qty) return;
+
+        const currentIds = Array.from(document.querySelectorAll('.dyn-id')).map(el => el.value);
+        const currentNames = Array.from(document.querySelectorAll('.dyn-name')).map(el => el.value);
+        const currentPhones = Array.from(document.querySelectorAll('.dyn-phone')).map(el => el.value);
+
+        container.innerHTML = "";
+        for(let i = 1; i <= qty; i++) {
+            container.innerHTML += `
+                <div class="row">
+                    <div class="col" style="flex: 0.5; margin-bottom: 0;">
+                        <label>ID ${i}</label>
+                        <input type="number" class="dyn-id" id="dyn-id-${i}" autocomplete="off" onblur="fetchPlayerData(${i})">
+                    </div>
+                    <div class="col" style="flex: 1.5; margin-bottom: 0;">
+                        <label>Name ${i}</label>
+                        <input type="text" class="dyn-name" id="dyn-name-${i}" autocomplete="off">
+                    </div>
+                    <div class="col" style="flex: 1; margin-bottom: 0;">
+                        <label>WhatsApp</label>
+                        <input type="number" class="dyn-phone" id="dyn-phone-${i}" autocomplete="off">
+                    </div>
+                </div>`;
+        }
+
+        const newIds = document.querySelectorAll('.dyn-id');
+        const newNames = document.querySelectorAll('.dyn-name');
+        const newPhones = document.querySelectorAll('.dyn-phone');
+
+        for(let i = 0; i < Math.min(qty, currentIds.length); i++) {
+            newIds[i].value = currentIds[i] || '';
+            newNames[i].value = currentNames[i] || '';
+            newPhones[i].value = currentPhones[i] || '';
         }
     }
 
-    async function saveCatalog() {
-        const type = document.getElementById('catType').value;
-        const tname = document.getElementById('catName').value.trim();
-        if(!tname) return alert("Fill Tournament Name");
-        let prizeConfig = {}, totalTickets = 0;
-        if(type === 'ODE') {
-            document.querySelectorAll('.prize-input').forEach(inp => {
-                const val = parseInt(inp.value) || 0;
-                prizeConfig[inp.dataset.pos] = val;
-                totalTickets += val;
-            });
-        }
-        const payload = {
-            event_id: eventPrefix, item_type: type, game: document.getElementById('catGame').value,
-            tname: tname, tfee: parseFloat(document.getElementById('catFee').value) || 0,
-            tcost: parseFloat(document.getElementById('catCost').value) || 0, prizes_config: prizeConfig
-        };
-        if(type === 'ODE') {
-            payload.table_min = parseInt(document.getElementById('catMinTable').value) || 1;
-            payload.table_max = parseInt(document.getElementById('catMaxTable').value) || 999;
-            payload.pod_size = parseInt(document.getElementById('catPodSize').value) || 4;
-            payload.tickets_per_pod = totalTickets;
-        } else { payload.thour = document.getElementById('catHour').value.trim(); }
+    async function fetchPlayerData(index) {
+        const idField = document.getElementById(`dyn-id-${index}`);
+        const nameField = document.getElementById(`dyn-name-${index}`);
+        const phoneField = document.getElementById(`dyn-phone-${index}`);
+        const playerId = idField.value.trim();
 
-        const { error } = editCatalogId ? await _supabase.from('tournament_catalog').update(payload).eq('id', editCatalogId) : await _supabase.from('tournament_catalog').insert([payload]);
-        if(!error) { alert("Tournament Saved!"); cancelEdit(); loadCatalog(); }
+        if (!playerId) return;
+
+        const { data, error } = await _supabase
+            .from('ode_registrations')
+            .select('player_name, player_phone')
+            .eq('player_id', playerId)
+            .order('created_at', { ascending: false })
+            .limit(1);
+
+        if (!error && data && data.length > 0) {
+            if (!nameField.value) nameField.value = data[0].player_name || '';
+            if (!phoneField.value) phoneField.value = data[0].player_phone || '';
+        }
     }
 
-    async function loadCatalog() {
-        const { data } = await _supabase.from('tournament_catalog').select('*').eq('event_id', eventPrefix).order('id', { ascending: false });
-        catalogDataBackup = data || [];
-        document.getElementById('catalogList').innerHTML = catalogDataBackup.map(item => `
-            <div class="catalog-item"><div class="catalog-info"><strong>${item.item_type}</strong> [${item.game}] ${item.tname}</div>
-            <div><button class="btn-edit" onclick="editCatalogItem(${item.id})">EDIT</button><button class="btn-del" onclick="deleteCatalogItem(${item.id})">DEL</button></div></div>`).join('');
-    }
+    async function editPod(tname, podNum) {
+        const { data: players } = await _supabase
+            .from('ode_registrations')
+            .select('*')
+            .eq('event_id', eventPrefix)
+            .eq('tname', tname)
+            .eq('pod_number', podNum)
+            .eq('status', 'waiting')
+            .order('id', { ascending: true });
 
-    function editCatalogItem(id) {
-        const item = catalogDataBackup.find(c => c.id === id);
-        if(!item) return;
-        editCatalogId = item.id;
-        document.getElementById('catType').value = item.item_type;
-        toggleCatFields();
-        document.getElementById('catGame').value = item.game;
-        document.getElementById('catName').value = item.tname;
-        document.getElementById('catFee').value = item.tfee;
-        document.getElementById('catCost').value = item.tcost;
-        if(item.item_type === 'ODE') {
-            document.getElementById('catPodSize').value = item.pod_size;
-            generatePrizeInputs();
-            setTimeout(() => { Object.keys(item.prizes_config || {}).forEach(pos => {
-                const inp = document.querySelector(`.prize-input[data-pos="${pos}"]`);
-                if(inp) inp.value = item.prizes_config[pos];
-            }); }, 100);
+        if (!players || players.length === 0) return alert("Pod not found or already allocated.");
+
+        editingPod = { tname, podNum, players };
+
+        const tour = currentCatalog.find(c => c.tname === tname);
+        if (tour) {
+            document.getElementById('gameSelect').value = tour.game;
+            filterTournaments();
         }
+        document.getElementById('tourSelect').value = tname;
+        
+        document.getElementById('gameSelect').disabled = true;
+        document.getElementById('tourSelect').disabled = true;
+
+        updateGroupSizeOptions();
+        document.getElementById('groupSizeSelect').value = players.length;
+        renderPlayerInputs();
+
+        const ids = document.querySelectorAll('.dyn-id');
+        const names = document.querySelectorAll('.dyn-name');
+        const phones = document.querySelectorAll('.dyn-phone');
+
+        for (let i = 0; i < players.length; i++) {
+            ids[i].value = players[i].player_id || '';
+            names[i].value = players[i].player_name || '';
+            phones[i].value = players[i].player_phone || '';
+        }
+
+        const btnReg = document.getElementById('btnMainSubmit');
+        btnReg.innerText = "UPDATE POD";
+        btnReg.style.backgroundColor = "var(--blue)";
+        btnReg.style.color = "white";
+        
         document.getElementById('btnCancelEdit').style.display = 'block';
+
+        window.scrollTo({ top: 0, behavior: 'smooth' });
     }
 
-    function cancelEdit() { editCatalogId = null; location.reload(); }
-    async function deleteCatalogItem(id) { if(confirm("Delete Tournament?")) { await _supabase.from('tournament_catalog').delete().eq('id', id); loadCatalog(); } }
-    
-    function openResetModal() { document.getElementById('resetPassField').value = ""; document.getElementById('resetModal').style.display = 'flex'; }
-    function closeResetModal() { document.getElementById('resetModal').style.display = 'none'; }
-    
-    async function confirmReset() {
-        const pass = document.getElementById('resetPassField').value.toUpperCase().trim();
-        if (pass === eventPrefix.toUpperCase() + "_LEAD") {
-            if(confirm("FINAL WARNING: This will permanently erase ALL event data. Proceed?")) {
-                await _supabase.from('tournament_history').delete().eq('event_id', eventPrefix);
-                await _supabase.from('tournament_catalog').delete().eq('event_id', eventPrefix);
-                await _supabase.from('ode_registrations').delete().eq('event_id', eventPrefix);
-                window.location.href = "index.html";
+    function cancelEditMode() {
+        editingPod = null;
+        document.getElementById('gameSelect').disabled = false;
+        document.getElementById('tourSelect').disabled = false;
+        
+        document.getElementById('playersContainer').innerHTML = "";
+        document.getElementById('tourSelect').value = "";
+        document.getElementById('gameSelect').value = "";
+        filterTournaments();
+        
+        const btnReg = document.getElementById('btnMainSubmit');
+        btnReg.innerText = "REGISTER TO POD";
+        btnReg.style.backgroundColor = "var(--gold)";
+        btnReg.style.color = "var(--dark)";
+        
+        document.getElementById('btnCancelEdit').style.display = 'none';
+    }
+
+    async function submitRegistration() {
+        const tname = document.getElementById('tourSelect').value;
+        if(!tname) return alert("Select tournament first.");
+        const tour = currentCatalog.find(c => c.tname === tname);
+        if(!tour) return alert("Tournament data not found in catalog.");
+        
+        const podLimit = parseInt(document.querySelector(`#tourSelect option[value="${tname}"]`).dataset.size);
+        const groupSize = parseInt(document.getElementById('groupSizeSelect').value);
+        const ids = document.querySelectorAll('.dyn-id');
+        const names = document.querySelectorAll('.dyn-name');
+        const phones = document.querySelectorAll('.dyn-phone');
+        const formPlayers = [];
+        
+        for(let i = 0; i < groupSize; i++) {
+            if(!ids[i].value || !names[i].value) return alert("Fill ID and Name for all players.");
+            formPlayers.push({ id: ids[i].value, name: names[i].value, phone: phones[i].value });
+        }
+        
+        if (editingPod) {
+            const dbPlayers = editingPod.players;
+            const podNum = editingPod.podNum;
+
+            document.getElementById('btnMainSubmit').disabled = true;
+
+            for (let i = 0; i < formPlayers.length; i++) {
+                const p = formPlayers[i];
+                if (i < dbPlayers.length) {
+                    await _supabase.from('ode_registrations')
+                        .update({ player_id: p.id, player_name: p.name, player_phone: p.phone })
+                        .eq('id', dbPlayers[i].id);
+                } else {
+                    await _supabase.from('ode_registrations')
+                        .insert([{ event_id: eventPrefix, player_id: p.id, player_name: p.name, player_phone: p.phone, tname: tname, status: 'waiting', pod_number: podNum }]);
+                }
             }
-        } else { alert("INCORRECT PASSWORD"); }
+
+            if (formPlayers.length < dbPlayers.length) {
+                for (let i = formPlayers.length; i < dbPlayers.length; i++) {
+                    await _supabase.from('ode_registrations').delete().eq('id', dbPlayers[i].id);
+                }
+            }
+
+            document.getElementById('btnMainSubmit').disabled = false;
+            alert("Pod Updated Successfully!");
+            cancelEditMode();
+            loadData();
+
+        } else {
+            const { data: podNum, error: rpcError } = await _supabase.rpc('get_pod_for_group', { 
+                p_event_id: eventPrefix, 
+                p_tname: tname, 
+                p_pod_limit: podLimit, 
+                p_group_size: groupSize, 
+                p_min_table: tour.table_min || 1, 
+                p_max_table: tour.table_max || 9999 
+            });
+            
+            if(rpcError) return alert("Error finding pod/table: " + rpcError.message);
+            
+            const inserts = formPlayers.map(p => ({ event_id: eventPrefix, player_id: p.id, player_name: p.name, player_phone: p.phone, tname: tname, status: 'waiting', pod_number: podNum }));
+            const { error } = await _supabase.from('ode_registrations').insert(inserts);
+            
+            if(!error) {
+                loadData(); 
+                document.getElementById('playersContainer').innerHTML = "";
+                document.getElementById('tourSelect').value = "";
+                updateGroupSizeOptions();
+                alert("Registration Successful!");
+            } else {
+                alert("Error registering: " + error.message);
+            }
+        }
     }
 
-    function navTo(page) { window.location.href = `${page}?event=${eventPrefix}`; }
-    
-    async function setupTables() {
-        const qty = parseInt(document.getElementById('totalTables').value);
-        if(!qty) return alert("Enter number of tables");
-        const { data: ex } = await _supabase.from('event_tables').select('table_number').eq('event_id', eventPrefix).order('table_number', {desc:true});
-        const last = ex?.[0]?.table_number || 0;
-        let news = [];
-        for(let i=last+1; i<=qty; i++) news.push({event_id: eventPrefix, table_number: i, status: 'FREE'});
-        await _supabase.from('event_tables').insert(news);
-        alert("Tables infrastructure updated!");
+    async function updateWaitingList() {
+        const { data: regs } = await _supabase.from('ode_registrations').select('*').eq('event_id', eventPrefix).eq('status', 'waiting').order('pod_number', { ascending: true });
+        const listDiv = document.getElementById('waitingList');
+        listDiv.innerHTML = "";
+        if(!regs || regs.length === 0) { listDiv.innerHTML = "<p style='opacity:0.5; text-align:center;'>No players in queue.</p>"; return; }
+        const groups = {};
+        regs.forEach(r => { const key = `${r.tname}|${r.pod_number}`; groups[key] = (groups[key] || 0) + 1; });
+        for (const [key, count] of Object.entries(groups)) {
+            const [tname, podNum] = key.split('|');
+            const tourInfo = currentCatalog.find(c => c.tname === tname);
+            const targetSize = tourInfo ? tourInfo.pod_size : 4;
+            
+            const gamePrefix = tourInfo && tourInfo.game ? `[${tourInfo.game}] ` : '';
+
+            listDiv.innerHTML += `
+                <div class="pod-card-3d">
+                    <div class="pod-info-3d"><b>${gamePrefix}${tname}</b><small>POD #${podNum}</small></div>
+                    <div style="display:flex; align-items:center;">
+                        <div class="pill-blue">${count} / ${targetSize} PLAYERS</div>
+                        <button class="btn-edit-pod" onclick="editPod('${tname}', ${podNum})">EDIT</button>
+                    </div>
+                </div>`;
+        }
     }
 
-    async function saveEventAnchor() {
-        const payload = { event_id: eventPrefix, tournament_id: 0, event_name: document.getElementById('eventName').value, event_dates: document.getElementById('eventDates').value, logo_type: document.getElementById('logoType').value, tournament_name: 'SYSTEM_ANCHOR' };
-        await _supabase.from('tournament_history').upsert(payload, { onConflict: 'event_id, tournament_id' });
-        location.reload();
-    }
+    function navToTables() { window.location.href = `admin_tables.html?event=${eventPrefix}`; }
+
+    _supabase.channel('any').on('postgres_changes', { event: '*', schema: 'public', table: 'ode_registrations' }, loadData).subscribe();
+    _supabase.channel('catalog_sync').on('postgres_changes', { event: '*', schema: 'public', table: 'tournament_catalog' }, loadData).subscribe();
+
+    setInterval(() => { loadData(); }, 30000); 
 </script>
 </body>
 </html>
