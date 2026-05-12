@@ -192,8 +192,19 @@
         };
         if(!payload.product_name) return alert("Product name is required.");
 
-        if(editId) { await _supabase.from('prize_inventory').update(payload).eq('id', editId); }
-        else { await _supabase.from('prize_inventory').insert([payload]); }
+        let dbError;
+        if(editId) { 
+            const { error } = await _supabase.from('prize_inventory').update(payload).eq('id', editId); 
+            dbError = error;
+        } else { 
+            const { error } = await _supabase.from('prize_inventory').insert([payload]); 
+            dbError = error;
+        }
+        
+        if (dbError) {
+            alert("Database Error: " + dbError.message);
+            return;
+        }
         
         cancelEdit(); loadInventory(); alert("Saved!");
     }
