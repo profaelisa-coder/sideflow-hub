@@ -24,6 +24,7 @@
         button { width: 100%; padding: 14px; border-radius: 8px; border: none; font-weight: bold; text-transform: uppercase; cursor: pointer; transition: 0.3s; font-size: 0.9rem; }
         button:hover { filter: brightness(1.1); }
         .btn-reg { background: var(--gold); color: var(--dark); margin-top: 5px; }
+        .btn-blue { background: var(--blue); color: var(--dark); margin-top: 10px; }
         
         .btn-cancel-edit { background: var(--red); color: white; margin-top: 5px; display: none; }
         .btn-edit-pod { background: var(--gold); color: var(--dark); padding: 5px 10px; border-radius: 6px; border: none; font-weight: bold; cursor: pointer; font-size: 0.7rem; margin-left: 10px; width: auto; }
@@ -74,6 +75,42 @@
     </div>
 </div>
 
+<div id="schModal" class="modal">
+    <div class="modal-content">
+        <h3 style="color: var(--gold); margin-top: 0;">SCH PAYMENT</h3>
+        <div class="row">
+            <div class="col" style="flex: 1;">
+                <label>ID</label>
+                <input type="number" id="sch-id" autocomplete="off" onblur="fetchSchPlayerData()">
+            </div>
+            <div class="col" style="flex: 2;">
+                <label>Name</label>
+                <input type="text" id="sch-name" autocomplete="off">
+            </div>
+        </div>
+        <div class="row">
+            <div class="col">
+                <label>SCH Tournament</label>
+                <select id="sch-tourSelect"></select>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col">
+                <label>Payment Method</label>
+                <select id="sch-pay">
+                    <option value="CREDIT CARD">Credit Card</option>
+                    <option value="DEBIT CARD">Debit Card</option>
+                    <option value="PIX">PIX</option>
+                </select>
+            </div>
+        </div>
+        <div class="row" style="margin-top: 15px;">
+            <button class="btn-reg" onclick="submitSchPayment()" style="margin-top:0;">REGISTER PAYMENT</button>
+            <button style="background: var(--red); color: white; margin-top:0;" onclick="closeModal('schModal')">CANCEL</button>
+        </div>
+    </div>
+</div>
+
 <div class="container">
     <div class="header-top">
         <h2>TOURNAMENT REGISTRATION ODE</h2>
@@ -105,22 +142,9 @@
         </div>
         
         <div id="playersContainer"></div>
-
-        <div class="row" style="margin-top: 15px;">
-            <div class="col">
-                <label>Payment Method</label>
-                <select id="paymentMethod">
-                    <option value="">-- SELECT PAYMENT METHOD --</option>
-                    <option value="CREDIT">Credit Card</option>
-                    <option value="DEBIT">Debit Card</option>
-                    <option value="CASH">Cash</option>
-                    <option value="PIX">PIX</option>
-                    <option value="TICKETS">Store Credit / Tickets</option>
-                </select>
-            </div>
-        </div>
         
         <button class="btn-reg" id="btnMainSubmit" onclick="submitRegistration()">REGISTER TO POD</button>
+        <button class="btn-blue" onclick="openSchModal()">SCH PAYMENT</button>
         <button class="btn-cancel-edit" id="btnCancelEdit" onclick="cancelEditMode()">CANCEL EDIT</button>
     </div>
     
@@ -138,8 +162,9 @@
     const _supabase = supabase.createClient(supabaseUrl, supabaseKey);
     const urlParams = new URLSearchParams(window.location.search);
     let eventPrefix = urlParams.get('event') || localStorage.getItem('active_event_id');
-    let currentCatalog = [];
     
+    let currentCatalog = [];
+    let schCatalog = []; 
     let editingPod = null; 
 
     window.onload = () => {
@@ -170,8 +195,11 @@
     }
 
     async function loadData() {
-        const { data: catalog } = await _supabase.from('tournament_catalog').select('*').eq('event_id', eventPrefix).eq('item_type', 'ODE');
-        currentCatalog = catalog || [];
+        const { data: catalog } = await _supabase.from('tournament_catalog').select('*').eq('event_id', eventPrefix);
+        
+        currentCatalog = catalog.filter(c => c.item_type === 'ODE') || [];
+        schCatalog = catalog.filter(c => c.item_type === 'SCH') || [];
+
         if (!editingPod) {
             filterTournaments();
         }
@@ -184,11 +212,7 @@
         const select = document.getElementById('tourSelect');
         select.innerHTML = '<option value="">-- SELECT TOURNAMENT --</option>';
         const filtered = game ? currentCatalog.filter(c => c.game === game) : currentCatalog;
-        
         filtered.forEach(t => select.innerHTML += `<option value="${t.tname}" data-size="${t.pod_size || 4}">${t.tname}</option>`);
-        
-        select.innerHTML += `<option value="[EXT] SCH PAYMENT" data-size="1" style="font-weight: bold; color: var(--gold);">[EXT] SCH PAYMENT</option>`;
-        
         if(currentSelection) select.value = currentSelection;
         updateGroupSizeOptions();
     }
@@ -198,17 +222,13 @@
         const groupSelect = document.getElementById('groupSizeSelect');
         const currentGroupSize = groupSelect.value;
         groupSelect.innerHTML = "";
-        
         if(!tname) {
             groupSelect.innerHTML = '<option value="1">1 Player</option>';
             groupSelect.disabled = true;
             document.getElementById('playersContainer').innerHTML = "";
             return;
         }
-        
-        const selectedOption = document.querySelector(`#tourSelect option[value="${tname.replace(/"/g, '\\"')}"]`);
-        const size = parseInt(selectedOption.dataset.size);
-        
+        const size = parseInt(document.querySelector(`#tourSelect option[value="${tname}"]`).dataset.size);
         for(let i = 1; i <= size; i++) {
             groupSelect.innerHTML += `<option value="${i}">${i} Player${i > 1 ? 's' : ''}</option>`;
         }
@@ -225,6 +245,7 @@
         const currentIds = Array.from(document.querySelectorAll('.dyn-id')).map(el => el.value);
         const currentNames = Array.from(document.querySelectorAll('.dyn-name')).map(el => el.value);
         const currentPhones = Array.from(document.querySelectorAll('.dyn-phone')).map(el => el.value);
+        const currentPays = Array.from(document.querySelectorAll('.dyn-pay')).map(el => el.value);
 
         container.innerHTML = "";
         for(let i = 1; i <= qty; i++) {
@@ -239,6 +260,14 @@
                         <input type="text" class="dyn-name" id="dyn-name-${i}" autocomplete="off">
                     </div>
                     <div class="col" style="flex: 1; margin-bottom: 0;">
+                        <label>Payment</label>
+                        <select class="dyn-pay" id="dyn-pay-${i}">
+                            <option value="CREDIT CARD">Credit Card</option>
+                            <option value="DEBIT CARD">Debit Card</option>
+                            <option value="PIX">PIX</option>
+                        </select>
+                    </div>
+                    <div class="col" style="flex: 1; margin-bottom: 0;">
                         <label>WhatsApp</label>
                         <input type="number" class="dyn-phone" id="dyn-phone-${i}" autocomplete="off">
                     </div>
@@ -248,11 +277,13 @@
         const newIds = document.querySelectorAll('.dyn-id');
         const newNames = document.querySelectorAll('.dyn-name');
         const newPhones = document.querySelectorAll('.dyn-phone');
+        const newPays = document.querySelectorAll('.dyn-pay');
 
         for(let i = 0; i < Math.min(qty, currentIds.length); i++) {
             newIds[i].value = currentIds[i] || '';
             newNames[i].value = currentNames[i] || '';
             newPhones[i].value = currentPhones[i] || '';
+            newPays[i].value = currentPays[i] || 'CREDIT CARD';
         }
     }
 
@@ -274,6 +305,58 @@
         if (!error && data && data.length > 0) {
             if (!nameField.value) nameField.value = data[0].player_name || '';
             if (!phoneField.value) phoneField.value = data[0].player_phone || '';
+        }
+    }
+
+    function openSchModal() {
+        const sel = document.getElementById('sch-tourSelect');
+        sel.innerHTML = '<option value="">-- SELECT SCH TOURNAMENT --</option>';
+        schCatalog.forEach(t => sel.innerHTML += `<option value="${t.tname}">${t.tname}</option>`);
+        
+        document.getElementById('sch-id').value = "";
+        document.getElementById('sch-name').value = "";
+        document.getElementById('sch-pay').value = "CREDIT CARD";
+        
+        document.getElementById('schModal').style.display = 'flex';
+    }
+
+    async function fetchSchPlayerData() {
+        const idField = document.getElementById('sch-id');
+        const nameField = document.getElementById('sch-name');
+        const playerId = idField.value.trim();
+        if (!playerId) return;
+
+        const { data } = await _supabase.from('ode_registrations').select('player_name').eq('player_id', playerId).order('created_at', { ascending: false }).limit(1);
+        if (data && data.length > 0 && !nameField.value) {
+            nameField.value = data[0].player_name || '';
+        }
+    }
+
+    async function submitSchPayment() {
+        const id = document.getElementById('sch-id').value.trim();
+        const name = document.getElementById('sch-name').value.trim();
+        const tname = document.getElementById('sch-tourSelect').value;
+        const pay = document.getElementById('sch-pay').value;
+
+        if(!id || !name || !tname) return alert("Fill ID, Name and select a Tournament.");
+
+        const payload = {
+            event_id: eventPrefix,
+            player_id: id,
+            player_name: name,
+            tname: tname,
+            status: 'finished', 
+            pod_number: 9999, 
+            payment_method: pay
+        };
+
+        const { error } = await _supabase.from('ode_registrations').insert([payload]);
+        
+        if(error) {
+            alert("Error: " + error.message);
+        } else {
+            alert("SCH Payment Registered Successfully!");
+            closeModal('schModal');
         }
     }
 
@@ -308,11 +391,13 @@
         const ids = document.querySelectorAll('.dyn-id');
         const names = document.querySelectorAll('.dyn-name');
         const phones = document.querySelectorAll('.dyn-phone');
+        const pays = document.querySelectorAll('.dyn-pay');
 
         for (let i = 0; i < players.length; i++) {
             ids[i].value = players[i].player_id || '';
             names[i].value = players[i].player_name || '';
             phones[i].value = players[i].player_phone || '';
+            pays[i].value = players[i].payment_method || 'CREDIT CARD';
         }
 
         const btnReg = document.getElementById('btnMainSubmit');
@@ -333,7 +418,6 @@
         document.getElementById('playersContainer').innerHTML = "";
         document.getElementById('tourSelect').value = "";
         document.getElementById('gameSelect').value = "";
-        document.getElementById('paymentMethod').value = "";
         filterTournaments();
         
         const btnReg = document.getElementById('btnMainSubmit');
@@ -347,19 +431,20 @@
     async function submitRegistration() {
         const tname = document.getElementById('tourSelect').value;
         if(!tname) return alert("Select tournament first.");
+        const tour = currentCatalog.find(c => c.tname === tname);
+        if(!tour) return alert("Tournament data not found in catalog.");
         
-        const paymentMethod = document.getElementById('paymentMethod').value;
-        if(!paymentMethod && !editingPod) return alert("Select Payment Method!");
-
+        const podLimit = parseInt(document.querySelector(`#tourSelect option[value="${tname}"]`).dataset.size);
         const groupSize = parseInt(document.getElementById('groupSizeSelect').value);
         const ids = document.querySelectorAll('.dyn-id');
         const names = document.querySelectorAll('.dyn-name');
         const phones = document.querySelectorAll('.dyn-phone');
+        const pays = document.querySelectorAll('.dyn-pay');
         const formPlayers = [];
         
         for(let i = 0; i < groupSize; i++) {
             if(!ids[i].value || !names[i].value) return alert("Fill ID and Name for all players.");
-            formPlayers.push({ id: ids[i].value, name: names[i].value, phone: phones[i].value });
+            formPlayers.push({ id: ids[i].value, name: names[i].value, phone: phones[i].value, pay: pays[i].value });
         }
         
         if (editingPod) {
@@ -371,14 +456,12 @@
             for (let i = 0; i < formPlayers.length; i++) {
                 const p = formPlayers[i];
                 if (i < dbPlayers.length) {
-                    let updateData = { player_id: p.id, player_name: p.name, player_phone: p.phone };
-                    if (paymentMethod) updateData.payment_method = paymentMethod;
-                    await _supabase.from('ode_registrations').update(updateData).eq('id', dbPlayers[i].id);
+                    await _supabase.from('ode_registrations')
+                        .update({ player_id: p.id, player_name: p.name, player_phone: p.phone, payment_method: p.pay })
+                        .eq('id', dbPlayers[i].id);
                 } else {
-                    await _supabase.from('ode_registrations').insert([{ 
-                        event_id: eventPrefix, player_id: p.id, player_name: p.name, player_phone: p.phone, 
-                        tname: tname, status: 'waiting', pod_number: podNum, payment_method: paymentMethod 
-                    }]);
+                    await _supabase.from('ode_registrations')
+                        .insert([{ event_id: eventPrefix, player_id: p.id, player_name: p.name, player_phone: p.phone, tname: tname, status: 'waiting', pod_number: podNum, payment_method: p.pay }]);
                 }
             }
 
@@ -394,50 +477,29 @@
             loadData();
 
         } else {
-            let podNum = 1;
-            let currentCount = 0;
-            let podLimit = 1;
+            const { data: podNum, error: rpcError } = await _supabase.rpc('get_pod_for_group', { 
+                p_event_id: eventPrefix, 
+                p_tname: tname, 
+                p_pod_limit: podLimit, 
+                p_group_size: groupSize, 
+                p_min_table: tour.table_min || 1, 
+                p_max_table: tour.table_max || 9999 
+            });
             
-            if (tname !== "[EXT] SCH PAYMENT") {
-                const selectedOption = document.querySelector(`#tourSelect option[value="${tname.replace(/"/g, '\\"')}"]`);
-                podLimit = parseInt(selectedOption.dataset.size);
-                
-                const { data: existing } = await _supabase.from('ode_registrations')
-                    .select('pod_number').eq('event_id', eventPrefix).eq('tname', tname).eq('status', 'waiting');
-                
-                if (existing && existing.length > 0) {
-                    podNum = Math.max(...existing.map(e => e.pod_number));
-                    currentCount = existing.filter(p => p.pod_number === podNum).length;
-                    
-                    if (currentCount + groupSize > podLimit) {
-                        podNum++;
-                        currentCount = 0;
-                    }
-                }
-            } else {
-                podNum = 9999; 
-            }
+            if(rpcError) return alert("Error finding pod/table: " + rpcError.message);
             
-            const insertStatus = tname === "[EXT] SCH PAYMENT" ? 'finished' : 'waiting';
             const inserts = formPlayers.map(p => ({ 
                 event_id: eventPrefix, player_id: p.id, player_name: p.name, player_phone: p.phone, 
-                tname: tname, status: insertStatus, pod_number: podNum, payment_method: paymentMethod 
+                tname: tname, status: 'waiting', pod_number: podNum, payment_method: p.pay 
             }));
-            
             const { error } = await _supabase.from('ode_registrations').insert(inserts);
             
             if(!error) {
                 loadData(); 
                 document.getElementById('playersContainer').innerHTML = "";
                 document.getElementById('tourSelect').value = "";
-                document.getElementById('paymentMethod').value = "";
                 updateGroupSizeOptions();
-                
-                if (tname !== "[EXT] SCH PAYMENT" && (currentCount + groupSize === podLimit)) {
-                    alert(`POD #${podNum} IS FULL! Vá ao Mapa para alocar a mesa.`);
-                } else {
-                    alert("Registration Successful!");
-                }
+                alert("Registration Successful!");
             } else {
                 alert("Error registering: " + error.message);
             }
@@ -463,13 +525,13 @@
                     <div class="pod-info-3d"><b>${gamePrefix}${tname}</b><small>POD #${podNum}</small></div>
                     <div style="display:flex; align-items:center;">
                         <div class="pill-blue">${count} / ${targetSize} PLAYERS</div>
-                        <button class="btn-edit-pod" onclick="editPod('${tname.replace(/'/g, "\\'")}', ${podNum})">EDIT</button>
+                        <button class="btn-edit-pod" onclick="editPod('${tname}', ${podNum})">EDIT</button>
                     </div>
                 </div>`;
         }
     }
 
-    function navToTables() { window.location.href = `admin_map.html?event=${eventPrefix}`; }
+    function navToTables() { window.location.href = `admin_tables.html?event=${eventPrefix}`; }
 
     _supabase.channel('any').on('postgres_changes', { event: '*', schema: 'public', table: 'ode_registrations' }, loadData).subscribe();
     _supabase.channel('catalog_sync').on('postgres_changes', { event: '*', schema: 'public', table: 'tournament_catalog' }, loadData).subscribe();
