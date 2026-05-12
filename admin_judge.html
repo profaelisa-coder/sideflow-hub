@@ -1,95 +1,4 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SideFlow - Judge Area</title>
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <style>
-        :root { --bg: #1A4B84; --sec: #2B6CB0; --gold: #ffb703; --white: #e0e1dd; --blue: #63B3ED; --red: #e63946; --dark: #0A2540; }
-        body { font-family: 'Segoe UI', sans-serif; background: var(--bg); color: var(--white); margin: 0; padding: 20px; display: flex; flex-direction: column; align-items: center; }
-        .container { width: 100%; max-width: 600px; padding-bottom: 80px; }
-        .box { background: var(--sec); padding: 25px; border-radius: 12px; margin-bottom: 25px; border-bottom: 4px solid var(--gold); box-shadow: 0 8px 25px rgba(0,0,0,0.3); }
-        h2 { color: var(--gold); text-align: center; text-transform: uppercase; letter-spacing: 1px; }
-        h3 { border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 10px; margin-top: 0; font-size: 1.1rem; text-transform: uppercase; color: var(--gold); }
-        label { font-size: 0.75rem; font-weight: bold; margin-bottom: 5px; color: var(--gold); text-transform: uppercase; display: block; }
-        input, select { width: 100%; padding: 15px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.1); background: var(--dark); color: white; box-sizing: border-box; font-size: 1.1rem; margin-bottom: 10px; }
-        button { padding: 15px; border-radius: 8px; border: none; font-weight: bold; text-transform: uppercase; cursor: pointer; transition: 0.3s; width: 100%; font-size: 1rem; }
-        .btn-gold { background: var(--gold); color: var(--dark); }
-        .btn-blue { background: var(--blue); color: var(--dark); }
-        .btn-red { background: var(--red); color: white; }
-        
-        /* Lista de Jogadores */
-        .player-card { background: rgba(0,0,0,0.2); padding: 15px; border-radius: 8px; margin-bottom: 10px; border-left: 4px solid var(--blue); }
-        .player-card b { display: block; font-size: 1rem; margin-bottom: 5px; }
-        .player-card span { font-size: 0.8rem; opacity: 0.8; }
-
-        /* Botão Fixo Mapa */
-        .btn-map-fixed { position: fixed; bottom: 20px; right: 20px; width: 60px; height: 60px; border-radius: 50%; background: var(--gold); color: var(--dark); font-size: 1.5rem; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 15px rgba(0,0,0,0.5); border: none; cursor: pointer; z-index: 1000; }
-
-        #loginOverlay { position: fixed; top:0; left:0; width:100%; height:100%; background: var(--bg); display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 2000; }
-        #loginOverlay input { width: 250px; text-align: center; }
-    </style>
-</head>
-<body>
-
-<div id="loginOverlay">
-    <h2>JUDGE ACCESS</h2>
-    <input type="password" id="passInput" placeholder="ENTER ACCESS CODE">
-    <button onclick="checkLogin()" class="btn-gold" style="width: 250px; margin-top: 15px;">UNLOCK</button>
-</div>
-
-<button class="btn-map-fixed" onclick="window.open('admin_map.html?event='+eventPrefix, '_blank')">🗺️</button>
-
-<div class="container" id="mainContent" style="display:none;">
-    <h2>Judge Control</h2>
-
-    <div class="box">
-        <h3>SEARCH TABLE</h3>
-        <label>Physical Table Number</label>
-        <input type="number" id="tableNum" placeholder="Ex: 24" inputmode="numeric">
-        <button class="btn-blue" onclick="findTable()">FIND POD</button>
-    </div>
-
-    <div id="podArea" style="display: none;">
-        <div class="box">
-            <h3 id="displayTour">---</h3>
-            <p id="displayPod" style="text-align: center; margin-top: -10px; opacity: 0.7;">Pod #--</p>
-            
-            <div id="playersList"></div>
-
-            <button class="btn-gold" id="btnSave" style="margin-top: 20px;" onclick="saveResults()">SAVE RESULTS & FREE TABLE</button>
-        </div>
-    </div>
-</div>
-
-<script>
-    const supabaseUrl = 'https://hocpoastnlcwgedvcyqs.supabase.co';
-    const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhvY3BvYXN0bmxjd2dlZHZjeXFzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQyODU0MTYsImV4cCI6MjA4OTg2MTQxNn0.1MvvcFsnGW4e0Bj7mzoUKs_3bGM-eHDJTOqsvgKe-pI';
-    const _supabase = supabase.createClient(supabaseUrl, supabaseKey);
-    const eventPrefix = new URLSearchParams(window.location.search).get('event');
-
-    let currentTable = null;
-    let currentPodPlayers = [];
-    let currentTourConfig = null;
-
-    window.onload = () => {
-        // Se for o Lead vindo da admin_lead, já está autorizado
-        if(sessionStorage.getItem('jdg_auth') === 'true') {
-            document.getElementById('loginOverlay').style.display = 'none';
-            document.getElementById('mainContent').style.display = 'block';
-        }
-    };
-
-    function checkLogin() {
-        const pass = document.getElementById('passInput').value.toUpperCase().trim();
-        if(pass === eventPrefix.toUpperCase() + "_JDG") {
-            sessionStorage.setItem('jdg_auth', 'true');
-            location.reload();
-        } else { alert("ACCESS DENIED"); }
-    }
-
-    async function findTable() {
+async function findTable() {
         const tNum = document.getElementById('tableNum').value;
         if(!tNum) return;
 
@@ -98,25 +7,34 @@
             .select('*').eq('event_id', eventPrefix).eq('table_number', tNum).single();
 
         if(tErr || !table || table.status === 'FREE') return alert("Mesa vazia ou não encontrada.");
+        
+        // SEGURANÇA: Verifica se o Pod Number existe na mesa
+        if(!table.pod_number) return alert("Erro: Esta mesa está ocupada mas não tem um número de Pod associado.");
 
         currentTable = table;
 
-        // 2. Busca configuração de prêmios do catálogo
+        // 2. Busca configuração de prêmios
         const { data: catalog } = await _supabase.from('tournament_catalog')
             .select('*').eq('event_id', eventPrefix).eq('tname', table.tournament_name).single();
         
         currentTourConfig = catalog;
 
         // 3. Busca jogadores do Pod
-        const { data: players } = await _supabase.from('ode_registrations')
+        const { data: players, error: pErr } = await _supabase.from('ode_registrations')
             .select('*').eq('event_id', eventPrefix).eq('tname', table.tournament_name)
             .eq('pod_number', table.pod_number).eq('status', 'waiting');
+
+        if(pErr || !players || players.length === 0) {
+            return alert("Nenhum jogador 'waiting' encontrado para o Pod #" + table.pod_number);
+        }
 
         currentPodPlayers = players;
         renderPlayers();
     }
 
     function renderPlayers() {
+        if(!currentPodPlayers) return; // Evita o erro de 'map' do console
+        
         document.getElementById('displayTour').innerText = currentTable.tournament_name;
         document.getElementById('displayPod').innerText = "Pod #" + currentTable.pod_number;
         
@@ -127,7 +45,7 @@
                 <span>ID: ${p.player_id}</span>
                 <select id="rank-${idx}" style="margin-top: 10px; margin-bottom: 0;">
                     <option value="">-- SET RANK --</option>
-                    ${Array.from({length: currentTourConfig.pod_size || 4}, (_, i) => `<option value="${i+1}">${i+1}º Place</option>`).join('')}
+                    ${Array.from({length: (currentTourConfig ? currentTourConfig.pod_size : 4)}, (_, i) => `<option value="${i+1}">${i+1}º Place</option>`).join('')}
                     <option value="99">Dropped / No Prize</option>
                 </select>
             </div>
@@ -135,65 +53,3 @@
 
         document.getElementById('podArea').style.display = 'block';
     }
-
-    async function saveResults() {
-        const btn = document.getElementById('btnSave');
-        const transactions = [];
-
-        // Validação
-        for(let i=0; i < currentPodPlayers.length; i++) {
-            const rank = document.getElementById(`rank-${i}`).value;
-            if(!rank) return alert("Por favor, defina a posição de todos os jogadores.");
-            
-            const prizeAmt = (currentTourConfig.prizes_config && currentTourConfig.prizes_config[rank]) || 0;
-            
-            if(prizeAmt > 0) {
-                transactions.push({
-                    event_id: eventPrefix,
-                    player_id: currentPodPlayers[i].player_id,
-                    player_name: currentPodPlayers[i].player_name,
-                    amount: parseInt(prizeAmt),
-                    source_type: 'ODE',
-                    description: `${rank}º Lugar - ${currentTourConfig.tname}`
-                });
-            }
-        }
-
-        if(!confirm("Confirmar encerramento do Pod? Isso creditará os tickets e liberará a mesa.")) return;
-
-        btn.disabled = true;
-        btn.innerText = "SAVING...";
-
-        try {
-            // 1. Salva as transações (Tickets)
-            if(transactions.length > 0) {
-                const { error: errTrans } = await _supabase.from('player_transactions').insert(transactions);
-                if(errTrans) throw new Error("Erro ao salvar tickets: " + errTrans.message);
-            }
-
-            // 2. Atualiza os jogadores para 'finished'
-            for(const p of currentPodPlayers) {
-                await _supabase.from('ode_registrations').update({ status: 'finished' }).eq('id', p.id);
-            }
-
-            // 3. Libera a mesa
-            const { error: errTable } = await _supabase.from('event_tables').update({
-                status: 'FREE',
-                tournament_name: null,
-                pod_number: null
-            }).eq('event_id', eventPrefix).eq('table_number', currentTable.table_number);
-
-            if(errTable) throw new Error("Erro ao liberar mesa: " + errTable.message);
-
-            alert("POD FINALIZADO COM SUCESSO!");
-            location.reload();
-
-        } catch (e) {
-            alert("ERRO CRÍTICO: " + e.message);
-            btn.disabled = false;
-            btn.innerText = "SAVE RESULTS & FREE TABLE";
-        }
-    }
-</script>
-</body>
-</html>
