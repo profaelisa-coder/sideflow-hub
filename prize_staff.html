@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SideFlow - Prize Staff</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        :root { --bg: #1A4B84; --sec: #2B6CB0; --gold: #ffb703; --white: #e0e1dd; --blue: #63B3ED; --red: #e63946; --dark: #0A2540; --green: #2ecc71; }
+        body { font-family: 'Segoe UI', sans-serif; background: var(--bg); color: var(--white); margin: 0; padding: 20px; display: flex; flex-direction: column; align-items: center; }
+        .container { width: 100%; max-width: 600px; padding-bottom: 50px; }
+        .box { background: var(--sec); padding: 20px; border-radius: 12px; margin-bottom: 20px; border-bottom: 4px solid var(--gold); box-shadow: 0 8px 25px rgba(0,0,0,0.3); }
+        h2 { color: var(--gold); text-align: center; text-transform: uppercase; margin-bottom: 20px; }
+        h3 { border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 10px; margin-top: 0; font-size: 1rem; text-transform: uppercase; color: var(--gold); }
+        label { font-size: 0.75rem; font-weight: bold; margin-bottom: 5px; color: var(--gold); text-transform: uppercase; }
+        input, select { width: 100%; padding: 12px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.1); background: var(--dark); color: white; box-sizing: border-box; font-size: 1.1rem; }
+        button { padding: 15px; border-radius: 8px; border: none; font-weight: bold; text-transform: uppercase; cursor: pointer; transition: 0.3s; }
+        .btn-gold { background: var(--gold); color: var(--dark); width: 100%; }
+        .btn-blue { background: var(--blue); color: var(--dark); width: 100%; }
+        .btn-green { background: var(--green); color: white; width: 100%; font-size: 1rem; }
+        
+        .player-info { background: var(--dark); padding: 15px; border-radius: 8px; text-align: center; border: 1px solid var(--blue); margin-bottom: 20px; }
+        .balance-val { font-size: 2rem; color: var(--gold); display: block; font-weight: bold; }
+        
+        .product-row { display: grid; grid-template-columns: 1fr 60px 80px; gap: 10px; align-items: center; padding: 12px; background: rgba(0,0,0,0.2); border-radius: 8px; margin-bottom: 8px; border-left: 4px solid var(--blue); }
+        .product-info { font-size: 0.9rem; }
+        .product-info b { display: block; color: var(--white); }
+        .product-info small { color: var(--gold); }
+        .qty-input { text-align: center; padding: 8px; font-size: 1rem; }
+
+        /* Modal Foto */
+        .modal { position: fixed; top:0; left:0; width:100%; height:100%; background: rgba(0,0,0,0.85); display: none; align-items: center; justify-content: center; z-index: 2000; }
+        .modal-content { background: var(--sec); padding: 20px; border-radius: 12px; text-align: center; max-width: 90%; }
+        #imgPreview { max-width: 100%; border-radius: 8px; border: 2px solid var(--gold); }
+
+        #loginOverlay { position: fixed; top:0; left:0; width:100%; height:100%; background: var(--bg); display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 3000; }
+        #loginOverlay input { width: 250px; text-align: center; margin-bottom: 20px; }
+    </style>
+</head>
+<body>
+
+<div id="loginOverlay">
+    <h2 style="color: var(--gold);">PRIZE STAFF ACCESS</h2>
+    <input type="password" id="passInput" placeholder="STAFF PASSWORD">
+    <button onclick="checkLogin()" class="btn-gold" style="width: 250px;">UNLOCK</button>
+</div>
+
+<div id="photoModal" class="modal" onclick="this.style.display='none'">
+    <div class="modal-content">
+        <img id="imgPreview" src="">
+        <button class="btn-blue" style="margin-top:15px; width:100%;">CLOSE</button>
+    </div>
+</div>
+
+<div class="container" id="mainContent" style="display:none;">
+    <h2>Prize Wall Sales</h2>
+
+    <div class="box">
+        <label>Player ID</label>
+        <div style="display: flex; gap: 10px;">
+            <input type="number" id="playerId" placeholder="Search ID..." onkeypress="if(event.key==='Enter') searchPlayer()">
+            <button class="btn-blue" onclick="searchPlayer()" style="width: auto; padding: 0 20px;">GO</button>
+        </div>
+    </div>
+
+    <div id="playerArea" style="display: none;">
+        <div class="player-info">
+            <span id="displayName" style="font-size: 1.1rem; font-weight: bold;">---</span>
+            <span class="balance-val" id="displayBalance">0</span>
+            <small>AVAILABLE TICKETS</small>
+        </div>
+
+        <div class="box">
+            <h3>Inventory Selection</h3>
+            <div id="inventoryList"></div>
+            
+            <div style="margin-top: 20px; padding-top: 15px; border-top: 1px solid rgba(255,255,255,0.2);">
+                <div style="display: flex; justify-content: space-between; margin-bottom: 15px;">
+                    <span>Total Cost:</span>
+                    <b id="totalCart" style="color: var(--gold); font-size: 1.2rem;">0 Tks</b>
+                </div>
+                <button class="btn-green" id="btnCheckout" onclick="processCheckout()">FINALIZE REDEMPTION</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    const supabaseUrl = 'https://hocpoastnlcwgedvcyqs.supabase.co';
+    const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhvY3BvYXN0bmxjd2dlZHZjeXFzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQyODU0MTYsImV4cCI6MjA4OTg2MTQxNn0.1MvvcFsnGW4e0Bj7mzoUKs_3bGM-eHDJTOqsvgKe-pI';
+    const _supabase = supabase.createClient(supabaseUrl, supabaseKey);
+    const eventPrefix = new URLSearchParams(window.location.search).get('event');
+
+    let currentPlayer = null;
+    let inventory = [];
+
+    window.onload = () => {
+        if(sessionStorage.getItem('ps_auth') === 'true') {
+            document.getElementById('loginOverlay').style.display = 'none';
+            document.getElementById('mainContent').style.display = 'block';
+            loadInventory();
+        }
+    };
+
+    function checkLogin() {
+        const pass = document.getElementById('passInput').value.toUpperCase().trim();
+        const lll = eventPrefix.substring(0,3);
+        const nn = eventPrefix.slice(-2);
+        if(pass === lll + nn + "_PS") {
+            sessionStorage.setItem('ps_auth', 'true');
+            location.reload();
+        } else { alert("WRONG PASSWORD"); }
+    }
+
+    async function loadInventory() {
+        const { data } = await _supabase.from('prize_inventory').select('*').eq('event_id', eventPrefix).gt('stock_quantity', 0).order('product_name');
+        inventory = data || [];
+        renderInventory();
+    }
+
+    function renderInventory() {
+        const list = document.getElementById('inventoryList');
+        list.innerHTML = inventory.map(item => `
+            <div class="product-row">
+                <div class="product-info">
+                    <b>${item.image_url ? `<span onclick="viewPhoto('${item.image_url}')" style="cursor:pointer">📷</span> ` : ''}${item.product_name}</b>
+                    <small>${item.ticket_cost} Tks | Stock: ${item.stock_quantity}</small>
+                </div>
+                <div style="font-size: 0.8rem; text-align: center; opacity: 0.7;">QTY:</div>
+                <input type="number" class="qty-input" id="qty-${item.id}" value="0" min="0" max="${item.stock_quantity}" oninput="updateTotal()">
+            </div>
+        `).join('');
+    }
+
+    function viewPhoto(url) {
+        document.getElementById('imgPreview').src = url;
+        document.getElementById('photoModal').style.display = 'flex';
+    }
+
+    async function searchPlayer() {
+        const pid = document.getElementById('playerId').value;
+        if(!pid) return;
+
+        // 1. Get Name from ODE registrations
+        const { data: reg } = await _supabase.from('ode_registrations').select('player_name').eq('event_id', eventPrefix).eq('player_id', pid).limit(1).single();
+        
+        // 2. Calculate balance from transactions
+        const { data: trans } = await _supabase.from('player_transactions').select('amount').eq('event_id', eventPrefix).eq('player_id', pid);
+        
+        const balance = trans ? trans.reduce((acc, t) => acc + t.amount, 0) : 0;
+
+        currentPlayer = { id: pid, name: reg ? reg.player_name : "Unknown Player", balance: balance };
+        
+        document.getElementById('displayName').innerText = currentPlayer.name;
+        document.getElementById('displayBalance').innerText = currentPlayer.balance;
+        document.getElementById('playerArea').style.display = 'block';
+        updateTotal();
+    }
+
+    function updateTotal() {
+        let total = 0;
+        inventory.forEach(item => {
+            const qty = parseInt(document.getElementById(`qty-${item.id}`).value) || 0;
+            total += qty * item.ticket_cost;
+        });
+        document.getElementById('totalCart').innerText = total + " Tks";
+        document.getElementById('btnCheckout').disabled = total === 0;
+    }
+
+    async function processCheckout() {
+        let totalCost = 0;
+        const itemsToBuy = [];
+
+        inventory.forEach(item => {
+            const qty = parseInt(document.getElementById(`qty-${item.id}`).value) || 0;
+            if(qty > 0) {
+                totalCost += qty * item.ticket_cost;
+                itemsToBuy.push({ ...item, buyQty: qty });
+            }
+        });
+
+        if(totalCost > currentPlayer.balance) return alert("INSUFFICIENT BALANCE!");
+        if(!confirm(`Confirm redemption for ${totalCost} tickets?`)) return;
+
+        document.getElementById('btnCheckout').innerText = "PROCESSING...";
+        document.getElementById('btnCheckout').disabled = true;
+
+        try {
+            for(const item of itemsToBuy) {
+                // 1. Create Negative Transaction
+                const { error: tError } = await _supabase.from('player_transactions').insert([{
+                    event_id: eventPrefix,
+                    player_id: currentPlayer.id,
+                    player_name: currentPlayer.name,
+                    amount: -(item.buyQty * item.ticket_cost),
+                    source_type: 'PRIZE_WALL',
+                    description: `Redemption: ${item.product_name}`
+                }]);
+
+                if(tError) throw new Error("Transaction Error: " + tError.message);
+
+                // 2. Deduct Stock
+                const { error: sError } = await _supabase.from('prize_inventory').update({
+                    stock_quantity: item.stock_quantity - item.buyQty
+                }).eq('id', item.id);
+
+                if(sError) throw new Error("Stock Update Error: " + sError.message);
+            }
+
+            alert("SUCCESS! Redemption completed.");
+            location.reload();
+
+        } catch (err) {
+            alert("CRITICAL ERROR: " + err.message);
+            console.error(err);
+            document.getElementById('btnCheckout').innerText = "FINALIZE REDEMPTION";
+            document.getElementById('btnCheckout').disabled = false;
+        }
+    }
+</script>
+</body>
+</html>
