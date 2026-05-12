@@ -39,12 +39,10 @@
         const pass = document.getElementById('accessCode').value.toUpperCase().trim();
         if(!pass) return;
 
+        // 1. LEAD (Acesso Direto - Cria ou Entra)
         if (pass.endsWith("_LEAD")) {
             const eventId = pass.replace("_LEAD", "");
-            const regexLead = /^[A-Z]{3}\d{4}$/;
-            if (!regexLead.test(eventId)) {
-                return alert("INVALID LEAD FORMAT. MUST BE 3 LETTERS + 4 NUMBERS + _LEAD (EX: TST1234_LEAD)");
-            }
+            if (!/^[A-Z]{3}\d{4}$/.test(eventId)) return alert("INVALID LEAD FORMAT. (EX: VNH2026_LEAD)");
             window.location.href = `admin_lead.html?event=${eventId}`;
             return; 
         } 
@@ -52,39 +50,66 @@
         let targetPage = "";
         let authType = "";
         let searchPattern = "";
+        let exactMatchId = "";
 
-        if (pass.endsWith("ODE") && pass.length === 8) {
-            const letters = pass.substring(0, 3);
-            const nums = pass.substring(3, 5);
-            if (!/^[A-Z]{3}\d{2}$/.test(letters + nums)) return alert("INVALID ODE FORMAT.");
-            searchPattern = `${letters}${nums}%`;
+        // 2. Acessos que exigem o ID completo (4 números)
+        if (pass.endsWith("_JDG")) {
+            exactMatchId = pass.replace("_JDG", "");
+            if (!/^[A-Z]{3}\d{4}$/.test(exactMatchId)) return alert("INVALID JUDGE FORMAT. (EX: VNH2026_JDG)");
+            targetPage = "admin_judge.html";
+            authType = "jdg_auth";
+        }
+        else if (pass.endsWith("_PL")) {
+            exactMatchId = pass.replace("_PL", "");
+            if (!/^[A-Z]{3}\d{4}$/.test(exactMatchId)) return alert("INVALID PRIZE LEAD FORMAT. (EX: VNH2026_PL)");
+            targetPage = "prize_setup.html";
+            authType = "pl_auth";
+        }
+        // 3. Acessos que exigem ID parcial (2 números) de acordo com nossa regra
+        else if (pass.endsWith("_ODE")) {
+            const base = pass.replace("_ODE", "");
+            if (!/^[A-Z]{3}\d{2}$/.test(base)) return alert("INVALID ODE FORMAT. (EX: VNH26_ODE)");
+            searchPattern = `${base.substring(0,3)}%${base.substring(3,5)}`; // Ex: VNH%26
             targetPage = "admin_ode.html";
             authType = "ode_auth";
-        } 
-        else if (pass.endsWith("SCH") && pass.length === 8) {
-            const letters = pass.substring(0, 3);
-            const nums = pass.substring(3, 5);
-            if (!/^[A-Z]{3}\d{2}$/.test(letters + nums)) return alert("INVALID SCH FORMAT.");
-            searchPattern = `${letters}%${nums}`;
+        }
+        else if (pass.endsWith("_SCH")) {
+            const base = pass.replace("_SCH", "");
+            if (!/^[A-Z]{3}\d{2}$/.test(base)) return alert("INVALID SCH FORMAT. (EX: VNH20_SCH)");
+            searchPattern = `${base.substring(0,3)}${base.substring(3,5)}%`; // Ex: VNH20%
             targetPage = "admin_sch.html";
             authType = "sch_auth";
-        } 
+        }
+        else if (pass.endsWith("_PS")) {
+            const base = pass.replace("_PS", "");
+            if (!/^[A-Z]{3}\d{2}$/.test(base)) return alert("INVALID PRIZE STAFF FORMAT. (EX: VNH26_PS)");
+            searchPattern = `${base.substring(0,3)}%${base.substring(3,5)}`; // Ex: VNH%26
+            targetPage = "prize_staff.html";
+            authType = "ps_auth";
+        }
         else {
-            return alert("EVENT NOT FOUND WITH THIS ACCESS CODE.");
+            return alert("ACCESS CODE NOT RECOGNIZED.");
         }
 
-        const { data, error } = await _supabase.from('tournament_history')
-            .select('event_id')
-            .ilike('event_id', searchPattern)
-            .eq('tournament_id', 0)
-            .limit(1)
-            .single();
-
-        if (data) {
-            sessionStorage.setItem(authType, 'true');
-            window.location.href = `${targetPage}?event=${data.event_id}`;
+        // 4. Validação no Banco de Dados antes de liberar a entrada
+        if (exactMatchId) {
+            const { data } = await _supabase.from('tournament_history')
+                .select('event_id').eq('event_id', exactMatchId).eq('tournament_id', 0).single();
+            if (data) {
+                sessionStorage.setItem(authType, 'true');
+                window.location.href = `${targetPage}?event=${data.event_id}`;
+            } else {
+                alert("EVENT NOT FOUND. MAKE SURE THE LEAD HAS INITIALIZED IT.");
+            }
         } else {
-            alert("EVENT NOT FOUND.");
+            const { data } = await _supabase.from('tournament_history')
+                .select('event_id').ilike('event_id', searchPattern).eq('tournament_id', 0).limit(1).single();
+            if (data) {
+                sessionStorage.setItem(authType, 'true');
+                window.location.href = `${targetPage}?event=${data.event_id}`;
+            } else {
+                alert("EVENT NOT FOUND. CHECK ACCESS CODE.");
+            }
         }
     }
 </script>
