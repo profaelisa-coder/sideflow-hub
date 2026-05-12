@@ -8,7 +8,7 @@
     <style>
         :root { --bg: #1A4B84; --sec: #2B6CB0; --gold: #ffb703; --blue: #63B3ED; --white: #e0e1dd; --red: #e63946; --green: #2ecc71; --dark: #0A2540; }
         body { font-family: 'Segoe UI', sans-serif; background: var(--bg); color: var(--white); margin: 0; padding: 15px; padding-bottom: 80px; display: flex; flex-direction: column; align-items: center; }
-        .container { width: 100%; max-width: 800px; }
+        .container { width: 100%; max-width: 900px; }
         .header-top { display: grid; grid-template-columns: 100px 1fr 100px; align-items: center; margin-bottom: 20px; width: 100%; }
         h2 { grid-column: 2; text-align: center; color: var(--gold); text-transform: uppercase; letter-spacing: 2px; margin: 0; font-size: 1.2rem; white-space: nowrap; }
         .btn-return { grid-column: 3; justify-self: end; background: transparent; color: var(--gold); border: 1px solid var(--gold); padding: 5px 10px; border-radius: 6px; cursor: pointer; font-weight: bold; text-transform: uppercase; font-size: 0.7rem; width: auto; transition: 0.3s; }
@@ -29,7 +29,7 @@
         .btn-cancel-edit { background: var(--red); color: white; margin-top: 5px; display: none; }
         .btn-edit-pod { background: var(--gold); color: var(--dark); padding: 5px 10px; border-radius: 6px; border: none; font-weight: bold; cursor: pointer; font-size: 0.7rem; margin-left: 10px; width: auto; }
 
-        #playersContainer .row { background: rgba(0,0,0,0.1); padding: 8px; border-radius: 6px; margin-bottom: 6px; }
+        #playersContainer .row { background: rgba(0,0,0,0.1); padding: 10px; border-radius: 6px; margin-bottom: 8px; align-items: flex-end; }
         
         .live-label { color: var(--gold); font-size: 0.9rem; font-weight: bold; margin: 15px 0 10px 0; display: flex; align-items: center; gap: 8px; }
         .live-dot { width: 8px; height: 8px; background: var(--red); border-radius: 50%; animation: blink 1s infinite; }
@@ -196,7 +196,6 @@
 
     async function loadData() {
         const { data: catalog } = await _supabase.from('tournament_catalog').select('*').eq('event_id', eventPrefix);
-        
         currentCatalog = catalog.filter(c => c.item_type === 'ODE') || [];
         schCatalog = catalog.filter(c => c.item_type === 'SCH') || [];
 
@@ -212,7 +211,9 @@
         const select = document.getElementById('tourSelect');
         select.innerHTML = '<option value="">-- SELECT TOURNAMENT --</option>';
         const filtered = game ? currentCatalog.filter(c => c.game === game) : currentCatalog;
+        
         filtered.forEach(t => select.innerHTML += `<option value="${t.tname}" data-size="${t.pod_size || 4}">${t.tname}</option>`);
+        
         if(currentSelection) select.value = currentSelection;
         updateGroupSizeOptions();
     }
@@ -222,13 +223,17 @@
         const groupSelect = document.getElementById('groupSizeSelect');
         const currentGroupSize = groupSelect.value;
         groupSelect.innerHTML = "";
+        
         if(!tname) {
             groupSelect.innerHTML = '<option value="1">1 Player</option>';
             groupSelect.disabled = true;
             document.getElementById('playersContainer').innerHTML = "";
             return;
         }
-        const size = parseInt(document.querySelector(`#tourSelect option[value="${tname}"]`).dataset.size);
+        
+        const selectedOption = document.querySelector(`#tourSelect option[value="${tname.replace(/"/g, '\\"')}"]`);
+        const size = parseInt(selectedOption.dataset.size);
+        
         for(let i = 1; i <= size; i++) {
             groupSelect.innerHTML += `<option value="${i}">${i} Player${i > 1 ? 's' : ''}</option>`;
         }
@@ -251,12 +256,12 @@
         for(let i = 1; i <= qty; i++) {
             container.innerHTML += `
                 <div class="row">
-                    <div class="col" style="flex: 0.5; margin-bottom: 0;">
+                    <div class="col" style="flex: 0.8; margin-bottom: 0;">
                         <label>ID ${i}</label>
                         <input type="number" class="dyn-id" id="dyn-id-${i}" autocomplete="off" onblur="fetchPlayerData(${i})">
                     </div>
                     <div class="col" style="flex: 1.5; margin-bottom: 0;">
-                        <label>Name ${i}</label>
+                        <label>Name</label>
                         <input type="text" class="dyn-name" id="dyn-name-${i}" autocomplete="off">
                     </div>
                     <div class="col" style="flex: 1; margin-bottom: 0;">
@@ -431,79 +436,70 @@
     async function submitRegistration() {
         const tname = document.getElementById('tourSelect').value;
         if(!tname) return alert("Select tournament first.");
-        const tour = currentCatalog.find(c => c.tname === tname);
-        if(!tour) return alert("Tournament data not found in catalog.");
         
-        const podLimit = parseInt(document.querySelector(`#tourSelect option[value="${tname}"]`).dataset.size);
-        const groupSize = parseInt(document.getElementById('groupSizeSelect').value);
+        const qty = parseInt(document.getElementById('groupSizeSelect').value);
         const ids = document.querySelectorAll('.dyn-id');
         const names = document.querySelectorAll('.dyn-name');
         const phones = document.querySelectorAll('.dyn-phone');
         const pays = document.querySelectorAll('.dyn-pay');
         const formPlayers = [];
         
-        for(let i = 0; i < groupSize; i++) {
+        for(let i = 0; i < qty; i++) {
             if(!ids[i].value || !names[i].value) return alert("Fill ID and Name for all players.");
             formPlayers.push({ id: ids[i].value, name: names[i].value, phone: phones[i].value, pay: pays[i].value });
         }
-        
+
+        const btn = document.getElementById('btnMainSubmit');
+        btn.disabled = true;
+
         if (editingPod) {
-            const dbPlayers = editingPod.players;
-            const podNum = editingPod.podNum;
-
-            document.getElementById('btnMainSubmit').disabled = true;
-
             for (let i = 0; i < formPlayers.length; i++) {
                 const p = formPlayers[i];
-                if (i < dbPlayers.length) {
-                    await _supabase.from('ode_registrations')
-                        .update({ player_id: p.id, player_name: p.name, player_phone: p.phone, payment_method: p.pay })
-                        .eq('id', dbPlayers[i].id);
+                if (i < editingPod.players.length) {
+                    await _supabase.from('ode_registrations').update({ player_id: p.id, player_name: p.name, player_phone: p.phone, payment_method: p.pay }).eq('id', editingPod.players[i].id);
                 } else {
-                    await _supabase.from('ode_registrations')
-                        .insert([{ event_id: eventPrefix, player_id: p.id, player_name: p.name, player_phone: p.phone, tname: tname, status: 'waiting', pod_number: podNum, payment_method: p.pay }]);
+                    await _supabase.from('ode_registrations').insert([{ event_id: eventPrefix, player_id: p.id, player_name: p.name, player_phone: p.phone, tname: tname, status: 'waiting', pod_number: editingPod.podNum, payment_method: p.pay }]);
                 }
             }
-
-            if (formPlayers.length < dbPlayers.length) {
-                for (let i = formPlayers.length; i < dbPlayers.length; i++) {
-                    await _supabase.from('ode_registrations').delete().eq('id', dbPlayers[i].id);
-                }
-            }
-
-            document.getElementById('btnMainSubmit').disabled = false;
-            alert("Pod Updated Successfully!");
+            alert("Pod Updated!");
             cancelEditMode();
-            loadData();
-
         } else {
-            const { data: podNum, error: rpcError } = await _supabase.rpc('get_pod_for_group', { 
-                p_event_id: eventPrefix, 
-                p_tname: tname, 
-                p_pod_limit: podLimit, 
-                p_group_size: groupSize, 
-                p_min_table: tour.table_min || 1, 
-                p_max_table: tour.table_max || 9999 
-            });
+            let podNum = 1;
+            let currentCount = 0;
+            const tour = currentCatalog.find(c => c.tname === tname);
+            const podLimit = tour ? tour.pod_size : 4;
+
+            const { data: existing } = await _supabase.from('ode_registrations').select('pod_number').eq('event_id', eventPrefix).eq('tname', tname).eq('status', 'waiting');
             
-            if(rpcError) return alert("Error finding pod/table: " + rpcError.message);
-            
+            if (existing && existing.length > 0) {
+                podNum = Math.max(...existing.map(e => e.pod_number));
+                currentCount = existing.filter(p => p.pod_number === podNum).length;
+                if (currentCount + qty > podLimit) { 
+                    podNum++; 
+                    currentCount = 0; 
+                }
+            }
+
             const inserts = formPlayers.map(p => ({ 
                 event_id: eventPrefix, player_id: p.id, player_name: p.name, player_phone: p.phone, 
                 tname: tname, status: 'waiting', pod_number: podNum, payment_method: p.pay 
             }));
+            
             const { error } = await _supabase.from('ode_registrations').insert(inserts);
             
             if(!error) {
-                loadData(); 
-                document.getElementById('playersContainer').innerHTML = "";
-                document.getElementById('tourSelect').value = "";
-                updateGroupSizeOptions();
-                alert("Registration Successful!");
+                if (currentCount + qty === podLimit) {
+                    alert(`POD #${podNum} FULL! Vá ao Mapa para alocar a mesa.`);
+                } else {
+                    alert("Registration Successful!");
+                }
+                cancelEditMode();
             } else {
                 alert("Error registering: " + error.message);
             }
         }
+        btn.disabled = false;
+        loadData();
     }
 
     async function updateWaitingList() {
@@ -511,27 +507,26 @@
         const listDiv = document.getElementById('waitingList');
         listDiv.innerHTML = "";
         if(!regs || regs.length === 0) { listDiv.innerHTML = "<p style='opacity:0.5; text-align:center;'>No players in queue.</p>"; return; }
+        
         const groups = {};
         regs.forEach(r => { const key = `${r.tname}|${r.pod_number}`; groups[key] = (groups[key] || 0) + 1; });
+        
         for (const [key, count] of Object.entries(groups)) {
             const [tname, podNum] = key.split('|');
-            const tourInfo = currentCatalog.find(c => c.tname === tname);
-            const targetSize = tourInfo ? tourInfo.pod_size : 4;
-            
-            const gamePrefix = tourInfo && tourInfo.game ? `[${tourInfo.game}] ` : '';
-
+            const tour = currentCatalog.find(c => c.tname === tname);
+            const target = tour ? tour.pod_size : 4;
             listDiv.innerHTML += `
                 <div class="pod-card-3d">
-                    <div class="pod-info-3d"><b>${gamePrefix}${tname}</b><small>POD #${podNum}</small></div>
+                    <div class="pod-info-3d"><b>${tname}</b><small>POD #${podNum}</small></div>
                     <div style="display:flex; align-items:center;">
-                        <div class="pill-blue">${count} / ${targetSize} PLAYERS</div>
-                        <button class="btn-edit-pod" onclick="editPod('${tname}', ${podNum})">EDIT</button>
+                        <div class="pill-blue">${count} / ${target}</div>
+                        <button class="btn-edit-pod" onclick="editPod('${tname.replace(/'/g, "\\'")}', ${podNum})">EDIT</button>
                     </div>
                 </div>`;
         }
     }
 
-    function navToTables() { window.location.href = `admin_tables.html?event=${eventPrefix}`; }
+    function navToTables() { window.location.href = `admin_map.html?event=${eventPrefix}`; }
 
     _supabase.channel('any').on('postgres_changes', { event: '*', schema: 'public', table: 'ode_registrations' }, loadData).subscribe();
     _supabase.channel('catalog_sync').on('postgres_changes', { event: '*', schema: 'public', table: 'tournament_catalog' }, loadData).subscribe();
