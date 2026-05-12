@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SideFlow - Prize Setup</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        :root { --bg: #1A4B84; --sec: #2B6CB0; --gold: #ffb703; --white: #e0e1dd; --blue: #63B3ED; --red: #e63946; --dark: #0A2540; --green: #2ecc71; }
+        body { font-family: 'Segoe UI', sans-serif; background: var(--bg); color: var(--white); margin: 0; padding: 20px; display: flex; flex-direction: column; align-items: center; }
+        .container { width: 100%; max-width: 850px; padding-bottom: 50px; }
+        .box { background: var(--sec); padding: 25px; border-radius: 12px; margin-bottom: 25px; border-bottom: 4px solid var(--gold); box-shadow: 0 8px 25px rgba(0,0,0,0.3); }
+        h2 { color: var(--gold); text-align: center; letter-spacing: 1px; text-transform: uppercase; }
+        h3 { border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 10px; margin-top: 0; font-size: 1.1rem; text-transform: uppercase; }
+        .row { display: flex; gap: 15px; margin-bottom: 15px; width: 100%; flex-wrap: wrap; }
+        .col { flex: 1; min-width: 150px; display: flex; flex-direction: column; }
+        label { font-size: 0.75rem; font-weight: bold; margin-bottom: 5px; color: var(--gold); text-transform: uppercase; }
+        input, select { width: 100%; padding: 12px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.1); background: var(--dark); color: white; box-sizing: border-box; font-size: 0.95rem; }
+        button { padding: 14px; border-radius: 8px; border: none; font-weight: bold; text-transform: uppercase; cursor: pointer; transition: 0.3s; font-size: 0.9rem; }
+        button:hover { filter: brightness(1.1); }
+        .btn-gold { background: var(--gold); color: var(--dark); width: 100%; margin-top: 10px; }
+        .btn-blue { background: var(--blue); color: var(--dark); width: 100%; margin-top: 10px; }
+        .btn-red { background: var(--red); color: white; width: 100%; margin-top: 10px; }
+        .nav-buttons { display: flex; gap: 10px; justify-content: center; margin-bottom: 30px; }
+        .btn-nav { background: var(--sec); color: var(--white); border: 1px solid var(--blue); padding: 12px 20px; border-radius: 8px; font-size: 0.75rem; }
+        .catalog-item { display: flex; justify-content: space-between; align-items: center; background: rgba(0,0,0,0.15); padding: 12px 20px; border-radius: 8px; margin-bottom: 8px; border-left: 4px solid var(--blue); }
+        .catalog-info { font-size: 0.9rem; }
+        .catalog-info strong { color: var(--gold); margin-right: 10px; }
+        .btn-del { background: var(--red); color: white; padding: 8px 12px; font-size: 0.75rem; width: auto; border-radius: 6px; }
+        .btn-edit { background: var(--gold); color: var(--dark); padding: 8px 12px; font-size: 0.75rem; width: auto; border-radius: 6px; margin-right: 5px; }
+        .btn-cam { background: transparent; color: var(--white); border: 1px solid var(--white); padding: 5px; border-radius: 4px; font-size: 0.8rem; cursor: pointer; margin-right: 8px; opacity: 0.7; }
+        .btn-cam:hover { opacity: 1; background: rgba(255,255,255,0.1); }
+        
+        /* Modal Style */
+        .modal { position: fixed; top:0; left:0; width:100%; height:100%; background: rgba(0,0,0,0.85); display: none; align-items: center; justify-content: center; z-index: 2000; }
+        .modal-content { background: var(--sec); padding: 30px; border-radius: 12px; border-top: 4px solid var(--gold); width: 90%; max-width: 450px; text-align: center; }
+        #imgPreview { max-width: 100%; max-height: 300px; border-radius: 8px; margin-top: 10px; border: 2px solid var(--gold); }
+        
+        #loginOverlay { position: fixed; top:0; left:0; width:100%; height:100%; background: var(--bg); display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 3000; }
+        #loginOverlay input { width: 250px; text-align: center; margin-bottom: 20px; }
+
+        .void-list { margin-top: 15px; }
+        .void-row { background: white; color: #333; padding: 10px; border-radius: 6px; margin-bottom: 5px; display: flex; justify-content: space-between; align-items: center; font-size: 0.85rem; }
+        .void-row b { color: var(--red); }
+    </style>
+</head>
+<body>
+
+<div id="loginOverlay">
+    <h2>PRIZE LEAD ACCESS</h2>
+    <input type="password" id="passInput" placeholder="ACCESS CODE">
+    <button onclick="checkLogin()" class="btn-gold" style="width: 250px;">UNLOCK</button>
+</div>
+
+<div id="photoModal" class="modal" onclick="closePhotoModal()">
+    <div class="modal-content" onclick="event.stopPropagation()">
+        <h3 style="color: var(--gold); margin-top: 0;">PRODUCT PREVIEW</h3>
+        <img id="imgPreview" src="" alt="Preview">
+        <button class="btn-blue" style="margin-top: 20px; width: 100%;" onclick="closePhotoModal()">CLOSE</button>
+    </div>
+</div>
+
+<div class="container" id="mainContent" style="display:none;">
+    <h2>PRIZE WALL SETUP</h2>
+
+    <div class="nav-buttons">
+        <button class="btn-nav" onclick="location.href='admin_lead.html?event='+eventPrefix">BACK TO LEAD</button>
+        <button class="btn-nav" onclick="location.href='prize_staff.html?event='+eventPrefix" style="background: var(--gold); color: var(--dark); border:none;">GO TO SALES (STAFF)</button>
+    </div>
+
+    <div class="box">
+        <h3>ADD / EDIT PRODUCT</h3>
+        <div class="row">
+            <div class="col" style="flex: 2;">
+                <label>Product Name</label>
+                <input type="text" id="prodName">
+            </div>
+            <div class="col">
+                <label>Stock Quantity</label>
+                <input type="number" id="prodStock">
+            </div>
+        </div>
+        <div class="row">
+            <div class="col">
+                <label>Price (Prize Tickets)</label>
+                <input type="number" id="prodCost">
+            </div>
+            <div class="col" style="flex: 2;">
+                <label>Image URL (Optional)</label>
+                <input type="text" id="prodImg" placeholder="https://...">
+            </div>
+        </div>
+        <button class="btn-blue" id="btnSave" onclick="saveProduct()">ADD TO INVENTORY</button>
+        <button class="btn-red" id="btnCancel" style="display:none; margin-top:10px;" onclick="cancelEdit()">CANCEL EDIT</button>
+    </div>
+
+    <div class="box">
+        <h3>CURRENT INVENTORY</h3>
+        <div id="inventoryList"></div>
+    </div>
+
+    <div class="box">
+        <h3>VOID TRANSACTION (DESFAZER)</h3>
+        <div class="row" style="align-items: flex-end;">
+            <div class="col" style="flex: 2;">
+                <label>Search Player ID</label>
+                <input type="number" id="searchPlayerId" placeholder="Enter ID to find purchases">
+            </div>
+            <div class="col">
+                <button class="btn-blue" onclick="searchTransactions()" style="margin-top: 0;">SEARCH</button>
+            </div>
+        </div>
+        <div id="voidList" class="void-list"></div>
+    </div>
+</div>
+
+<script>
+    const supabaseUrl = 'https://hocpoastnlcwgedvcyqs.supabase.co';
+    const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhvY3BvYXN0bmxjd2dlZHZjeXFzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQyODU0MTYsImV4cCI6MjA4OTg2MTQxNn0.1MvvcFsnGW4e0Bj7mzoUKs_3bGM-eHDJTOqsvgKe-pI';
+    const _supabase = supabase.createClient(supabaseUrl, supabaseKey);
+    const eventPrefix = new URLSearchParams(window.location.search).get('event');
+    let editId = null;
+
+    window.onload = () => {
+        if(sessionStorage.getItem('pl_auth') === 'true') {
+            document.getElementById('loginOverlay').style.display = 'none';
+            document.getElementById('mainContent').style.display = 'block';
+            loadInventory();
+        }
+    };
+
+    function checkLogin() {
+        const pass = document.getElementById('passInput').value.toUpperCase().trim();
+        if(pass === eventPrefix.toUpperCase() + "_PL") {
+            sessionStorage.setItem('pl_auth', 'true');
+            location.reload();
+        } else { alert("ACCESS DENIED."); }
+    }
+
+    async function loadInventory() {
+        const { data } = await _supabase.from('prize_inventory').select('*').eq('event_id', eventPrefix).order('product_name');
+        const list = document.getElementById('inventoryList');
+        list.innerHTML = data.length ? data.map(item => `
+            <div class="catalog-item">
+                <div class="catalog-info">
+                    ${item.image_url ? `<button class="btn-cam" onclick="viewPhoto('${item.image_url}')">📷</button>` : ''}
+                    <strong>${item.product_name}</strong>
+                    <small>| Qtd: ${item.stock_quantity} | ${item.ticket_cost} Tks</small>
+                </div>
+                <div>
+                    <button class="btn-edit" onclick="editItem(${JSON.stringify(item).replace(/"/g, '&quot;')})">EDIT</button>
+                    <button class="btn-del" onclick="deleteItem(${item.id})">DEL</button>
+                </div>
+            </div>
+        `).join('') : "<p style='opacity:0.5; text-align:center;'>No products found.</p>";
+    }
+
+    function viewPhoto(url) {
+        document.getElementById('imgPreview').src = url;
+        document.getElementById('photoModal').style.display = 'flex';
+    }
+    function closePhotoModal() { document.getElementById('photoModal').style.display = 'none'; }
+
+    function editItem(item) {
+        editId = item.id;
+        document.getElementById('prodName').value = item.product_name;
+        document.getElementById('prodStock').value = item.stock_quantity;
+        document.getElementById('prodCost').value = item.ticket_cost;
+        document.getElementById('prodImg').value = item.image_url || "";
+        document.getElementById('btnSave').innerText = "UPDATE PRODUCT";
+        document.getElementById('btnCancel').style.display = 'block';
+        window.scrollTo({top: 0, behavior: 'smooth'});
+    }
+
+    function cancelEdit() {
+        editId = null;
+        document.getElementById('prodName').value = "";
+        document.getElementById('prodStock').value = "";
+        document.getElementById('prodCost').value = "";
+        document.getElementById('prodImg').value = "";
+        document.getElementById('btnSave').innerText = "ADD TO INVENTORY";
+        document.getElementById('btnCancel').style.display = 'none';
+    }
+
+    async function saveProduct() {
+        const payload = {
+            event_id: eventPrefix,
+            product_name: document.getElementById('prodName').value.trim(),
+            stock_quantity: parseInt(document.getElementById('prodStock').value) || 0,
+            ticket_cost: parseInt(document.getElementById('prodCost').value) || 0,
+            image_url: document.getElementById('prodImg').value.trim()
+        };
+        if(!payload.product_name) return alert("Product name is required.");
+
+        if(editId) { await _supabase.from('prize_inventory').update(payload).eq('id', editId); }
+        else { await _supabase.from('prize_inventory').insert([payload]); }
+        
+        cancelEdit(); loadInventory(); alert("Saved!");
+    }
+
+    async function deleteItem(id) {
+        if(confirm("Delete item from inventory?")) {
+            await _supabase.from('prize_inventory').delete().eq('id', id);
+            loadInventory();
+        }
+    }
+
+    async function searchTransactions() {
+        const pid = document.getElementById('searchPlayerId').value;
+        if(!pid) return;
+        
+        const { data } = await _supabase.from('player_transactions')
+            .select('*').eq('event_id', eventPrefix).eq('player_id', pid).eq('source_type', 'PRIZE_WALL')
+            .order('created_at', {ascending: false});
+        
+        const list = document.getElementById('voidList');
+        list.innerHTML = data.length ? data.map(t => `
+            <div class="void-row">
+                <span><b>${t.amount}</b> | ${t.description}</span>
+                <button class="btn-del" onclick="voidTransaction(${t.id}, '${t.player_id}', ${t.amount}, '${t.description}')">VOID</button>
+            </div>
+        `).join('') : "No transactions found.";
+    }
+
+    async function voidTransaction(id, pid, amount, desc) {
+        if(desc.includes("VOIDED")) return alert("Already voided.");
+        if(!confirm("UNDO this purchase? Unit returns to stock and tickets return to player.")) return;
+
+        // 1. Return Tickets (positive transaction)
+        await _supabase.from('player_transactions').insert([{
+            event_id: eventPrefix, player_id: pid, amount: Math.abs(amount),
+            source_type: 'PRIZE_WALL', description: "VOID: " + desc
+        }]);
+
+        // 2. Return unit to stock
+        const productName = desc.replace("Redemption: ", "");
+        const { data: current } = await _supabase.from('prize_inventory').select('*').eq('event_id', eventPrefix).eq('product_name', productName).single();
+        if(current) {
+            await _supabase.from('prize_inventory').update({ stock_quantity: current.stock_quantity + 1 }).eq('id', current.id);
+        }
+
+        // 3. Mark original as voided to avoid double undo
+        await _supabase.from('player_transactions').update({ description: "VOIDED: " + desc }).eq('id', id);
+
+        alert("Transaction Voided!");
+        searchTransactions();
+        loadInventory();
+    }
+</script>
+</body>
+</html>
