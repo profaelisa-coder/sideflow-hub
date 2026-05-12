@@ -526,7 +526,7 @@
         }
     }
 
-    function navToTables() { window.location.href = `admin_map.html?event=${eventPrefix}`; }
+    function navToTables() { window.location.href = `admin_tables.html?event=${eventPrefix}`; }
 
     _supabase.channel('any').on('postgres_changes', { event: '*', schema: 'public', table: 'ode_registrations' }, loadData).subscribe();
     _supabase.channel('catalog_sync').on('postgres_changes', { event: '*', schema: 'public', table: 'tournament_catalog' }, loadData).subscribe();
