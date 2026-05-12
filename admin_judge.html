@@ -104,12 +104,12 @@
         
         currentTourConfig = catalog;
 
-        const { data: players, error: pErr } = await _supabase.from('ode_registrations')
+       const { data: players, error: pErr } = await _supabase.from('ode_registrations')
             .select('*').eq('event_id', eventPrefix).eq('tname', table.tournament_name)
-            .eq('pod_number', table.pod_number).eq('status', 'waiting');
+            .eq('pod_number', table.pod_number).in('status', ['waiting', 'allocated']);
 
         if(pErr || !players || players.length === 0) {
-            return alert("Nenhum jogador 'waiting' encontrado para o Pod #" + table.pod_number);
+            return alert("Nenhum jogador encontrado na mesa para o Pod #" + table.pod_number);
         }
 
         currentPodPlayers = players;
