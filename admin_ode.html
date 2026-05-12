@@ -105,6 +105,20 @@
         </div>
         
         <div id="playersContainer"></div>
+
+        <div class="row" style="margin-top: 15px;">
+            <div class="col">
+                <label>Payment Method</label>
+                <select id="paymentMethod">
+                    <option value="">-- SELECT PAYMENT METHOD --</option>
+                    <option value="CREDIT">Credit Card</option>
+                    <option value="DEBIT">Debit Card</option>
+                    <option value="CASH">Cash</option>
+                    <option value="PIX">PIX</option>
+                    <option value="TICKETS">Store Credit / Tickets</option>
+                </select>
+            </div>
+        </div>
         
         <button class="btn-reg" id="btnMainSubmit" onclick="submitRegistration()">REGISTER TO POD</button>
         <button class="btn-cancel-edit" id="btnCancelEdit" onclick="cancelEditMode()">CANCEL EDIT</button>
@@ -170,7 +184,11 @@
         const select = document.getElementById('tourSelect');
         select.innerHTML = '<option value="">-- SELECT TOURNAMENT --</option>';
         const filtered = game ? currentCatalog.filter(c => c.game === game) : currentCatalog;
+        
         filtered.forEach(t => select.innerHTML += `<option value="${t.tname}" data-size="${t.pod_size || 4}">${t.tname}</option>`);
+        
+        select.innerHTML += `<option value="[EXT] SCH PAYMENT" data-size="1" style="font-weight: bold; color: var(--gold);">[EXT] SCH PAYMENT</option>`;
+        
         if(currentSelection) select.value = currentSelection;
         updateGroupSizeOptions();
     }
@@ -180,13 +198,17 @@
         const groupSelect = document.getElementById('groupSizeSelect');
         const currentGroupSize = groupSelect.value;
         groupSelect.innerHTML = "";
+        
         if(!tname) {
             groupSelect.innerHTML = '<option value="1">1 Player</option>';
             groupSelect.disabled = true;
             document.getElementById('playersContainer').innerHTML = "";
             return;
         }
-        const size = parseInt(document.querySelector(`#tourSelect option[value="${tname}"]`).dataset.size);
+        
+        const selectedOption = document.querySelector(`#tourSelect option[value="${tname.replace(/"/g, '\\"')}"]`);
+        const size = parseInt(selectedOption.dataset.size);
+        
         for(let i = 1; i <= size; i++) {
             groupSelect.innerHTML += `<option value="${i}">${i} Player${i > 1 ? 's' : ''}</option>`;
         }
@@ -311,6 +333,7 @@
         document.getElementById('playersContainer').innerHTML = "";
         document.getElementById('tourSelect').value = "";
         document.getElementById('gameSelect').value = "";
+        document.getElementById('paymentMethod').value = "";
         filterTournaments();
         
         const btnReg = document.getElementById('btnMainSubmit');
@@ -324,10 +347,10 @@
     async function submitRegistration() {
         const tname = document.getElementById('tourSelect').value;
         if(!tname) return alert("Select tournament first.");
-        const tour = currentCatalog.find(c => c.tname === tname);
-        if(!tour) return alert("Tournament data not found in catalog.");
         
-        const podLimit = parseInt(document.querySelector(`#tourSelect option[value="${tname}"]`).dataset.size);
+        const paymentMethod = document.getElementById('paymentMethod').value;
+        if(!paymentMethod && !editingPod) return alert("Select Payment Method!");
+
         const groupSize = parseInt(document.getElementById('groupSizeSelect').value);
         const ids = document.querySelectorAll('.dyn-id');
         const names = document.querySelectorAll('.dyn-name');
@@ -348,12 +371,14 @@
             for (let i = 0; i < formPlayers.length; i++) {
                 const p = formPlayers[i];
                 if (i < dbPlayers.length) {
-                    await _supabase.from('ode_registrations')
-                        .update({ player_id: p.id, player_name: p.name, player_phone: p.phone })
-                        .eq('id', dbPlayers[i].id);
+                    let updateData = { player_id: p.id, player_name: p.name, player_phone: p.phone };
+                    if (paymentMethod) updateData.payment_method = paymentMethod;
+                    await _supabase.from('ode_registrations').update(updateData).eq('id', dbPlayers[i].id);
                 } else {
-                    await _supabase.from('ode_registrations')
-                        .insert([{ event_id: eventPrefix, player_id: p.id, player_name: p.name, player_phone: p.phone, tname: tname, status: 'waiting', pod_number: podNum }]);
+                    await _supabase.from('ode_registrations').insert([{ 
+                        event_id: eventPrefix, player_id: p.id, player_name: p.name, player_phone: p.phone, 
+                        tname: tname, status: 'waiting', pod_number: podNum, payment_method: paymentMethod 
+                    }]);
                 }
             }
 
@@ -369,26 +394,50 @@
             loadData();
 
         } else {
-            const { data: podNum, error: rpcError } = await _supabase.rpc('get_pod_for_group', { 
-                p_event_id: eventPrefix, 
-                p_tname: tname, 
-                p_pod_limit: podLimit, 
-                p_group_size: groupSize, 
-                p_min_table: tour.table_min || 1, 
-                p_max_table: tour.table_max || 9999 
-            });
+            let podNum = 1;
+            let currentCount = 0;
+            let podLimit = 1;
             
-            if(rpcError) return alert("Error finding pod/table: " + rpcError.message);
+            if (tname !== "[EXT] SCH PAYMENT") {
+                const selectedOption = document.querySelector(`#tourSelect option[value="${tname.replace(/"/g, '\\"')}"]`);
+                podLimit = parseInt(selectedOption.dataset.size);
+                
+                const { data: existing } = await _supabase.from('ode_registrations')
+                    .select('pod_number').eq('event_id', eventPrefix).eq('tname', tname).eq('status', 'waiting');
+                
+                if (existing && existing.length > 0) {
+                    podNum = Math.max(...existing.map(e => e.pod_number));
+                    currentCount = existing.filter(p => p.pod_number === podNum).length;
+                    
+                    if (currentCount + groupSize > podLimit) {
+                        podNum++;
+                        currentCount = 0;
+                    }
+                }
+            } else {
+                podNum = 9999; 
+            }
             
-            const inserts = formPlayers.map(p => ({ event_id: eventPrefix, player_id: p.id, player_name: p.name, player_phone: p.phone, tname: tname, status: 'waiting', pod_number: podNum }));
+            const insertStatus = tname === "[EXT] SCH PAYMENT" ? 'finished' : 'waiting';
+            const inserts = formPlayers.map(p => ({ 
+                event_id: eventPrefix, player_id: p.id, player_name: p.name, player_phone: p.phone, 
+                tname: tname, status: insertStatus, pod_number: podNum, payment_method: paymentMethod 
+            }));
+            
             const { error } = await _supabase.from('ode_registrations').insert(inserts);
             
             if(!error) {
                 loadData(); 
                 document.getElementById('playersContainer').innerHTML = "";
                 document.getElementById('tourSelect').value = "";
+                document.getElementById('paymentMethod').value = "";
                 updateGroupSizeOptions();
-                alert("Registration Successful!");
+                
+                if (tname !== "[EXT] SCH PAYMENT" && (currentCount + groupSize === podLimit)) {
+                    alert(`POD #${podNum} IS FULL! Vá ao Mapa para alocar a mesa.`);
+                } else {
+                    alert("Registration Successful!");
+                }
             } else {
                 alert("Error registering: " + error.message);
             }
@@ -414,13 +463,13 @@
                     <div class="pod-info-3d"><b>${gamePrefix}${tname}</b><small>POD #${podNum}</small></div>
                     <div style="display:flex; align-items:center;">
                         <div class="pill-blue">${count} / ${targetSize} PLAYERS</div>
-                        <button class="btn-edit-pod" onclick="editPod('${tname}', ${podNum})">EDIT</button>
+                        <button class="btn-edit-pod" onclick="editPod('${tname.replace(/'/g, "\\'")}', ${podNum})">EDIT</button>
                     </div>
                 </div>`;
         }
     }
 
-    function navToTables() { window.location.href = `admin_tables.html?event=${eventPrefix}`; }
+    function navToTables() { window.location.href = `admin_map.html?event=${eventPrefix}`; }
 
     _supabase.channel('any').on('postgres_changes', { event: '*', schema: 'public', table: 'ode_registrations' }, loadData).subscribe();
     _supabase.channel('catalog_sync').on('postgres_changes', { event: '*', schema: 'public', table: 'tournament_catalog' }, loadData).subscribe();
