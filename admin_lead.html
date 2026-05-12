@@ -14,8 +14,8 @@
         .box { background: var(--sec); padding: 25px; border-radius: 12px; margin-bottom: 25px; border-bottom: 4px solid var(--gold); box-shadow: 0 8px 25px rgba(0,0,0,0.3); }
         h2 { color: var(--gold); text-align: center; letter-spacing: 1px; }
         h3 { border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 10px; margin-top: 0; font-size: 1.1rem; }
-        .row { display: flex; gap: 15px; margin-bottom: 15px; width: 100%; }
-        .col { flex: 1; display: flex; flex-direction: column; }
+        .row { display: flex; gap: 15px; margin-bottom: 15px; width: 100%; flex-wrap: wrap; }
+        .col { flex: 1; display: flex; flex-direction: column; min-width: 120px; }
         label { font-size: 0.75rem; font-weight: bold; margin-bottom: 5px; color: var(--gold); text-transform: uppercase; }
         input, select { width: 100%; padding: 12px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.1); background: var(--dark); color: white; box-sizing: border-box; font-size: 0.95rem; }
         button { padding: 14px; border-radius: 8px; border: none; font-weight: bold; text-transform: uppercase; cursor: pointer; transition: 0.3s; font-size: 0.9rem; }
@@ -24,7 +24,7 @@
         .btn-blue { background: var(--blue); color: var(--dark); width: 100%; margin-top: 10px; }
         .btn-red { background: var(--red); color: white; width: 100%; margin-top: 10px; }
         .nav-buttons { display: flex; gap: 10px; justify-content: center; margin-bottom: 30px; flex-wrap: wrap; }
-        .btn-nav { background: var(--sec); color: var(--white); border: 1px solid var(--blue); padding: 15px 30px; border-radius: 8px; font-size: 0.85rem; }
+        .btn-nav { background: var(--sec); color: var(--white); border: 1px solid var(--blue); padding: 12px 20px; border-radius: 8px; font-size: 0.75rem; min-width: 140px; }
         .btn-nav:hover { background: var(--blue); color: var(--dark); }
         .catalog-list { width: 100%; margin-bottom: 30px; }
         .catalog-item { display: flex; justify-content: space-between; align-items: center; background: var(--sec); padding: 12px 20px; border-radius: 8px; margin-bottom: 8px; border-left: 4px solid var(--blue); }
@@ -36,6 +36,7 @@
         .reset-link:hover { opacity: 1; text-decoration: underline; }
         .modal { position: fixed; top:0; left:0; width:100%; height:100%; background: rgba(0,0,0,0.85); display: none; align-items: center; justify-content: center; z-index: 2000; }
         .modal-content { background: var(--sec); padding: 30px; border-radius: 12px; border-top: 4px solid var(--gold); width: 90%; max-width: 400px; text-align: center; }
+        .prize-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 10px; background: rgba(0,0,0,0.2); padding: 15px; border-radius: 8px; margin-top: 10px; border: 1px dashed var(--gold); }
     </style>
 </head>
 <body>
@@ -97,7 +98,8 @@
         </div>
     </div>
 
-    <div class="box" id="catalogBox"> <h3 id="catalogTitle">TOURNAMENT CATALOG SETUP</h3>
+    <div class="box" id="catalogBox"> 
+        <h3 id="catalogTitle">TOURNAMENT CATALOG SETUP</h3>
         <div class="row">
             <div class="col">
                 <label>Event Type</label>
@@ -125,7 +127,7 @@
             </div>
             <div class="col ode-field">
                 <label>Pod Size</label>
-                <input type="number" id="catPodSize">
+                <input type="number" id="catPodSize" oninput="generatePrizeInputs()">
             </div>
             <div class="col sch-field" style="display:none;">
                 <label>Day</label>
@@ -158,8 +160,8 @@
                 <label>Cost ($)</label>
                 <input type="number" id="catCost">
             </div>
-            <div class="col ode-field">
-                <label>Total Tickets Per Pod</label>
+            <div class="col ode-field" style="display:none;">
+                <label>Total Tickets</label>
                 <input type="number" id="catTickets">
             </div>
             <div class="col sch-field" style="display:none;">
@@ -176,13 +178,21 @@
                 </select>
             </div>
         </div>
-        <button class="btn-blue" id="btnSaveCatalog" onclick="saveCatalog()">ADD TO CATALOG</button>
+
+        <div id="prizeConfigArea" class="prize-grid" style="display:none;"></div>
+
+        <button class="btn-blue" id="btnSaveCatalog" onclick="saveCatalog()" style="margin-top:15px;">ADD TO CATALOG</button>
         <button class="btn-red" id="btnCancelEdit" style="display:none; margin-top:10px;" onclick="cancelEdit()">CANCEL EDIT</button>
     </div>
 
     <div class="nav-buttons">
         <button class="btn-nav" onclick="navTo('admin_ode.html')">STAFF ODE</button>
         <button class="btn-nav" onclick="navTo('admin_sch.html')">STAFF SCH</button>
+        <button class="btn-nav" onclick="navTo('admin_judge.html')">JUDGE PANEL</button>
+    </div>
+    <div class="nav-buttons">
+        <button class="btn-nav" onclick="navTo('prize_setup.html')">PRIZE SETUP</button>
+        <button class="btn-nav" onclick="navTo('prize_staff.html')">PRIZE STAFF</button>
         <button class="btn-nav" style="background: var(--gold); color: var(--dark); border: none;" onclick="navTo('final_report.html')">VIEW FINAL REPORT</button>
     </div>
 
@@ -233,12 +243,31 @@
         const type = document.getElementById('catType').value;
         const odeFields = document.querySelectorAll('.ode-field');
         const schFields = document.querySelectorAll('.sch-field');
-        if(type === 'ODE' || type === '') {
+        const prizeArea = document.getElementById('prizeConfigArea');
+        if(type === 'ODE') {
             odeFields.forEach(el => el.style.display = 'flex');
             schFields.forEach(el => el.style.display = 'none');
+            prizeArea.style.display = 'grid';
+            generatePrizeInputs();
         } else if (type === 'SCH') {
             odeFields.forEach(el => el.style.display = 'none');
             schFields.forEach(el => el.style.display = 'flex');
+            prizeArea.style.display = 'none';
+        } else {
+            odeFields.forEach(el => el.style.display = 'none');
+            schFields.forEach(el => el.style.display = 'none');
+            prizeArea.style.display = 'none';
+        }
+    }
+
+    function generatePrizeInputs() {
+        const size = parseInt(document.getElementById('catPodSize').value) || 0;
+        const grid = document.getElementById('prizeConfigArea');
+        grid.innerHTML = "";
+        if(size > 0) {
+            for(let i = 1; i <= size; i++) {
+                grid.innerHTML += `<div class="col"><label>${i}º Place</label><input type="number" class="prize-input" data-pos="${i}" value="0"></div>`;
+            }
         }
     }
 
@@ -268,67 +297,49 @@
 
     async function saveCatalog() {
         const type = document.getElementById('catType').value;
-        const totalTablesEvent = parseInt(document.getElementById('totalTables').value) || 9999;
-        
         const tname = document.getElementById('catName').value.trim();
         if(!tname) return alert("Please fill the Tournament Name.");
-
+        let prizeConfig = {};
+        let totalSum = 0;
+        if(type === 'ODE') {
+            document.querySelectorAll('.prize-input').forEach(inp => {
+                const val = parseInt(inp.value) || 0;
+                prizeConfig[inp.dataset.pos] = val;
+                totalSum += val;
+            });
+        }
         const payload = {
-            event_id: eventPrefix, item_type: type,
-            game: document.getElementById('catGame').value,
-            tname: tname,
-            tfee: parseFloat(document.getElementById('catFee').value) || 0,
-            tcost: parseFloat(document.getElementById('catCost').value) || 0
+            event_id: eventPrefix, item_type: type, game: document.getElementById('catGame').value,
+            tname: tname, tfee: parseFloat(document.getElementById('catFee').value) || 0,
+            tcost: parseFloat(document.getElementById('catCost').value) || 0,
+            prizes_config: prizeConfig
         };
-
         if(type === 'ODE') {
             payload.table_min = parseInt(document.getElementById('catMinTable').value) || 1;
-            payload.table_max = parseInt(document.getElementById('catMaxTable').value) || totalTablesEvent;
+            payload.table_max = parseInt(document.getElementById('catMaxTable').value) || 999;
             payload.pod_size = parseInt(document.getElementById('catPodSize').value) || 4;
-            payload.tickets_per_pod = parseInt(document.getElementById('catTickets').value) || 0;
-            payload.tday = null; payload.thour = null; payload.tax = null; payload.spread = null;
+            payload.tickets_per_pod = totalSum;
         } else {
-            payload.table_min = 1;
-            payload.table_max = totalTablesEvent;
             payload.tday = document.getElementById('catDay').value;
             payload.thour = document.getElementById('catHour').value.trim();
             payload.tax = parseFloat(document.getElementById('catTax').value) || 0;
             payload.spread = parseFloat(document.getElementById('catSpread').value) || 2.0;
-            payload.pod_size = null; payload.tickets_per_pod = null;
         }
-
-        let errorResult;
-        if (editCatalogId) {
-            const { error } = await _supabase.from('tournament_catalog').update(payload).eq('id', editCatalogId);
-            errorResult = error;
-            if(!error) alert("Tournament updated successfully!");
-        } else {
-            const { error } = await _supabase.from('tournament_catalog').insert([payload]);
-            errorResult = error;
-            if(!error) alert("Tournament saved successfully!");
-        }
-
-        if(!errorResult) {
-            cancelEdit();
-            loadCatalog();
-        } else {
-            alert("Database Error: " + errorResult.message);
-        }
+        const { error } = editCatalogId ? await _supabase.from('tournament_catalog').update(payload).eq('id', editCatalogId) : await _supabase.from('tournament_catalog').insert([payload]);
+        if(!error) { alert("Saved!"); cancelEdit(); loadCatalog(); }
     }
 
     async function loadCatalog() {
         const { data } = await _supabase.from('tournament_catalog').select('*').eq('event_id', eventPrefix).order('id', { ascending: false });
         const listDiv = document.getElementById('catalogList');
         listDiv.innerHTML = "";
-        
         if (data) {
             catalogDataBackup = data;
             data.forEach(item => {
                 const dayInfo = item.tday ? ` - ${item.tday}` : "";
-                const tables = item.item_type === 'ODE' ? ` [Tables ${item.table_min}-${item.table_max}]` : " [Auto-Allocated]";
                 listDiv.innerHTML += `
                     <div class="catalog-item">
-                        <div class="catalog-info"><strong>${item.item_type}</strong> [${item.game}] ${item.tname}${dayInfo}${tables}</div>
+                        <div class="catalog-info"><strong>${item.item_type}</strong> [${item.game}] ${item.tname}${dayInfo}</div>
                         <div>
                             <button class="btn-edit" onclick="editCatalogItem(${item.id})">EDIT</button>
                             <button class="btn-del" onclick="deleteCatalogItem(${item.id})">DEL</button>
@@ -341,73 +352,45 @@
     function editCatalogItem(id) {
         const item = catalogDataBackup.find(c => c.id === id);
         if(!item) return;
-
         editCatalogId = item.id;
-        
         document.getElementById('catType').value = item.item_type || "";
         toggleCatFields();
-        
         document.getElementById('catGame').value = item.game || "";
         document.getElementById('catName').value = item.tname || "";
         document.getElementById('catFee').value = item.tfee || "";
         document.getElementById('catCost').value = item.tcost || "";
-        
         if (item.item_type === 'ODE') {
             document.getElementById('catMinTable').value = item.table_min || "";
             document.getElementById('catMaxTable').value = item.table_max || "";
             document.getElementById('catPodSize').value = item.pod_size || "";
-            document.getElementById('catTickets').value = item.tickets_per_pod || "";
+            generatePrizeInputs();
+            setTimeout(() => {
+                const config = item.prizes_config || {};
+                document.querySelectorAll('.prize-input').forEach(inp => {
+                    inp.value = config[inp.dataset.pos] || 0;
+                });
+            }, 50);
         } else {
             document.getElementById('catDay').value = item.tday || "";
             document.getElementById('catHour').value = item.thour || "";
             document.getElementById('catTax').value = item.tax || "";
-            
-            // Correção segura do Spread independente do formato do banco
-            let numSpread = Number(item.spread);
-            if (numSpread === 2) document.getElementById('catSpread').value = "2.0";
-            else if (numSpread === 1.75) document.getElementById('catSpread').value = "1.75";
-            else if (numSpread === 1.5) document.getElementById('catSpread').value = "1.5";
-            else document.getElementById('catSpread').value = "";
+            document.getElementById('catSpread').value = item.spread || "";
         }
-
         document.getElementById('catalogTitle').innerText = "EDITING TOURNAMENT...";
-        document.getElementById('catalogTitle').style.color = "var(--red)";
-        
-        const btnSave = document.getElementById('btnSaveCatalog');
-        btnSave.innerText = "UPDATE TOURNAMENT";
-        btnSave.className = "btn-gold";
-        
+        document.getElementById('btnSaveCatalog').innerText = "UPDATE TOURNAMENT";
         document.getElementById('btnCancelEdit').style.display = 'block';
-
-        document.getElementById('catalogBox').scrollIntoView({ behavior: 'smooth' });
     }
 
     function cancelEdit() {
         editCatalogId = null;
-        
         document.getElementById('catType').value = "";
+        toggleCatFields();
         document.getElementById('catGame').value = "";
         document.getElementById('catName').value = "";
         document.getElementById('catFee').value = "";
         document.getElementById('catCost').value = "";
-        document.getElementById('catMinTable').value = "";
-        document.getElementById('catMaxTable').value = "";
-        document.getElementById('catPodSize').value = "";
-        document.getElementById('catTickets').value = "";
-        document.getElementById('catDay').value = "";
-        document.getElementById('catHour').value = "";
-        document.getElementById('catTax').value = "";
-        document.getElementById('catSpread').value = "";
-        
-        toggleCatFields();
-
         document.getElementById('catalogTitle').innerText = "TOURNAMENT CATALOG SETUP";
-        document.getElementById('catalogTitle').style.color = "var(--gold)";
-        
-        const btnSave = document.getElementById('btnSaveCatalog');
-        btnSave.innerText = "ADD TO CATALOG";
-        btnSave.className = "btn-blue";
-        
+        document.getElementById('btnSaveCatalog').innerText = "ADD TO CATALOG";
         document.getElementById('btnCancelEdit').style.display = 'none';
     }
 
@@ -421,8 +404,6 @@
     }
 
     function navTo(page) {
-        sessionStorage.setItem('ode_auth', 'true');
-        sessionStorage.setItem('sch_auth', 'true');
         window.location.href = `${page}?event=${eventPrefix}`;
     }
 
