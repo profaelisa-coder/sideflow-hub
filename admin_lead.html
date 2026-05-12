@@ -404,6 +404,11 @@
     }
 
     function navTo(page) {
+        sessionStorage.setItem('ode_auth', 'true');
+        sessionStorage.setItem('sch_auth', 'true');
+        sessionStorage.setItem('jdg_auth', 'true');
+        sessionStorage.setItem('pl_auth', 'true');
+        sessionStorage.setItem('ps_auth', 'true');
         window.location.href = `${page}?event=${eventPrefix}`;
     }
 
