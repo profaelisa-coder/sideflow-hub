@@ -138,7 +138,11 @@
             
             if (upperStatus === 'OCCUPIED') {
                 stateClass = 'occupied-state';
-                statusText = t.tournament_name || 'OCCUPIED';
+                if (t.tournament_name) {
+                    statusText = t.pod_number ? t.tournament_name + ' #' + t.pod_number : t.tournament_name;
+                } else {
+                    statusText = 'OCCUPIED';
+                }
             } else if (upperStatus === 'BLOCKED') {
                 stateClass = 'blocked-state';
                 statusText = 'BLOCKED';
@@ -198,7 +202,10 @@
         }
         
         const tableNum = tableData[0].table_number;
-        await _supabase.from('event_tables').update({ tournament_name: tname, status: 'OCCUPIED' }).eq('event_id', eventPrefix).eq('table_number', tableNum);
+        const podNum = parseInt(groupKey.split('|')[1]);
+        
+        await _supabase.from('event_tables').update({ tournament_name: tname, pod_number: podNum, status: 'OCCUPIED' }).eq('event_id', eventPrefix).eq('table_number', tableNum);
+        
         pendingWA[groupKey] = { table: tableNum };
         document.getElementById(`alloc-${safeKey}`).style.display = 'none';
         document.getElementById(`wa-${safeKey}`).style.display = 'block';
@@ -240,14 +247,14 @@
         const safeStatus = status ? status.trim().toUpperCase() : '';
         if(safeStatus === 'FREE' || safeStatus === 'BLOCKED') return; 
         if(confirm(`Free Table ${num}?`)) {
-            await _supabase.from('event_tables').update({ status: 'FREE', tournament_name: null }).eq('id', id);
+            await _supabase.from('event_tables').update({ status: 'FREE', tournament_name: null, pod_number: null }).eq('id', id);
             loadTables();
         }
     }
 
     async function toggleBlockTable(id, action) {
         const newStatus = action === 'BLOCK' ? 'BLOCKED' : 'FREE';
-        await _supabase.from('event_tables').update({ status: newStatus, tournament_name: null }).eq('id', id);
+        await _supabase.from('event_tables').update({ status: newStatus, tournament_name: null, pod_number: null }).eq('id', id);
         loadTables();
     }
 
@@ -280,7 +287,7 @@
         if(isConfirmed) {
             const { error } = await _supabase
                 .from('event_tables')
-                .update({ status: 'FREE', tournament_name: null })
+                .update({ status: 'FREE', tournament_name: null, pod_number: null })
                 .eq('event_id', eventPrefix)
                 .eq('tournament_name', tname);
                 
