@@ -18,21 +18,16 @@
         .btn-gold { background: var(--gold); color: var(--dark); width: 100%; }
         .btn-blue { background: var(--blue); color: var(--dark); width: 100%; }
         .btn-green { background: var(--green); color: white; width: 100%; font-size: 1rem; }
-        
         .player-info { background: var(--dark); padding: 15px; border-radius: 8px; text-align: center; border: 1px solid var(--blue); margin-bottom: 20px; }
         .balance-val { font-size: 2rem; color: var(--gold); display: block; font-weight: bold; }
-        
         .product-row { display: grid; grid-template-columns: 1fr 60px 80px; gap: 10px; align-items: center; padding: 12px; background: rgba(0,0,0,0.2); border-radius: 8px; margin-bottom: 8px; border-left: 4px solid var(--blue); }
         .product-info { font-size: 0.9rem; }
         .product-info b { display: block; color: var(--white); }
         .product-info small { color: var(--gold); }
         .qty-input { text-align: center; padding: 8px; font-size: 1rem; }
-
-        /* Modal Foto */
         .modal { position: fixed; top:0; left:0; width:100%; height:100%; background: rgba(0,0,0,0.85); display: none; align-items: center; justify-content: center; z-index: 2000; }
         .modal-content { background: var(--sec); padding: 20px; border-radius: 12px; text-align: center; max-width: 90%; }
         #imgPreview { max-width: 100%; border-radius: 8px; border: 2px solid var(--gold); }
-
         #loginOverlay { position: fixed; top:0; left:0; width:100%; height:100%; background: var(--bg); display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 3000; }
         #loginOverlay input { width: 250px; text-align: center; margin-bottom: 20px; }
     </style>
@@ -132,8 +127,16 @@
         `).join('');
     }
 
+    function formatDriveLink(url) {
+        if (url && url.includes('drive.google.com') && url.includes('/d/')) {
+            const id = url.split('/d/')[1].split('/')[0];
+            return `https://drive.google.com/uc?export=view&id=${id}`;
+        }
+        return url;
+    }
+
     function viewPhoto(url) {
-        document.getElementById('imgPreview').src = url;
+        document.getElementById('imgPreview').src = formatDriveLink(url);
         document.getElementById('photoModal').style.display = 'flex';
     }
 
@@ -141,10 +144,8 @@
         const pid = document.getElementById('playerId').value;
         if(!pid) return;
 
-        // 1. Get Name from ODE registrations
         const { data: reg } = await _supabase.from('ode_registrations').select('player_name').eq('event_id', eventPrefix).eq('player_id', pid).limit(1).single();
         
-        // 2. Calculate balance from transactions
         const { data: trans } = await _supabase.from('player_transactions').select('amount').eq('event_id', eventPrefix).eq('player_id', pid);
         
         const balance = trans ? trans.reduce((acc, t) => acc + t.amount, 0) : 0;
@@ -187,7 +188,6 @@
 
         try {
             for(const item of itemsToBuy) {
-                // 1. Create Negative Transaction
                 const { error: tError } = await _supabase.from('player_transactions').insert([{
                     event_id: eventPrefix,
                     player_id: currentPlayer.id,
@@ -199,7 +199,6 @@
 
                 if(tError) throw new Error("Transaction Error: " + tError.message);
 
-                // 2. Deduct Stock
                 const { error: sError } = await _supabase.from('prize_inventory').update({
                     stock_quantity: item.stock_quantity - item.buyQty
                 }).eq('id', item.id);
