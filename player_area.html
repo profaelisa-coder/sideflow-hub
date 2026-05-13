@@ -6,53 +6,66 @@
     <title>SideFlow - Player Area</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
-        :root { --bg: #0A2540; --sec: #1A4B84; --gold: #ffb703; --white: #ffffff; --blue: #63B3ED; --red: #e63946; --dark: #051626; }
+        :root { --bg: #0A2540; --sec: #1A4B84; --gold: #ffb703; --white: #ffffff; --blue: #63B3ED; --red: #e63946; --dark: #051626; --green: #2ecc71; }
         body { font-family: 'Segoe UI', sans-serif; background: var(--bg); color: var(--white); margin: 0; padding: 0; display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
         
         #authOverlay { position: fixed; top:0; left:0; width:100%; height:100%; background: var(--bg); z-index: 5000; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px; box-sizing: border-box; }
-        .auth-box { width: 100%; max-width: 320px; text-align: center; }
-        .auth-box h2 { color: var(--gold); text-transform: uppercase; margin-bottom: 30px; }
+        .auth-box { width: 100%; max-width: 350px; text-align: center; }
+        .auth-box h2 { color: var(--gold); text-transform: uppercase; margin-bottom: 30px; font-size: 1.8rem; }
         
         #mainApp { display: none; flex-direction: column; height: 100vh; }
         
-        .top-bar { background: var(--dark); padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid var(--gold); z-index: 10; }
-        .player-id-tag { font-size: 1rem; font-weight: bold; opacity: 0.9; }
-        .balance-pill { background: var(--gold); color: var(--dark); padding: 8px 18px; border-radius: 25px; font-weight: 900; font-size: 1.2rem; box-shadow: 0 4px 10px rgba(255,183,3,0.3); }
+        .top-bar { position: sticky; top: 0; background: var(--dark); padding: 18px 20px; display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid var(--gold); z-index: 100; box-shadow: 0 4px 10px rgba(0,0,0,0.5); }
+        .player-id-tag { font-size: 1.2rem; font-weight: bold; color: var(--white); }
+        .balance-pill { background: var(--gold); color: var(--dark); padding: 10px 22px; border-radius: 30px; font-weight: 900; font-size: 1.4rem; box-shadow: 0 4px 15px rgba(255,183,3,0.4); }
         
-        .brand-header { text-align: center; padding: 20px 15px; background: var(--bg); display: flex; flex-direction: column; align-items: center; justify-content: center; }
-        .brand-header img { max-height: 80px; object-fit: contain; margin-bottom: 10px; display: none; }
-        .brand-header h1 { margin: 0; font-size: 1.3rem; color: var(--gold); text-transform: uppercase; letter-spacing: 1px; }
-        .brand-header p { margin: 5px 0 0 0; font-size: 0.85rem; opacity: 0.8; text-transform: uppercase; }
+        .brand-header { text-align: center; padding: 25px 15px 15px 15px; background: var(--bg); display: flex; flex-direction: column; align-items: center; justify-content: center; }
+        .brand-header img { max-height: 90px; object-fit: contain; margin-bottom: 15px; display: none; filter: drop-shadow(0px 4px 6px rgba(0,0,0,0.4)); }
+        .brand-header h1 { margin: 0; font-size: 1.5rem; color: var(--gold); text-transform: uppercase; letter-spacing: 1px; font-weight: 900; }
+        .brand-header p { margin: 5px 0 0 0; font-size: 0.9rem; opacity: 0.8; text-transform: uppercase; font-weight: bold; }
 
-        #pager { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255, 183, 3, 0.95); z-index: 9999; display: none; flex-direction: column; align-items: center; justify-content: center; text-align: center; color: var(--dark); animation: pulse-bg 1s infinite; }
-        @keyframes pulse-bg { 0% { background: rgba(255, 183, 3, 1); } 50% { background: rgba(255, 220, 100, 1); } 100% { background: rgba(255, 183, 3, 1); } }
-        #pager h3 { font-size: 2.5rem; margin: 0 0 10px 0; font-weight: 900; text-transform: uppercase; }
-        #pager p { font-size: 2rem; margin: 0 0 40px 0; font-weight: 900; color: var(--red); }
-        .btn-stop-pager { background: var(--dark); color: white; border: none; padding: 20px 40px; border-radius: 12px; font-weight: 900; font-size: 1.2rem; text-transform: uppercase; box-shadow: 0 8px 15px rgba(0,0,0,0.4); cursor: pointer; }
+        #pager { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255, 183, 3, 0.98); z-index: 9999; display: none; flex-direction: column; align-items: center; justify-content: center; text-align: center; color: var(--dark); animation: pulse-bg 0.8s infinite alternate; }
+        @keyframes pulse-bg { from { background: rgba(255, 183, 3, 1); } to { background: rgba(255, 230, 100, 1); } }
+        #pager h3 { font-size: 3rem; margin: 0 0 15px 0; font-weight: 900; text-transform: uppercase; line-height: 1.1; }
+        #pager p { font-size: 2.2rem; margin: 0 0 50px 0; font-weight: 900; color: var(--red); background: white; padding: 10px 30px; border-radius: 15px; box-shadow: 0 8px 20px rgba(0,0,0,0.3); }
+        .btn-stop-pager { background: var(--dark); color: white; border: none; padding: 25px 50px; border-radius: 15px; font-weight: 900; font-size: 1.5rem; text-transform: uppercase; box-shadow: 0 10px 20px rgba(0,0,0,0.5); cursor: pointer; transition: 0.2s; }
+        .btn-stop-pager:active { transform: scale(0.95); }
 
         .tab-nav { display: flex; background: var(--dark); border-bottom: 1px solid rgba(255,255,255,0.1); }
-        .tab-btn { flex: 1; padding: 18px; border: none; background: transparent; color: white; font-weight: bold; text-transform: uppercase; font-size: 0.85rem; opacity: 0.5; transition: 0.3s; cursor: pointer; }
-        .tab-btn.active { opacity: 1; color: var(--gold); border-bottom: 4px solid var(--gold); }
+        .tab-btn { flex: 1; padding: 18px 5px; border: none; background: transparent; color: white; font-weight: bold; text-transform: uppercase; font-size: 0.85rem; opacity: 0.5; transition: 0.3s; cursor: pointer; }
+        .tab-btn.active { opacity: 1; color: var(--gold); border-bottom: 4px solid var(--gold); background: rgba(255,183,3,0.1); }
         
         .content { flex: 1; overflow-y: auto; padding: 20px; }
         .tab-content { display: none; }
         .tab-content.active { display: block; }
         
-        .card { background: var(--sec); padding: 25px; border-radius: 12px; margin-bottom: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.2); }
-        label { display: block; font-size: 0.8rem; font-weight: bold; margin-bottom: 10px; color: var(--gold); text-transform: uppercase; }
-        input { width: 100%; padding: 15px; border-radius: 10px; border: 1px solid rgba(255,255,255,0.1); background: var(--dark); color: white; box-sizing: border-box; font-size: 1.1rem; margin-bottom: 20px; min-height: 48px; }
-        input:focus { border-color: var(--gold); outline: none; }
+        .card { background: var(--sec); padding: 25px; border-radius: 15px; margin-bottom: 20px; box-shadow: 0 6px 15px rgba(0,0,0,0.3); }
+        label { display: block; font-size: 0.9rem; font-weight: bold; margin-bottom: 12px; color: var(--gold); text-transform: uppercase; }
+        input { width: 100%; padding: 18px; border-radius: 12px; border: 1.5px solid rgba(255,255,255,0.2); background: var(--dark); color: white; box-sizing: border-box; font-size: 1.2rem; margin-bottom: 25px; text-align: center; }
+        input:focus { border-color: var(--gold); outline: none; background: rgba(0,0,0,0.5); }
         
-        button.primary { width: 100%; padding: 18px; border-radius: 10px; border: none; font-weight: bold; text-transform: uppercase; background: var(--gold); color: var(--dark); cursor: pointer; font-size: 1.1rem; }
-        button.primary:disabled { opacity: 0.5; background: var(--blue); color: white; cursor: not-allowed; }
+        button.primary { width: 100%; padding: 20px; border-radius: 12px; border: none; font-weight: 900; text-transform: uppercase; background: var(--gold); color: var(--dark); cursor: pointer; font-size: 1.2rem; transition: 0.3s; box-shadow: 0 4px 10px rgba(0,0,0,0.3); }
+        button.primary:disabled { opacity: 0.5; background: var(--blue); color: white; cursor: not-allowed; box-shadow: none; }
+        button.primary:active:not(:disabled) { transform: scale(0.98); }
         
-        .history-item { background: rgba(0,0,0,0.2); padding: 18px; border-radius: 10px; margin-bottom: 12px; border-left: 5px solid var(--gold); display: flex; justify-content: space-between; align-items: center; }
+        .history-item { background: rgba(0,0,0,0.25); padding: 20px; border-radius: 12px; margin-bottom: 15px; border-left: 5px solid var(--gold); display: flex; justify-content: space-between; align-items: center; }
         .history-info { display: flex; flex-direction: column; }
-        .history-info b { font-size: 1rem; }
-        .history-info small { font-size: 0.8rem; opacity: 0.7; margin-top: 6px; }
-        .history-val { font-weight: 900; font-size: 1.2rem; }
+        .history-info b { font-size: 1.1rem; }
+        .history-info small { font-size: 0.85rem; opacity: 0.7; margin-top: 8px; }
+        .history-val { font-weight: 900; font-size: 1.3rem; }
         .val-plus { color: var(--green); }
         .val-minus { color: var(--red); }
+
+        .prize-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; }
+        .prize-card { background: var(--sec); border-radius: 15px; overflow: hidden; display: flex; flex-direction: column; position: relative; transition: 0.3s; }
+        .prize-img { width: 100%; aspect-ratio: 1; object-fit: cover; background: rgba(0,0,0,0.3); display: flex; align-items: center; justify-content: center; font-size: 3rem; font-weight: 900; color: rgba(255,255,255,0.1); }
+        .prize-info { padding: 15px 10px; display: flex; flex-direction: column; align-items: center; text-align: center; flex: 1; justify-content: space-between; background: linear-gradient(0deg, rgba(0,0,0,0.2) 0%, transparent 100%); }
+        .prize-name { font-weight: bold; font-size: 0.95rem; margin-bottom: 12px; line-height: 1.2; }
+        .prize-price { background: var(--gold); color: var(--dark); font-weight: 900; padding: 6px 15px; border-radius: 20px; font-size: 1.1rem; box-shadow: 0 4px 6px rgba(0,0,0,0.3); }
+        .prize-affordable { border: 2px solid var(--gold); box-shadow: 0 0 15px rgba(255,183,3,0.4); }
+        .prize-locked { opacity: 0.55; filter: grayscale(40%); }
+        .prize-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(10, 37, 64, 0.7); display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 5; pointer-events: none; }
+        .prize-overlay span { background: var(--dark); padding: 8px 15px; border-radius: 8px; font-size: 0.85rem; border: 1.5px solid var(--gold); color: var(--gold); font-weight: 900; text-transform: uppercase; letter-spacing: 1px; box-shadow: 0 4px 10px rgba(0,0,0,0.5); transform: rotate(-5deg); }
     </style>
 </head>
 <body>
@@ -66,7 +79,7 @@
     </div>
     <div class="auth-box" id="step2" style="display: none;">
         <h2 id="passTitle">PASSWORD</h2>
-        <p id="passSub" style="font-size: 0.85rem; margin-bottom: 25px; opacity: 0.8;"></p>
+        <p id="passSub" style="font-size: 0.9rem; margin-bottom: 25px; opacity: 0.8; font-weight: bold;"></p>
         <input type="password" id="loginPass" placeholder="*****" inputmode="numeric" maxlength="5">
         <button class="primary" id="btnPass" onclick="handlePass()">UNLOCK</button>
     </div>
@@ -92,6 +105,7 @@
 
     <div class="tab-nav">
         <button class="tab-btn active" onclick="switchTab(event, 'tab-home')">HOME</button>
+        <button class="tab-btn" onclick="switchTab(event, 'tab-prizes')">PRIZE WALL</button>
         <button class="tab-btn" onclick="switchTab(event, 'tab-transfer')">TRANSFER</button>
         <button class="tab-btn" onclick="switchTab(event, 'tab-history')">HISTORY</button>
     </div>
@@ -100,20 +114,24 @@
         <div id="tab-home" class="tab-content active">
             <div class="card">
                 <label>PLAYER NAME</label>
-                <div id="playerName" style="font-size: 1.3rem; font-weight: bold;">---</div>
+                <div id="playerName" style="font-size: 1.5rem; font-weight: 900; color: var(--gold);">---</div>
             </div>
-            <div id="activePodCard" class="card" style="display: none; border-left: 5px solid var(--blue);">
+            <div id="activePodCard" class="card" style="display: none; border-left: 6px solid var(--blue);">
                 <label>CURRENT TOURNAMENT</label>
-                <div id="activePodName" style="font-weight: bold; font-size: 1.1rem;">---</div>
-                <div id="activePodStatus" style="font-size: 0.9rem; opacity: 0.8; margin-top: 8px;">Waiting for Allocation...</div>
+                <div id="activePodName" style="font-weight: 900; font-size: 1.3rem;">---</div>
+                <div id="activePodStatus" style="font-size: 1rem; opacity: 0.9; margin-top: 10px; font-weight: bold;">Waiting for Allocation...</div>
             </div>
+        </div>
+
+        <div id="tab-prizes" class="tab-content">
+            <div id="prizeGrid" class="prize-grid"></div>
         </div>
 
         <div id="tab-transfer" class="tab-content">
             <div class="card">
                 <label>DESTINATION ID</label>
                 <input type="number" id="destId" oninput="checkDestName()" placeholder="EX: 9999" inputmode="numeric">
-                <div id="destName" style="font-size: 0.9rem; color: var(--gold); margin-top: -10px; margin-bottom: 20px; min-height: 20px; font-weight: bold;"></div>
+                <div id="destName" style="font-size: 1rem; color: var(--gold); margin-top: -15px; margin-bottom: 25px; min-height: 20px; font-weight: 900; text-align: center;"></div>
                 
                 <label>TICKET AMOUNT</label>
                 <input type="number" id="transAmount" placeholder="0" inputmode="numeric">
@@ -142,12 +160,15 @@
     let currentPlayer = null;
     let pagerActive = false;
     let lastStatus = null;
+    let needsPassword = false;
+    let currentBalance = 0;
+    let currentPrizes = [];
 
     async function handleLogin() {
         const id = document.getElementById('loginId').value;
         if(!id) return;
         
-        let query = _supabase.from('ode_registrations').select('*').eq('player_id', id);
+        let query = _supabase.from('ode_registrations').select('id, player_id, player_name, event_id, status').eq('player_id', id);
         if(eventPrefix) { query = query.eq('event_id', eventPrefix); }
         
         const { data, error } = await query.order('created_at', {ascending: false}).limit(1).single();
@@ -156,9 +177,13 @@
         currentPlayer = data;
         if(!eventPrefix) { eventPrefix = data.event_id; }
         
+        const { data: nullPass } = await _supabase.from('ode_registrations').select('id').eq('player_id', currentPlayer.player_id).is('player_password', null).maybeSingle();
+        needsPassword = !!nullPass;
+        
         document.getElementById('step1').style.display = 'none';
         document.getElementById('step2').style.display = 'block';
-        if(!data.player_password) {
+        
+        if(needsPassword) {
             document.getElementById('passTitle').innerText = "CREATE PASSWORD";
             document.getElementById('passSub').innerText = "DEFINE A 5-DIGIT PIN FOR SECURITY";
             document.getElementById('btnPass').innerText = "CREATE & ENTER";
@@ -171,13 +196,15 @@
     async function handlePass() {
         const pass = document.getElementById('loginPass').value;
         if(pass.length !== 5) return alert("PASSWORD MUST BE 5 DIGITS");
-        if(!currentPlayer.player_password) {
+        
+        if(needsPassword) {
             const { error } = await _supabase.from('ode_registrations').update({ player_password: pass }).eq('id', currentPlayer.id);
             if(error) return alert("ERROR SAVING PASSWORD");
-            currentPlayer.player_password = pass;
         } else {
-            if(currentPlayer.player_password !== pass) return alert("INCORRECT PASSWORD");
+            const { data: auth } = await _supabase.from('ode_registrations').select('id').eq('player_id', currentPlayer.player_id).eq('player_password', pass).maybeSingle();
+            if(!auth) return alert("INCORRECT PASSWORD");
         }
+        
         document.getElementById('authOverlay').style.display = 'none';
         document.getElementById('mainApp').style.display = 'flex';
         startApp();
@@ -200,40 +227,92 @@
         }
     }
 
+    async function fetchPrizeWall() {
+        const { data } = await _supabase.from('prize_inventory')
+            .select('*')
+            .eq('event_id', eventPrefix)
+            .gt('stock_quantity', 0)
+            .order('ticket_cost', { ascending: true });
+        currentPrizes = data || [];
+        renderPrizeWall();
+    }
+
+    function renderPrizeWall() {
+        const grid = document.getElementById('prizeGrid');
+        if(currentPrizes.length === 0) {
+            grid.innerHTML = "<div style='grid-column: span 2; text-align:center; opacity:0.5; padding: 30px; font-weight: bold;'>NO PRIZES AVAILABLE YET</div>";
+            return;
+        }
+        grid.innerHTML = currentPrizes.map(p => {
+            const affordable = currentBalance >= p.ticket_cost;
+            const cardClass = affordable ? 'prize-affordable' : 'prize-locked';
+            const imgHtml = p.image_url ? `<img src="${p.image_url}" class="prize-img" loading="lazy">` : `<div class="prize-img">${p.product_name.charAt(0).toUpperCase()}</div>`;
+            const lockHtml = !affordable ? `<div class="prize-overlay"><span>KEEP PLAYING!</span></div>` : '';
+            return `
+                <div class="prize-card ${cardClass}">
+                    ${imgHtml}
+                    ${lockHtml}
+                    <div class="prize-info">
+                        <div class="prize-name">${p.product_name}</div>
+                        <div class="prize-price">${p.ticket_cost} TKS</div>
+                    </div>
+                </div>
+            `;
+        }).join('');
+    }
+
     function startApp() {
         document.getElementById('displayPlayer').innerText = "ID: " + currentPlayer.player_id;
         document.getElementById('playerName').innerText = currentPlayer.player_name;
         fetchEventData();
+        fetchPrizeWall();
         updateData();
-        setInterval(updateData, 10000);
+        
         _supabase.channel('player_watch')
             .on('postgres_changes', { event: '*', schema: 'public', table: 'ode_registrations', filter: `player_id=eq.${currentPlayer.player_id}` }, updateData)
+            .on('postgres_changes', { event: '*', schema: 'public', table: 'prize_inventory', filter: `event_id=eq.${eventPrefix}` }, fetchPrizeWall)
             .subscribe();
     }
 
     async function updateData() {
-        const { data: player } = await _supabase.from('ode_registrations').select('*').eq('player_id', currentPlayer.player_id).order('created_at', {ascending: false});
+        const { data: player } = await _supabase.from('ode_registrations')
+            .select('id, player_id, player_name, event_id, status, assigned_table, tname, pod_number, created_at')
+            .eq('player_id', currentPlayer.player_id)
+            .order('created_at', {ascending: false});
+            
         if(!player) return;
         const currentReg = player[0];
         const status = currentReg.status;
+        
         if(status === 'allocated' && lastStatus !== 'allocated') {
             startPager(currentReg.tname, currentReg.assigned_table);
         }
         lastStatus = status;
+        
         const podCard = document.getElementById('activePodCard');
         if(status === 'waiting' || status === 'allocated') {
             podCard.style.display = 'block';
             document.getElementById('activePodName').innerText = currentReg.tname + " #" + currentReg.pod_number;
-            document.getElementById('activePodStatus').innerText = status === 'allocated' ? "TABLE " + currentReg.assigned_table : "Waiting for Allocation...";
-            if(status === 'allocated') { document.getElementById('activePodStatus').style.color = "var(--green)"; document.getElementById('activePodStatus').style.fontWeight = "bold"; }
-            else { document.getElementById('activePodStatus').style.color = "inherit"; document.getElementById('activePodStatus').style.fontWeight = "normal"; }
+            document.getElementById('activePodStatus').innerText = status === 'allocated' ? "GO TO TABLE " + currentReg.assigned_table : "Waiting for Allocation...";
+            if(status === 'allocated') { 
+                document.getElementById('activePodStatus').style.color = "var(--green)"; 
+                document.getElementById('activePodStatus').style.fontWeight = "900"; 
+                document.getElementById('activePodStatus').style.fontSize = "1.2rem";
+            } else { 
+                document.getElementById('activePodStatus').style.color = "inherit"; 
+                document.getElementById('activePodStatus').style.fontWeight = "bold"; 
+                document.getElementById('activePodStatus').style.fontSize = "1rem";
+            }
         } else {
             podCard.style.display = 'none';
         }
+        
         const { data: trans } = await _supabase.from('player_transactions').select('*').eq('player_id', currentPlayer.player_id);
-        const total = trans ? trans.reduce((acc, curr) => acc + curr.amount, 0) : 0;
-        document.getElementById('displayBalance').innerText = total + " TKS";
+        currentBalance = trans ? trans.reduce((acc, curr) => acc + curr.amount, 0) : 0;
+        document.getElementById('displayBalance').innerText = currentBalance + " TKS";
+        
         renderHistory(trans, player);
+        renderPrizeWall(); 
     }
 
     function renderHistory(trans, regs) {
@@ -265,9 +344,10 @@
         const display = document.getElementById('destName');
         const btn = document.getElementById('btnTransfer');
         if(id.length < 2) { display.innerText = ""; btn.disabled = true; return; }
+        
         const { data } = await _supabase.from('ode_registrations').select('player_name').eq('player_id', id).limit(1).single();
         if(data) {
-            display.innerText = "Send to: " + data.player_name;
+            display.innerText = "SEND TO: " + data.player_name;
             btn.disabled = false;
         } else {
             display.innerText = "ID NOT FOUND";
@@ -278,16 +358,17 @@
     async function executeTransfer() {
         const destId = document.getElementById('destId').value;
         const amount = parseInt(document.getElementById('transAmount').value);
-        const balanceText = document.getElementById('displayBalance').innerText;
-        const balance = parseInt(balanceText);
         if(!amount || amount <= 0) return alert("ENTER A VALID AMOUNT");
-        if(amount > balance) return alert("INSUFFICIENT BALANCE");
+        if(amount > currentBalance) return alert("INSUFFICIENT BALANCE");
+        
         const btn = document.getElementById('btnTransfer');
         btn.disabled = true;
         btn.innerText = "PROCESSING...";
+        
         const { error: err1 } = await _supabase.from('player_transactions').insert([
             { player_id: currentPlayer.player_id, amount: -amount, description: "Sent to ID " + destId, source_type: 'TRANSFER_SEND' }
         ]);
+        
         if(!err1) {
             await _supabase.from('player_transactions').insert([
                 { player_id: destId, amount: amount, description: "Received from ID " + currentPlayer.player_id, source_type: 'TRANSFER_RECV' }
@@ -300,6 +381,7 @@
         } else {
             alert("TRANSACTION ERROR");
         }
+        
         btn.disabled = false;
         btn.innerText = "CONFIRM TRANSFER";
     }
@@ -315,7 +397,7 @@
         pagerActive = true;
         document.getElementById('pager').style.display = 'flex';
         document.getElementById('pagerText').innerText = "TABLE " + table;
-        document.getElementById('beep').play().catch(()=>console.log("Audio play blocked"));
+        document.getElementById('beep').play().catch(()=>{});
         if ("vibrate" in navigator) navigator.vibrate([500, 300, 500, 300, 500, 300, 500]);
     }
 
