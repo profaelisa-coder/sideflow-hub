@@ -9,65 +9,65 @@
         :root { --bg: #1A4B84; --sec: #2B6CB0; --gold: #ffb703; --blue: #63B3ED; --white: #e0e1dd; --red: #e63946; --green: #2ecc71; --dark: #0A2540; }
         body { font-family: 'Segoe UI', sans-serif; background: var(--bg); color: var(--white); margin: 0; padding: 15px; padding-bottom: 80px; display: flex; flex-direction: column; align-items: center; }
         .container { width: 100%; max-width: 900px; }
-        .header-top { display: grid; grid-template-columns: 100px 1fr 100px; align-items: center; margin-bottom: 20px; width: 100%; }
-        h2 { grid-column: 2; text-align: center; color: var(--gold); text-transform: uppercase; letter-spacing: 2px; margin: 0; font-size: 1.2rem; white-space: nowrap; }
-        .btn-return { grid-column: 3; justify-self: end; background: transparent; color: var(--gold); border: 1px solid var(--gold); padding: 5px 10px; border-radius: 6px; cursor: pointer; font-weight: bold; text-transform: uppercase; font-size: 0.7rem; width: auto; transition: 0.3s; }
+        .header-top { display: grid; grid-template-columns: 100px 1fr 100px; align-items: center; margin-bottom: 25px; width: 100%; }
+        h2 { grid-column: 2; text-align: center; color: var(--gold); text-transform: uppercase; letter-spacing: 2px; margin: 0; font-size: 1.4rem; white-space: nowrap; }
+        .btn-return { grid-column: 3; justify-self: end; background: transparent; color: var(--gold); border: 1.5px solid var(--gold); padding: 8px 15px; border-radius: 8px; cursor: pointer; font-weight: bold; text-transform: uppercase; font-size: 0.8rem; width: auto; transition: 0.3s; }
         .btn-return:hover { background: var(--gold); color: var(--dark); }
         
-        .box { background: var(--sec); padding: 15px; border-radius: 12px; box-shadow: 0 8px 25px rgba(0,0,0,0.4); margin-bottom: 20px; border-bottom: 4px solid var(--gold); }
-        .row { display: flex; gap: 8px; margin-bottom: 10px; width: 100%; }
+        .box { background: var(--sec); padding: 20px; border-radius: 15px; box-shadow: 0 10px 30px rgba(0,0,0,0.4); margin-bottom: 25px; border-bottom: 5px solid var(--gold); }
+        .row { display: flex; gap: 10px; margin-bottom: 15px; width: 100%; }
         .col { flex: 1; display: flex; flex-direction: column; }
-        label { display: block; font-size: 0.7rem; font-weight: bold; margin-bottom: 5px; color: var(--gold); text-transform: uppercase; }
-        input, select { width: 100%; padding: 8px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.2); background: rgba(0,0,0,0.15); color: white; font-size: 0.9rem; box-sizing: border-box; transition: 0.3s; }
-        input:focus, select:focus { border-color: var(--gold); outline: none; background: rgba(0,0,0,0.3); }
+        label { display: block; font-size: 0.85rem; font-weight: bold; margin-bottom: 8px; color: var(--gold); text-transform: uppercase; }
+        input, select { width: 100%; padding: 12px; border-radius: 8px; border: 1.5px solid rgba(255,255,255,0.2); background: rgba(0,0,0,0.25); color: white; font-size: 1.1rem; box-sizing: border-box; transition: 0.3s; }
+        input:focus, select:focus { border-color: var(--gold); outline: none; background: rgba(0,0,0,0.4); }
         
-        button { width: 100%; padding: 14px; border-radius: 8px; border: none; font-weight: bold; text-transform: uppercase; cursor: pointer; transition: 0.3s; font-size: 0.9rem; }
+        button { width: 100%; padding: 18px; border-radius: 10px; border: none; font-weight: bold; text-transform: uppercase; cursor: pointer; transition: 0.3s; font-size: 1.1rem; }
         button:hover { filter: brightness(1.1); }
-        .btn-reg { background: var(--gold); color: var(--dark); margin-top: 5px; }
-        .btn-blue { background: var(--blue); color: var(--dark); margin-top: 10px; }
+        .btn-reg { background: var(--gold); color: var(--dark); margin-top: 10px; }
+        .btn-blue { background: var(--blue); color: var(--dark); margin-top: 15px; }
         
-        .btn-cancel-edit { background: var(--red); color: white; margin-top: 5px; display: none; }
-        .btn-edit-pod { background: var(--gold); color: var(--dark); padding: 5px 10px; border-radius: 6px; border: none; font-weight: bold; cursor: pointer; font-size: 0.7rem; margin-left: 10px; width: auto; }
+        .btn-cancel-edit { background: var(--red); color: white; margin-top: 10px; display: none; }
+        .btn-edit-pod { background: var(--gold); color: var(--dark); padding: 8px 15px; border-radius: 8px; border: none; font-weight: bold; cursor: pointer; font-size: 0.85rem; margin-left: 15px; width: auto; }
 
-        #playersContainer .row { background: rgba(0,0,0,0.1); padding: 10px; border-radius: 6px; margin-bottom: 8px; align-items: flex-end; }
+        #playersContainer .row { background: rgba(0,0,0,0.2); padding: 15px; border-radius: 10px; margin-bottom: 12px; align-items: flex-end; }
         
-        .live-label { color: var(--gold); font-size: 0.9rem; font-weight: bold; margin: 15px 0 10px 0; display: flex; align-items: center; gap: 8px; }
-        .live-dot { width: 8px; height: 8px; background: var(--red); border-radius: 50%; animation: blink 1s infinite; }
+        .live-label { color: var(--gold); font-size: 1.1rem; font-weight: bold; margin: 20px 0 15px 0; display: flex; align-items: center; gap: 10px; }
+        .live-dot { width: 10px; height: 10px; background: var(--red); border-radius: 50%; animation: blink 1s infinite; }
         .live-dot.green { background: var(--green); }
         @keyframes blink { 0% { opacity: 1; } 50% { opacity: 0.3; } 100% { opacity: 1; } }
         
-        .card-container { display: flex; flex-direction: column; gap: 12px; width: 100%; margin-bottom: 20px; }
+        .card-container { display: flex; flex-direction: column; gap: 15px; width: 100%; margin-bottom: 25px; }
         
-        .pod-card-3d { background: var(--dark); border-radius: 8px; padding: 15px; display: flex; justify-content: space-between; align-items: center; box-shadow: inset 1px 1px 0px rgba(255,255,255,0.1), inset -2px -2px 0px rgba(0,0,0,0.4), 2px 2px 6px rgba(0,0,0,0.3); box-sizing: border-box; width: 100%; }
-        .pod-info-3d { display: flex; flex-direction: column; gap: 3px; }
-        .pod-info-3d b { color: var(--gold); font-size: 1.05rem; margin: 0; line-height: 1; }
-        .pod-info-3d small { color: var(--white); font-size: 0.75rem; margin: 0; line-height: 1; opacity: 0.8; }
-        .pill-blue { background: var(--blue); color: var(--dark); padding: 5px 12px; border-radius: 20px; font-weight: bold; font-size: 0.8rem; box-shadow: 1px 1px 3px rgba(0,0,0,0.3); }
+        .pod-card-3d { background: var(--dark); border-radius: 10px; padding: 20px; display: flex; justify-content: space-between; align-items: center; box-shadow: inset 1px 1px 0px rgba(255,255,255,0.1), inset -2px -2px 0px rgba(0,0,0,0.4), 2px 2px 8px rgba(0,0,0,0.3); box-sizing: border-box; width: 100%; }
+        .pod-info-3d { display: flex; flex-direction: column; gap: 5px; }
+        .pod-info-3d b { color: var(--gold); font-size: 1.2rem; margin: 0; line-height: 1; }
+        .pod-info-3d small { color: var(--white); font-size: 0.9rem; margin: 0; line-height: 1; opacity: 0.8; }
+        .pill-blue { background: var(--blue); color: var(--dark); padding: 8px 18px; border-radius: 25px; font-weight: bold; font-size: 1rem; box-shadow: 1px 1px 3px rgba(0,0,0,0.3); }
         
         .modal { position: fixed; top:0; left:0; width:100%; height:100%; background: rgba(0,0,0,0.85); display: none; align-items: center; justify-content: center; z-index: 2000; }
-        .modal-content { background: var(--sec); padding: 30px; border-radius: 12px; border-top: 4px solid var(--gold); width: 90%; max-width: 450px; text-align: center; }
+        .modal-content { background: var(--sec); padding: 40px; border-radius: 15px; border-top: 5px solid var(--gold); width: 90%; max-width: 500px; text-align: center; }
         
         #loginOverlay { position: fixed; top:0; left:0; width:100%; height:100%; background: var(--bg); display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 1000; }
-        #loginOverlay input { width: 250px; text-align: center; margin-bottom: 20px; }
-        #loginOverlay button { width: 250px; }
+        #loginOverlay input { width: 300px; text-align: center; margin-bottom: 25px; padding: 15px; }
+        #loginOverlay button { width: 300px; }
         
-        .nav-footer { position: fixed; bottom: 0; left: 0; width: 100%; background: rgba(10, 37, 64, 0.95); padding: 12px; display: flex; justify-content: center; gap: 15px; border-top: 1px solid rgba(255,255,255,0.1); z-index: 500; }
-        .nav-footer button { width: auto; padding: 10px 25px; font-size: 0.8rem; background: var(--sec); color: white; border: 1px solid var(--blue); }
+        .nav-footer { position: fixed; bottom: 0; left: 0; width: 100%; background: rgba(10, 37, 64, 0.98); padding: 15px; display: flex; justify-content: center; gap: 20px; border-top: 1.5px solid rgba(255,255,255,0.1); z-index: 500; }
+        .nav-footer button { width: auto; padding: 12px 35px; font-size: 1rem; background: var(--sec); color: white; border: 1.5px solid var(--blue); }
     </style>
 </head>
 <body>
 
 <div id="loginOverlay">
-    <h2>STAFF ACCESS - ODE</h2>
+    <h2 style="font-size: 1.8rem; margin-bottom: 20px;">STAFF ACCESS - ODE</h2>
     <input type="password" id="passInput">
     <button onclick="checkLogin()" class="btn-reg">UNLOCK</button>
 </div>
 
 <div id="passwordModal" class="modal">
     <div class="modal-content">
-        <h3 style="color: var(--gold); margin-top: 0;">LEAD AUTHORIZATION</h3>
+        <h3 style="color: var(--gold); margin-top: 0; font-size: 1.4rem;">LEAD AUTHORIZATION</h3>
         <label>Enter Lead Password</label>
-        <input type="password" id="leadPassField" style="margin-bottom: 20px;">
+        <input type="password" id="leadPassField" style="margin-bottom: 25px;">
         <div class="row">
             <button class="btn-reg" onclick="confirmBack()" style="margin-top:0;">CONFIRM</button>
             <button style="background: var(--red); color: white; margin-top:0;" onclick="closeModal('passwordModal')">CANCEL</button>
@@ -77,7 +77,7 @@
 
 <div id="schModal" class="modal">
     <div class="modal-content">
-        <h3 style="color: var(--gold); margin-top: 0;">SCH PAYMENT</h3>
+        <h3 style="color: var(--gold); margin-top: 0; font-size: 1.4rem;">SCH PAYMENT</h3>
         <div class="row">
             <div class="col" style="flex: 1;">
                 <label>ID</label>
@@ -104,7 +104,7 @@
                 </select>
             </div>
         </div>
-        <div class="row" style="margin-top: 15px;">
+        <div class="row" style="margin-top: 20px;">
             <button class="btn-reg" onclick="submitSchPayment()" style="margin-top:0;">REGISTER PAYMENT</button>
             <button style="background: var(--red); color: white; margin-top:0;" onclick="closeModal('schModal')">CANCEL</button>
         </div>
@@ -249,22 +249,21 @@
 
         const currentIds = Array.from(document.querySelectorAll('.dyn-id')).map(el => el.value);
         const currentNames = Array.from(document.querySelectorAll('.dyn-name')).map(el => el.value);
-        const currentPhones = Array.from(document.querySelectorAll('.dyn-phone')).map(el => el.value);
         const currentPays = Array.from(document.querySelectorAll('.dyn-pay')).map(el => el.value);
 
         container.innerHTML = "";
         for(let i = 1; i <= qty; i++) {
             container.innerHTML += `
                 <div class="row">
-                    <div class="col" style="flex: 0.8; margin-bottom: 0;">
+                    <div class="col" style="flex: 1;">
                         <label>ID ${i}</label>
                         <input type="number" class="dyn-id" id="dyn-id-${i}" autocomplete="off" onblur="fetchPlayerData(${i})">
                     </div>
-                    <div class="col" style="flex: 1.5; margin-bottom: 0;">
+                    <div class="col" style="flex: 2;">
                         <label>Name</label>
                         <input type="text" class="dyn-name" id="dyn-name-${i}" autocomplete="off">
                     </div>
-                    <div class="col" style="flex: 1; margin-bottom: 0;">
+                    <div class="col" style="flex: 1.5;">
                         <label>Payment</label>
                         <select class="dyn-pay" id="dyn-pay-${i}">
                             <option value="CREDIT CARD">Credit Card</option>
@@ -272,22 +271,16 @@
                             <option value="PIX">PIX</option>
                         </select>
                     </div>
-                    <div class="col" style="flex: 1; margin-bottom: 0;">
-                        <label>WhatsApp</label>
-                        <input type="number" class="dyn-phone" id="dyn-phone-${i}" autocomplete="off">
-                    </div>
                 </div>`;
         }
 
         const newIds = document.querySelectorAll('.dyn-id');
         const newNames = document.querySelectorAll('.dyn-name');
-        const newPhones = document.querySelectorAll('.dyn-phone');
         const newPays = document.querySelectorAll('.dyn-pay');
 
         for(let i = 0; i < Math.min(qty, currentIds.length); i++) {
             newIds[i].value = currentIds[i] || '';
             newNames[i].value = currentNames[i] || '';
-            newPhones[i].value = currentPhones[i] || '';
             newPays[i].value = currentPays[i] || 'CREDIT CARD';
         }
     }
@@ -295,21 +288,18 @@
     async function fetchPlayerData(index) {
         const idField = document.getElementById(`dyn-id-${index}`);
         const nameField = document.getElementById(`dyn-name-${index}`);
-        const phoneField = document.getElementById(`dyn-phone-${index}`);
         const playerId = idField.value.trim();
-
         if (!playerId) return;
 
         const { data, error } = await _supabase
             .from('ode_registrations')
-            .select('player_name, player_phone')
+            .select('player_name')
             .eq('player_id', playerId)
             .order('created_at', { ascending: false })
             .limit(1);
 
         if (!error && data && data.length > 0) {
             if (!nameField.value) nameField.value = data[0].player_name || '';
-            if (!phoneField.value) phoneField.value = data[0].player_phone || '';
         }
     }
 
@@ -317,11 +307,9 @@
         const sel = document.getElementById('sch-tourSelect');
         sel.innerHTML = '<option value="">-- SELECT SCH TOURNAMENT --</option>';
         schCatalog.forEach(t => sel.innerHTML += `<option value="${t.tname}">${t.tname}</option>`);
-        
         document.getElementById('sch-id').value = "";
         document.getElementById('sch-name').value = "";
         document.getElementById('sch-pay').value = "CREDIT CARD";
-        
         document.getElementById('schModal').style.display = 'flex';
     }
 
@@ -356,11 +344,10 @@
         };
 
         const { error } = await _supabase.from('ode_registrations').insert([payload]);
-        
         if(error) {
             alert("Error: " + error.message);
         } else {
-            alert("SCH Payment Registered Successfully!");
+            alert("SCH Payment Registered Successfully! \n\n Ask the player to open the link and install the App (PWA) to receive notifications.");
             closeModal('schModal');
         }
     }
@@ -378,14 +365,12 @@
         if (!players || players.length === 0) return alert("Pod not found or already allocated.");
 
         editingPod = { tname, podNum, players };
-
         const tour = currentCatalog.find(c => c.tname === tname);
         if (tour) {
             document.getElementById('gameSelect').value = tour.game;
             filterTournaments();
         }
         document.getElementById('tourSelect').value = tname;
-        
         document.getElementById('gameSelect').disabled = true;
         document.getElementById('tourSelect').disabled = true;
 
@@ -395,13 +380,11 @@
 
         const ids = document.querySelectorAll('.dyn-id');
         const names = document.querySelectorAll('.dyn-name');
-        const phones = document.querySelectorAll('.dyn-phone');
         const pays = document.querySelectorAll('.dyn-pay');
 
         for (let i = 0; i < players.length; i++) {
             ids[i].value = players[i].player_id || '';
             names[i].value = players[i].player_name || '';
-            phones[i].value = players[i].player_phone || '';
             pays[i].value = players[i].payment_method || 'CREDIT CARD';
         }
 
@@ -409,9 +392,7 @@
         btnReg.innerText = "UPDATE POD";
         btnReg.style.backgroundColor = "var(--blue)";
         btnReg.style.color = "white";
-        
         document.getElementById('btnCancelEdit').style.display = 'block';
-
         window.scrollTo({ top: 0, behavior: 'smooth' });
     }
 
@@ -419,17 +400,14 @@
         editingPod = null;
         document.getElementById('gameSelect').disabled = false;
         document.getElementById('tourSelect').disabled = false;
-        
         document.getElementById('playersContainer').innerHTML = "";
         document.getElementById('tourSelect').value = "";
         document.getElementById('gameSelect').value = "";
         filterTournaments();
-        
         const btnReg = document.getElementById('btnMainSubmit');
         btnReg.innerText = "REGISTER TO POD";
         btnReg.style.backgroundColor = "var(--gold)";
         btnReg.style.color = "var(--dark)";
-        
         document.getElementById('btnCancelEdit').style.display = 'none';
     }
 
@@ -440,13 +418,12 @@
         const qty = parseInt(document.getElementById('groupSizeSelect').value);
         const ids = document.querySelectorAll('.dyn-id');
         const names = document.querySelectorAll('.dyn-name');
-        const phones = document.querySelectorAll('.dyn-phone');
         const pays = document.querySelectorAll('.dyn-pay');
         const formPlayers = [];
         
         for(let i = 0; i < qty; i++) {
             if(!ids[i].value || !names[i].value) return alert("Fill ID and Name for all players.");
-            formPlayers.push({ id: ids[i].value, name: names[i].value, phone: phones[i].value, pay: pays[i].value });
+            formPlayers.push({ id: ids[i].value, name: names[i].value, pay: pays[i].value });
         }
 
         const btn = document.getElementById('btnMainSubmit');
@@ -456,12 +433,12 @@
             for (let i = 0; i < formPlayers.length; i++) {
                 const p = formPlayers[i];
                 if (i < editingPod.players.length) {
-                    await _supabase.from('ode_registrations').update({ player_id: p.id, player_name: p.name, player_phone: p.phone, payment_method: p.pay }).eq('id', editingPod.players[i].id);
+                    await _supabase.from('ode_registrations').update({ player_id: p.id, player_name: p.name, payment_method: p.pay }).eq('id', editingPod.players[i].id);
                 } else {
-                    await _supabase.from('ode_registrations').insert([{ event_id: eventPrefix, player_id: p.id, player_name: p.name, player_phone: p.phone, tname: tname, status: 'waiting', pod_number: editingPod.podNum, payment_method: p.pay }]);
+                    await _supabase.from('ode_registrations').insert([{ event_id: eventPrefix, player_id: p.id, player_name: p.name, tname: tname, status: 'waiting', pod_number: editingPod.podNum, payment_method: p.pay }]);
                 }
             }
-            alert("Pod Updated!");
+            alert("Pod Updated! \n\n Remind players to install the App (PWA) to receive notifications.");
             cancelEditMode();
         } else {
             let podNum = 1;
@@ -481,7 +458,7 @@
             }
 
             const inserts = formPlayers.map(p => ({ 
-                event_id: eventPrefix, player_id: p.id, player_name: p.name, player_phone: p.phone, 
+                event_id: eventPrefix, player_id: p.id, player_name: p.name, 
                 tname: tname, status: 'waiting', pod_number: podNum, payment_method: p.pay 
             }));
             
@@ -489,9 +466,9 @@
             
             if(!error) {
                 if (currentCount + qty === podLimit) {
-                    alert(`POD #${podNum} FULL! Vá ao Mapa para alocar a mesa.`);
+                    alert(`POD #${podNum} FULL! \n\n Go to Map to allocate the table. Remind players to use the PWA.`);
                 } else {
-                    alert("Registration Successful!");
+                    alert("Registration Successful! \n\n Ask the player to open the link and install the App (PWA) to receive the table alert.");
                 }
                 cancelEditMode();
             } else {
@@ -530,7 +507,6 @@
 
     _supabase.channel('any').on('postgres_changes', { event: '*', schema: 'public', table: 'ode_registrations' }, loadData).subscribe();
     _supabase.channel('catalog_sync').on('postgres_changes', { event: '*', schema: 'public', table: 'tournament_catalog' }, loadData).subscribe();
-
     setInterval(() => { loadData(); }, 30000); 
 </script>
 </body>
