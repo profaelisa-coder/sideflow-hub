@@ -8,35 +8,50 @@
     <style>
         :root { --bg: #0A2540; --sec: #1A4B84; --gold: #ffb703; --white: #ffffff; --blue: #63B3ED; --red: #e63946; --dark: #051626; }
         body { font-family: 'Segoe UI', sans-serif; background: var(--bg); color: var(--white); margin: 0; padding: 0; display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
+        
         #authOverlay { position: fixed; top:0; left:0; width:100%; height:100%; background: var(--bg); z-index: 5000; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px; box-sizing: border-box; }
         .auth-box { width: 100%; max-width: 320px; text-align: center; }
         .auth-box h2 { color: var(--gold); text-transform: uppercase; margin-bottom: 30px; }
+        
         #mainApp { display: none; flex-direction: column; height: 100vh; }
-        .top-bar { background: var(--dark); padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid var(--gold); }
-        .player-id-tag { font-size: 0.8rem; opacity: 0.7; }
-        .balance-pill { background: var(--gold); color: var(--dark); padding: 6px 15px; border-radius: 20px; font-weight: 900; font-size: 1rem; box-shadow: 0 4px 10px rgba(255,183,3,0.3); }
-        .pager-alert { display: none; background: var(--gold); color: var(--dark); padding: 20px; text-align: center; animation: pulse-bg 1s infinite; border-bottom: 4px solid #000; }
-        @keyframes pulse-bg { 0% { background: var(--gold); } 50% { background: #fff; } 100% { background: var(--gold); } }
-        .pager-alert h3 { margin: 0; font-size: 1.2rem; font-weight: 900; }
-        .pager-alert p { margin: 5px 0 15px 0; font-weight: bold; }
-        .btn-stop-pager { background: var(--dark); color: white; border: none; padding: 10px 25px; border-radius: 5px; font-weight: bold; text-transform: uppercase; }
-        .content { flex: 1; overflow-y: auto; padding: 20px; }
+        
+        .top-bar { background: var(--dark); padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid var(--gold); z-index: 10; }
+        .player-id-tag { font-size: 1rem; font-weight: bold; opacity: 0.9; }
+        .balance-pill { background: var(--gold); color: var(--dark); padding: 8px 18px; border-radius: 25px; font-weight: 900; font-size: 1.2rem; box-shadow: 0 4px 10px rgba(255,183,3,0.3); }
+        
+        .brand-header { text-align: center; padding: 20px 15px; background: var(--bg); display: flex; flex-direction: column; align-items: center; justify-content: center; }
+        .brand-header img { max-height: 80px; object-fit: contain; margin-bottom: 10px; display: none; }
+        .brand-header h1 { margin: 0; font-size: 1.3rem; color: var(--gold); text-transform: uppercase; letter-spacing: 1px; }
+        .brand-header p { margin: 5px 0 0 0; font-size: 0.85rem; opacity: 0.8; text-transform: uppercase; }
+
+        #pager { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255, 183, 3, 0.95); z-index: 9999; display: none; flex-direction: column; align-items: center; justify-content: center; text-align: center; color: var(--dark); animation: pulse-bg 1s infinite; }
+        @keyframes pulse-bg { 0% { background: rgba(255, 183, 3, 1); } 50% { background: rgba(255, 220, 100, 1); } 100% { background: rgba(255, 183, 3, 1); } }
+        #pager h3 { font-size: 2.5rem; margin: 0 0 10px 0; font-weight: 900; text-transform: uppercase; }
+        #pager p { font-size: 2rem; margin: 0 0 40px 0; font-weight: 900; color: var(--red); }
+        .btn-stop-pager { background: var(--dark); color: white; border: none; padding: 20px 40px; border-radius: 12px; font-weight: 900; font-size: 1.2rem; text-transform: uppercase; box-shadow: 0 8px 15px rgba(0,0,0,0.4); cursor: pointer; }
+
         .tab-nav { display: flex; background: var(--dark); border-bottom: 1px solid rgba(255,255,255,0.1); }
-        .tab-btn { flex: 1; padding: 15px; border: none; background: transparent; color: white; font-weight: bold; text-transform: uppercase; font-size: 0.8rem; opacity: 0.5; transition: 0.3s; }
-        .tab-btn.active { opacity: 1; color: var(--gold); border-bottom: 3px solid var(--gold); }
+        .tab-btn { flex: 1; padding: 18px; border: none; background: transparent; color: white; font-weight: bold; text-transform: uppercase; font-size: 0.85rem; opacity: 0.5; transition: 0.3s; cursor: pointer; }
+        .tab-btn.active { opacity: 1; color: var(--gold); border-bottom: 4px solid var(--gold); }
+        
+        .content { flex: 1; overflow-y: auto; padding: 20px; }
         .tab-content { display: none; }
         .tab-content.active { display: block; }
-        .card { background: var(--sec); padding: 20px; border-radius: 12px; margin-bottom: 20px; }
-        label { display: block; font-size: 0.7rem; font-weight: bold; margin-bottom: 8px; color: var(--gold); text-transform: uppercase; }
-        input { width: 100%; padding: 12px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.1); background: var(--dark); color: white; box-sizing: border-box; font-size: 1rem; margin-bottom: 15px; }
-        button.primary { width: 100%; padding: 15px; border-radius: 8px; border: none; font-weight: bold; text-transform: uppercase; background: var(--blue); color: var(--dark); cursor: pointer; }
-        button.primary:disabled { opacity: 0.5; }
-        .history-item { background: rgba(0,0,0,0.2); padding: 15px; border-radius: 8px; margin-bottom: 10px; border-left: 4px solid var(--gold); display: flex; justify-content: space-between; align-items: center; }
+        
+        .card { background: var(--sec); padding: 25px; border-radius: 12px; margin-bottom: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.2); }
+        label { display: block; font-size: 0.8rem; font-weight: bold; margin-bottom: 10px; color: var(--gold); text-transform: uppercase; }
+        input { width: 100%; padding: 15px; border-radius: 10px; border: 1px solid rgba(255,255,255,0.1); background: var(--dark); color: white; box-sizing: border-box; font-size: 1.1rem; margin-bottom: 20px; min-height: 48px; }
+        input:focus { border-color: var(--gold); outline: none; }
+        
+        button.primary { width: 100%; padding: 18px; border-radius: 10px; border: none; font-weight: bold; text-transform: uppercase; background: var(--gold); color: var(--dark); cursor: pointer; font-size: 1.1rem; }
+        button.primary:disabled { opacity: 0.5; background: var(--blue); color: white; cursor: not-allowed; }
+        
+        .history-item { background: rgba(0,0,0,0.2); padding: 18px; border-radius: 10px; margin-bottom: 12px; border-left: 5px solid var(--gold); display: flex; justify-content: space-between; align-items: center; }
         .history-info { display: flex; flex-direction: column; }
-        .history-info b { font-size: 0.9rem; }
-        .history-info small { font-size: 0.7rem; opacity: 0.6; margin-top: 5px; }
-        .history-val { font-weight: 900; font-size: 1.1rem; }
-        .val-plus { color: #2ecc71; }
+        .history-info b { font-size: 1rem; }
+        .history-info small { font-size: 0.8rem; opacity: 0.7; margin-top: 6px; }
+        .history-val { font-weight: 900; font-size: 1.2rem; }
+        .val-plus { color: var(--green); }
         .val-minus { color: var(--red); }
     </style>
 </head>
@@ -51,51 +66,59 @@
     </div>
     <div class="auth-box" id="step2" style="display: none;">
         <h2 id="passTitle">PASSWORD</h2>
-        <p id="passSub" style="font-size: 0.8rem; margin-bottom: 20px; opacity: 0.7;"></p>
+        <p id="passSub" style="font-size: 0.85rem; margin-bottom: 25px; opacity: 0.8;"></p>
         <input type="password" id="loginPass" placeholder="*****" inputmode="numeric" maxlength="5">
         <button class="primary" id="btnPass" onclick="handlePass()">UNLOCK</button>
     </div>
 </div>
 
 <div id="mainApp">
-    <div class="pager-alert" id="pager">
-        <h3>MESA ENCONTRADA!</h3>
+    <div id="pager">
+        <h3>TABLE READY!</h3>
         <p id="pagerText"></p>
-        <button class="btn-stop-pager" onclick="stopPager()">ESTOU A CAMINHO</button>
+        <button class="btn-stop-pager" onclick="stopPager()">I'M GOING!</button>
     </div>
 
     <div class="top-bar">
         <div class="player-id-tag" id="displayPlayer">ID: ---</div>
         <div class="balance-pill" id="displayBalance">0 TKS</div>
     </div>
+    
+    <div class="brand-header" id="brandHeader">
+        <img id="eventLogo" src="" alt="Event Logo">
+        <h1 id="dynEventName">---</h1>
+        <p id="dynEventDates">---</p>
+    </div>
 
     <div class="tab-nav">
         <button class="tab-btn active" onclick="switchTab(event, 'tab-home')">HOME</button>
-        <button class="tab-btn" onclick="switchTab(event, 'tab-transfer')">TRANSFERIR</button>
-        <button class="tab-btn" onclick="switchTab(event, 'tab-history')">HISTÓRICO</button>
+        <button class="tab-btn" onclick="switchTab(event, 'tab-transfer')">TRANSFER</button>
+        <button class="tab-btn" onclick="switchTab(event, 'tab-history')">HISTORY</button>
     </div>
 
     <div class="content">
         <div id="tab-home" class="tab-content active">
             <div class="card">
                 <label>PLAYER NAME</label>
-                <div id="playerName" style="font-size: 1.2rem; font-weight: bold;">---</div>
+                <div id="playerName" style="font-size: 1.3rem; font-weight: bold;">---</div>
             </div>
-            <div id="activePodCard" class="card" style="display: none; border-left: 4px solid var(--blue);">
-                <label>TORNEIO ATUAL</label>
-                <div id="activePodName" style="font-weight: bold;">---</div>
-                <div id="activePodStatus" style="font-size: 0.8rem; opacity: 0.8; margin-top: 5px;">Aguardando Mesa...</div>
+            <div id="activePodCard" class="card" style="display: none; border-left: 5px solid var(--blue);">
+                <label>CURRENT TOURNAMENT</label>
+                <div id="activePodName" style="font-weight: bold; font-size: 1.1rem;">---</div>
+                <div id="activePodStatus" style="font-size: 0.9rem; opacity: 0.8; margin-top: 8px;">Waiting for Allocation...</div>
             </div>
         </div>
 
         <div id="tab-transfer" class="tab-content">
             <div class="card">
-                <label>ID DO AMIGO</label>
-                <input type="number" id="destId" oninput="checkDestName()" placeholder="EX: 9999">
-                <div id="destName" style="font-size: 0.8rem; color: var(--gold); margin-top: -10px; margin-bottom: 15px; height: 15px;"></div>
-                <label>QUANTIDADE DE TICKETS</label>
-                <input type="number" id="transAmount" placeholder="0">
-                <button class="primary" id="btnTransfer" onclick="executeTransfer()" disabled>CONFIRMAR TRANSFERÊNCIA</button>
+                <label>DESTINATION ID</label>
+                <input type="number" id="destId" oninput="checkDestName()" placeholder="EX: 9999" inputmode="numeric">
+                <div id="destName" style="font-size: 0.9rem; color: var(--gold); margin-top: -10px; margin-bottom: 20px; min-height: 20px; font-weight: bold;"></div>
+                
+                <label>TICKET AMOUNT</label>
+                <input type="number" id="transAmount" placeholder="0" inputmode="numeric">
+                
+                <button class="primary" id="btnTransfer" onclick="executeTransfer()" disabled>CONFIRM TRANSFER</button>
             </div>
         </div>
 
@@ -113,6 +136,8 @@
     const supabaseUrl = 'https://hocpoastnlcwgedvcyqs.supabase.co';
     const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhvY3BvYXN0bmxjd2dlZHZjeXFzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQyODU0MTYsImV4cCI6MjA4OTg2MTQxNn0.1MvvcFsnGW4e0Bj7mzoUKs_3bGM-eHDJTOqsvgKe-pI';
     const _supabase = supabase.createClient(supabaseUrl, supabaseKey);
+    const urlParams = new URLSearchParams(window.location.search);
+    let eventPrefix = urlParams.get('event');
 
     let currentPlayer = null;
     let pagerActive = false;
@@ -121,39 +146,64 @@
     async function handleLogin() {
         const id = document.getElementById('loginId').value;
         if(!id) return;
-        const { data, error } = await _supabase.from('ode_registrations').select('*').eq('player_id', id).limit(1).single();
-        if(error || !data) return alert("ID NÃO ENCONTRADO");
+        
+        let query = _supabase.from('ode_registrations').select('*').eq('player_id', id);
+        if(eventPrefix) { query = query.eq('event_id', eventPrefix); }
+        
+        const { data, error } = await query.order('created_at', {ascending: false}).limit(1).single();
+        if(error || !data) return alert("ID NOT FOUND");
+        
         currentPlayer = data;
+        if(!eventPrefix) { eventPrefix = data.event_id; }
+        
         document.getElementById('step1').style.display = 'none';
         document.getElementById('step2').style.display = 'block';
         if(!data.player_password) {
-            document.getElementById('passTitle').innerText = "CRIAR SENHA";
-            document.getElementById('passSub').innerText = "DEFINA UMA SENHA DE 5 DÍGITOS PARA SUA SEGURANÇA";
-            document.getElementById('btnPass').innerText = "CRIAR E ENTRAR";
+            document.getElementById('passTitle').innerText = "CREATE PASSWORD";
+            document.getElementById('passSub').innerText = "DEFINE A 5-DIGIT PIN FOR SECURITY";
+            document.getElementById('btnPass').innerText = "CREATE & ENTER";
         } else {
-            document.getElementById('passTitle').innerText = "ENTRAR";
-            document.getElementById('passSub').innerText = "DIGITE SUA SENHA DE 5 DÍGITOS";
+            document.getElementById('passTitle').innerText = "ENTER";
+            document.getElementById('passSub').innerText = "ENTER YOUR 5-DIGIT PIN";
         }
     }
 
     async function handlePass() {
         const pass = document.getElementById('loginPass').value;
-        if(pass.length !== 5) return alert("A SENHA DEVE TER 5 DÍGITOS");
+        if(pass.length !== 5) return alert("PASSWORD MUST BE 5 DIGITS");
         if(!currentPlayer.player_password) {
             const { error } = await _supabase.from('ode_registrations').update({ player_password: pass }).eq('id', currentPlayer.id);
-            if(error) return alert("ERRO AO SALVAR SENHA");
+            if(error) return alert("ERROR SAVING PASSWORD");
             currentPlayer.player_password = pass;
         } else {
-            if(currentPlayer.player_password !== pass) return alert("SENHA INCORRETA");
+            if(currentPlayer.player_password !== pass) return alert("INCORRECT PASSWORD");
         }
         document.getElementById('authOverlay').style.display = 'none';
         document.getElementById('mainApp').style.display = 'flex';
         startApp();
     }
 
+    async function fetchEventData() {
+        if(!eventPrefix) return;
+        const { data } = await _supabase.from('tournament_history').select('*').eq('event_id', eventPrefix).eq('tournament_id', 0).single();
+        if(data) {
+            document.getElementById('dynEventName').innerText = data.event_name || "SIDEFLOW EVENT";
+            document.getElementById('dynEventDates').innerText = data.event_dates || "";
+            const logoEl = document.getElementById('eventLogo');
+            if(data.logo_type === 'PREMIER') {
+                logoEl.src = 'ic.png';
+                logoEl.style.display = 'block';
+            } else if(data.logo_type === 'REGIONAL') {
+                logoEl.src = 'reg.png';
+                logoEl.style.display = 'block';
+            }
+        }
+    }
+
     function startApp() {
         document.getElementById('displayPlayer').innerText = "ID: " + currentPlayer.player_id;
         document.getElementById('playerName').innerText = currentPlayer.player_name;
+        fetchEventData();
         updateData();
         setInterval(updateData, 10000);
         _supabase.channel('player_watch')
@@ -173,8 +223,10 @@
         const podCard = document.getElementById('activePodCard');
         if(status === 'waiting' || status === 'allocated') {
             podCard.style.display = 'block';
-            document.getElementById('activePodName').innerText = currentReg.tname;
-            document.getElementById('activePodStatus').innerText = status === 'allocated' ? "MESA " + currentReg.assigned_table : "Aguardando Fechamento/Mesa...";
+            document.getElementById('activePodName').innerText = currentReg.tname + " #" + currentReg.pod_number;
+            document.getElementById('activePodStatus').innerText = status === 'allocated' ? "TABLE " + currentReg.assigned_table : "Waiting for Allocation...";
+            if(status === 'allocated') { document.getElementById('activePodStatus').style.color = "var(--green)"; document.getElementById('activePodStatus').style.fontWeight = "bold"; }
+            else { document.getElementById('activePodStatus').style.color = "inherit"; document.getElementById('activePodStatus').style.fontWeight = "normal"; }
         } else {
             podCard.style.display = 'none';
         }
@@ -202,7 +254,7 @@
                     <small>${i.date.toLocaleDateString()} ${i.date.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</small>
                 </div>
                 <div class="history-val ${i.val >= 0 ? 'val-plus' : 'val-minus'}">
-                    ${i.val === 0 && i.isGame ? 'JOGADO' : (i.val > 0 ? '+' : '') + i.val}
+                    ${i.val === 0 && i.isGame ? 'PLAYED' : (i.val > 0 ? '+' : '') + i.val}
                 </div>
             </div>
         `).join('');
@@ -215,10 +267,10 @@
         if(id.length < 2) { display.innerText = ""; btn.disabled = true; return; }
         const { data } = await _supabase.from('ode_registrations').select('player_name').eq('player_id', id).limit(1).single();
         if(data) {
-            display.innerText = "Destinatário: " + data.player_name;
+            display.innerText = "Send to: " + data.player_name;
             btn.disabled = false;
         } else {
-            display.innerText = "ID não encontrado";
+            display.innerText = "ID NOT FOUND";
             btn.disabled = true;
         }
     }
@@ -228,27 +280,28 @@
         const amount = parseInt(document.getElementById('transAmount').value);
         const balanceText = document.getElementById('displayBalance').innerText;
         const balance = parseInt(balanceText);
-        if(!amount || amount <= 0) return alert("Digite um valor válido");
-        if(amount > balance) return alert("Saldo insuficiente");
+        if(!amount || amount <= 0) return alert("ENTER A VALID AMOUNT");
+        if(amount > balance) return alert("INSUFFICIENT BALANCE");
         const btn = document.getElementById('btnTransfer');
         btn.disabled = true;
-        btn.innerText = "PROCESSANDO...";
+        btn.innerText = "PROCESSING...";
         const { error: err1 } = await _supabase.from('player_transactions').insert([
-            { player_id: currentPlayer.player_id, amount: -amount, description: "Transferência para ID " + destId, source_type: 'TRANSFER_SEND' }
+            { player_id: currentPlayer.player_id, amount: -amount, description: "Sent to ID " + destId, source_type: 'TRANSFER_SEND' }
         ]);
         if(!err1) {
             await _supabase.from('player_transactions').insert([
-                { player_id: destId, amount: amount, description: "Transferência de ID " + currentPlayer.player_id, source_type: 'TRANSFER_RECV' }
+                { player_id: destId, amount: amount, description: "Received from ID " + currentPlayer.player_id, source_type: 'TRANSFER_RECV' }
             ]);
-            alert("TRANSFERÊNCIA CONCLUÍDA!");
+            alert("TRANSFER SUCCESSFUL!");
             document.getElementById('destId').value = "";
             document.getElementById('transAmount').value = "";
+            document.getElementById('destName').innerText = "";
             updateData();
         } else {
-            alert("ERRO NA TRANSAÇÃO");
+            alert("TRANSACTION ERROR");
         }
         btn.disabled = false;
-        btn.innerText = "CONFIRMAR TRANSFERÊNCIA";
+        btn.innerText = "CONFIRM TRANSFER";
     }
 
     function switchTab(evt, tabId) {
@@ -260,10 +313,10 @@
 
     function startPager(tour, table) {
         pagerActive = true;
-        document.getElementById('pager').style.display = 'block';
-        document.getElementById('pagerText').innerText = tour + " - DIRIJA-SE À MESA " + table;
-        document.getElementById('beep').play();
-        if ("vibrate" in navigator) navigator.vibrate([500, 300, 500, 300, 500]);
+        document.getElementById('pager').style.display = 'flex';
+        document.getElementById('pagerText').innerText = "TABLE " + table;
+        document.getElementById('beep').play().catch(()=>console.log("Audio play blocked"));
+        if ("vibrate" in navigator) navigator.vibrate([500, 300, 500, 300, 500, 300, 500]);
     }
 
     function stopPager() {
@@ -278,9 +331,9 @@
     document.addEventListener('click', () => {
         const audio = document.getElementById('beep');
         if (audio.paused && !pagerActive) {
-            audio.play().then(() => audio.pause());
+            audio.play().then(() => audio.pause()).catch(()=>{});
         }
     }, { once: true });
 </script>
 </body>
-</html>```
+</html>
