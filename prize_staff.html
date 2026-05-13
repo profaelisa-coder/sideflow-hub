@@ -30,6 +30,8 @@
         #imgPreview { max-width: 100%; border-radius: 8px; border: 2px solid var(--gold); }
         #loginOverlay { position: fixed; top:0; left:0; width:100%; height:100%; background: var(--bg); display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 3000; }
         #loginOverlay input { width: 250px; text-align: center; margin-bottom: 20px; }
+        .header-nav { width: 100%; max-width: 600px; display: flex; justify-content: flex-end; margin-bottom: 10px; }
+        .btn-setup { background: rgba(0,0,0,0.3); color: var(--gold); padding: 8px 15px; font-size: 0.7rem; border: 1px solid var(--gold); border-radius: 6px; }
     </style>
 </head>
 <body>
@@ -45,6 +47,10 @@
         <img id="imgPreview" src="">
         <button class="btn-blue" style="margin-top:15px; width:100%;">CLOSE</button>
     </div>
+</div>
+
+<div class="header-nav" id="navHeader" style="display:none;">
+    <button class="btn-setup" onclick="backToSetup()">SETUP</button>
 </div>
 
 <div class="container" id="mainContent" style="display:none;">
@@ -93,6 +99,7 @@
         if(sessionStorage.getItem('ps_auth') === 'true') {
             document.getElementById('loginOverlay').style.display = 'none';
             document.getElementById('mainContent').style.display = 'block';
+            document.getElementById('navHeader').style.display = 'flex';
             loadInventory();
         }
     };
@@ -105,6 +112,17 @@
             sessionStorage.setItem('ps_auth', 'true');
             location.reload();
         } else { alert("WRONG PASSWORD"); }
+    }
+
+    function backToSetup() {
+        const pass = prompt("Enter PRIZE LEAD Password:");
+        if (!pass) return;
+        if (pass.toUpperCase().trim() === eventPrefix.toUpperCase() + "_PL") {
+            sessionStorage.setItem('pl_auth', 'true');
+            location.href = 'prize_setup.html?event=' + eventPrefix;
+        } else {
+            alert("WRONG PASSWORD");
+        }
     }
 
     async function loadInventory() {
