@@ -2,61 +2,66 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>SideFlow - Judge Area</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
-        :root { --bg: #1A4B84; --sec: #2B6CB0; --gold: #ffb703; --white: #e0e1dd; --blue: #63B3ED; --red: #e63946; --dark: #0A2540; }
-        body { font-family: 'Segoe UI', sans-serif; background: var(--bg); color: var(--white); margin: 0; padding: 20px; display: flex; flex-direction: column; align-items: center; }
-        .container { width: 100%; max-width: 600px; padding-bottom: 80px; }
-        .box { background: var(--sec); padding: 25px; border-radius: 12px; margin-bottom: 25px; border-bottom: 4px solid var(--gold); box-shadow: 0 8px 25px rgba(0,0,0,0.3); }
-        h2 { color: var(--gold); text-align: center; text-transform: uppercase; letter-spacing: 1px; }
-        h3 { border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 10px; margin-top: 0; font-size: 1.1rem; text-transform: uppercase; color: var(--gold); }
-        label { font-size: 0.75rem; font-weight: bold; margin-bottom: 5px; color: var(--gold); text-transform: uppercase; display: block; }
-        input, select { width: 100%; padding: 15px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.1); background: var(--dark); color: white; box-sizing: border-box; font-size: 1.1rem; margin-bottom: 10px; }
-        button { padding: 15px; border-radius: 8px; border: none; font-weight: bold; text-transform: uppercase; cursor: pointer; transition: 0.3s; width: 100%; font-size: 1rem; }
-        .btn-gold { background: var(--gold); color: var(--dark); }
-        .btn-blue { background: var(--blue); color: var(--dark); }
-        .btn-red { background: var(--red); color: white; }
+        :root { --bg: #1A4B84; --sec: #2B6CB0; --gold: #ffb703; --white: #e0e1dd; --blue: #63B3ED; --red: #e63946; --green: #2ecc71; --dark: #0A2540; }
+        body { font-family: 'Segoe UI', sans-serif; background: var(--bg); color: var(--white); margin: 0; padding: 15px; display: flex; flex-direction: column; align-items: center; min-height: 100vh; }
         
-        .player-card { background: rgba(0,0,0,0.2); padding: 15px; border-radius: 8px; margin-bottom: 10px; border-left: 4px solid var(--blue); }
-        .player-card b { display: block; font-size: 1rem; margin-bottom: 5px; }
-        .player-card span { font-size: 0.8rem; opacity: 0.8; }
-
-        .btn-map-fixed { position: fixed; bottom: 20px; right: 20px; width: 60px; height: 60px; border-radius: 50%; background: var(--gold); color: var(--dark); font-size: 1.5rem; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 15px rgba(0,0,0,0.5); border: none; cursor: pointer; z-index: 1000; }
-
-        #loginOverlay { position: fixed; top:0; left:0; width:100%; height:100%; background: var(--bg); display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 2000; }
-        #loginOverlay input { width: 250px; text-align: center; }
+        .container { width: 100%; max-width: 600px; padding-bottom: 30px; }
+        
+        .box { background: var(--sec); padding: 25px 20px; border-radius: 16px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); border-bottom: 5px solid var(--gold); margin-bottom: 20px; }
+        
+        h2 { color: var(--gold); text-align: center; text-transform: uppercase; margin-top: 10px; margin-bottom: 25px; font-size: 1.6rem; letter-spacing: 1px; }
+        
+        label { display: block; font-size: 0.9rem; font-weight: bold; margin-bottom: 12px; color: var(--gold); text-align: center; }
+        
+        input, select { width: 100%; padding: 18px; border-radius: 12px; border: 1.5px solid rgba(255,255,255,0.2); background: var(--dark); color: white; font-size: 1.2rem; box-sizing: border-box; text-align: center; appearance: none; }
+        input:focus, select:focus { border-color: var(--gold); outline: none; background: rgba(0,0,0,0.4); }
+        
+        .btn-search { background: var(--blue); color: var(--dark); font-weight: 900; padding: 18px; border: none; border-radius: 12px; width: 100%; cursor: pointer; margin-top: 15px; text-transform: uppercase; font-size: 1.1rem; box-shadow: 0 4px 10px rgba(0,0,0,0.3); transition: 0.2s; }
+        .btn-search:active { transform: scale(0.97); }
+        
+        .player-row { background: rgba(0,0,0,0.25); padding: 20px 15px; border-radius: 12px; margin-top: 15px; display: flex; flex-direction: column; gap: 15px; border-left: 5px solid var(--gold); }
+        
+        .player-header { display: flex; flex-direction: column; align-items: center; text-align: center; gap: 5px; }
+        .player-header b { font-size: 1.3rem; color: var(--white); }
+        .player-header small { opacity: 0.8; font-size: 0.95rem; background: var(--dark); padding: 4px 10px; border-radius: 6px; }
+        
+        .rank-select { margin-top: 5px; border-color: var(--blue); font-weight: bold; background-image: url("data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%2363B3ED%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E"); background-repeat: no-repeat; background-position: right 15px top 50%; background-size: 12px auto; }
+        
+        .btn-save { background: var(--green); color: var(--dark); font-weight: 900; padding: 22px; border: none; border-radius: 12px; width: 100%; cursor: pointer; margin-top: 25px; text-transform: uppercase; font-size: 1.1rem; box-shadow: 0 6px 15px rgba(0,0,0,0.4); transition: 0.2s; }
+        .btn-save:active { transform: scale(0.97); }
+        
+        .info-pod { text-align: center; margin-bottom: 20px; padding: 18px; background: var(--dark); border-radius: 12px; border: 1.5px solid var(--blue); }
+        .info-pod b { display: block; font-size: 1.4rem; color: var(--gold); margin-bottom: 5px; }
+        .info-pod span { font-size: 1.1rem; opacity: 0.9; font-weight: bold; }
+        
+        #resultsArea { display: none; }
     </style>
 </head>
 <body>
 
-<div id="loginOverlay">
-    <h2>JUDGE ACCESS</h2>
-    <input type="password" id="passInput" placeholder="ENTER ACCESS CODE">
-    <button onclick="checkLogin()" class="btn-gold" style="width: 250px; margin-top: 15px;">UNLOCK</button>
-</div>
-
-<button class="btn-map-fixed" onclick="window.open('admin_tables.html?event='+eventPrefix, '_blank')">🗺️</button>
-
-<div class="container" id="mainContent" style="display:none;">
-    <h2>Judge Control</h2>
-
+<div class="container">
+    <h2>JUDGE CONTROL</h2>
+    
     <div class="box">
-        <h3>SEARCH TABLE</h3>
-        <label>Physical Table Number</label>
-        <input type="number" id="tableNum" placeholder="Ex: 24" inputmode="numeric">
-        <button class="btn-blue" onclick="findTable()">FIND POD</button>
+        <label>ENTER TABLE NUMBER</label>
+        <input type="number" id="tableNum" placeholder="Ex: 15" inputmode="numeric">
+        <button class="btn-search" onclick="findTable()">SEARCH TABLE</button>
     </div>
 
-    <div id="podArea" style="display: none;">
+    <div id="resultsArea">
         <div class="box">
-            <h3 id="displayTour">---</h3>
-            <p id="displayPod" style="text-align: center; margin-top: -10px; opacity: 0.7;">Pod #--</p>
-            
+            <div class="info-pod">
+                <b id="displayTour">---</b>
+                <span id="displayPod">Pod #--</span>
+            </div>
+
             <div id="playersList"></div>
 
-            <button class="btn-gold" id="btnSave" style="margin-top: 20px;" onclick="saveResults()">SAVE RESULTS & FREE TABLE</button>
+            <button class="btn-save" onclick="saveResults()">FINISH POD & RELEASE TABLE</button>
         </div>
     </div>
 </div>
@@ -67,130 +72,112 @@
     const _supabase = supabase.createClient(supabaseUrl, supabaseKey);
     const eventPrefix = new URLSearchParams(window.location.search).get('event');
 
-    let currentTable = null;
     let currentPodPlayers = [];
     let currentTourConfig = null;
 
-    window.onload = () => {
-        if(sessionStorage.getItem('jdg_auth') === 'true') {
-            document.getElementById('loginOverlay').style.display = 'none';
-            document.getElementById('mainContent').style.display = 'block';
-        }
-    };
-
-    function checkLogin() {
-        const pass = document.getElementById('passInput').value.toUpperCase().trim();
-        if(pass === eventPrefix.toUpperCase() + "_JDG") {
-            sessionStorage.setItem('jdg_auth', 'true');
-            location.reload();
-        } else { alert("ACCESS DENIED"); }
-    }
-
     async function findTable() {
-        const tNum = document.getElementById('tableNum').value;
-        if(!tNum) return;
+        const tableNum = document.getElementById('tableNum').value;
+        if(!tableNum) return;
 
-        const { data: table, error: tErr } = await _supabase.from('event_tables')
-            .select('*').eq('event_id', eventPrefix).eq('table_number', tNum).single();
+        const { data: table, error } = await _supabase.from('event_tables')
+            .select('*').eq('event_id', eventPrefix).eq('table_number', tableNum).single();
 
-        if(tErr || !table || table.status === 'FREE') return alert("Mesa vazia ou não encontrada.");
-        
-        if(!table.pod_number) return alert("Erro: Esta mesa está ocupada mas não tem um número de Pod associado.");
-
-        currentTable = table;
+        if(!table || table.status === 'FREE') {
+            alert("Table is empty or not found.");
+            return;
+        }
 
         const { data: catalog } = await _supabase.from('tournament_catalog')
             .select('*').eq('event_id', eventPrefix).eq('tname', table.tournament_name).single();
         
         currentTourConfig = catalog;
 
-       const { data: players, error: pErr } = await _supabase.from('ode_registrations')
+        const { data: players } = await _supabase.from('ode_registrations')
             .select('*').eq('event_id', eventPrefix).eq('tname', table.tournament_name)
             .eq('pod_number', table.pod_number).in('status', ['waiting', 'allocated']);
 
-        if(pErr || !players || players.length === 0) {
-            return alert("Nenhum jogador encontrado na mesa para o Pod #" + table.pod_number);
+        if(!players || players.length === 0) {
+            alert("No players found for this Pod.");
+            return;
         }
 
         currentPodPlayers = players;
-        renderPlayers();
+        renderPlayers(table.tournament_name, table.pod_number);
     }
 
-    function renderPlayers() {
-        if(!currentPodPlayers) return;
-        
-        document.getElementById('displayTour').innerText = currentTable.tournament_name;
-        document.getElementById('displayPod').innerText = "Pod #" + currentTable.pod_number;
+    function renderPlayers(tourName, podNum) {
+        document.getElementById('displayTour').innerText = tourName;
+        document.getElementById('displayPod').innerText = `Pod #${podNum}`;
         
         const list = document.getElementById('playersList');
-        list.innerHTML = currentPodPlayers.map((p, idx) => `
-            <div class="player-card">
-                <b>${p.player_name}</b>
-                <span>ID: ${p.player_id}</span>
-                <select id="rank-${idx}" style="margin-top: 10px; margin-bottom: 0;">
-                    <option value="">-- SET RANK --</option>
-                    ${Array.from({length: (currentTourConfig ? currentTourConfig.pod_size : 4)}, (_, i) => `<option value="${i+1}">${i+1}º Place</option>`).join('')}
-                    <option value="99">Dropped / No Prize</option>
-                </select>
-            </div>
-        `).join('');
+        list.innerHTML = "";
 
-        document.getElementById('podArea').style.display = 'block';
+        currentPodPlayers.forEach((p, index) => {
+            list.innerHTML += `
+                <div class="player-row">
+                    <div class="player-header">
+                        <b>${p.player_name}</b>
+                        <small>ID: ${p.player_id}</small>
+                    </div>
+                    <select class="rank-select" id="rank-${index}">
+                        <option value="">-- SELECT POSITION --</option>
+                        ${Array.from({length: currentPodPlayers.length}, (_, i) => `<option value="${i+1}">${i+1}º Place</option>`).join('')}
+                        <option value="99">Dropped / No Prize</option>
+                    </select>
+                </div>
+            `;
+        });
+
+        document.getElementById('resultsArea').style.display = 'block';
     }
 
     async function saveResults() {
-        const btn = document.getElementById('btnSave');
-        const transactions = [];
+        if(!confirm("Are you sure? This will award tickets and free the table.")) return;
 
-        for(let i=0; i < currentPodPlayers.length; i++) {
+        const transactions = [];
+        const registrationUpdates = [];
+
+        for(let i = 0; i < currentPodPlayers.length; i++) {
             const rank = document.getElementById(`rank-${i}`).value;
-            if(!rank) return alert("Por favor, defina a posição de todos os jogadores.");
-            
-            const prizeAmt = (currentTourConfig && currentTourConfig.prizes_config && currentTourConfig.prizes_config[rank]) ? currentTourConfig.prizes_config[rank] : 0;
-            
-            if(prizeAmt > 0) {
+            if(!rank) return alert("Please set rank for all players.");
+
+            const player = currentPodPlayers[i];
+            const prizeAmount = (currentTourConfig.prizes_config && currentTourConfig.prizes_config[rank]) ? currentTourConfig.prizes_config[rank] : 0;
+
+            if(prizeAmount > 0) {
                 transactions.push({
                     event_id: eventPrefix,
-                    player_id: currentPodPlayers[i].player_id,
-                    player_name: currentPodPlayers[i].player_name,
-                    amount: parseInt(prizeAmt),
+                    player_id: player.player_id,
+                    player_name: player.player_name,
+                    amount: parseInt(prizeAmount),
                     source_type: 'ODE',
-                    description: `${rank}º Lugar - ${currentTourConfig.tname}`
+                    description: `${rank}º Place - ${currentTourConfig.tname}`
                 });
             }
+
+            registrationUpdates.push({
+                id: player.id,
+                status: 'finished'
+            });
         }
 
-        if(!confirm("Confirmar encerramento do Pod? Isso creditará os tickets e liberará a mesa.")) return;
-
-        btn.disabled = true;
-        btn.innerText = "SAVING...";
-
-        try {
-            if(transactions.length > 0) {
-                const { error: errTrans } = await _supabase.from('player_transactions').insert(transactions);
-                if(errTrans) throw new Error("Erro ao salvar tickets: " + errTrans.message);
-            }
-
-            for(const p of currentPodPlayers) {
-                await _supabase.from('ode_registrations').update({ status: 'finished' }).eq('id', p.id);
-            }
-
-            const { error: errTable } = await _supabase.from('event_tables').update({
-                status: 'FREE',
-                tournament_name: null,
-                pod_number: null
-            }).eq('event_id', eventPrefix).eq('table_number', currentTable.table_number);
-
-            if(errTable) throw new Error("Erro ao liberar mesa: " + errTable.message);
-
-            alert("POD FINALIZADO COM SUCESSO!");
-            location.reload();
-
-        } catch (e) {
-            alert("ERRO CRÍTICO: " + e.message);
-            btn.disabled = false;
-            btn.innerText = "SAVE RESULTS & FREE TABLE";
+        if(transactions.length > 0) {
+            await _supabase.from('player_transactions').insert(transactions);
         }
+
+        for(const up of registrationUpdates) {
+            await _supabase.from('ode_registrations').update({ status: 'finished' }).eq('id', up.id);
+        }
+
+        const tableNum = document.getElementById('tableNum').value;
+        await _supabase.from('event_tables').update({ 
+            status: 'FREE', 
+            tournament_name: null, 
+            pod_number: null 
+        }).eq('event_id', eventPrefix).eq('table_number', tableNum);
+
+        alert("POD FINISHED! Tickets awarded and table is now FREE.");
+        location.reload();
     }
 </script>
 </body>
