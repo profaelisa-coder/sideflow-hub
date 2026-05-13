@@ -31,7 +31,6 @@
         .btn-cam { background: transparent; color: var(--white); border: 1px solid var(--white); padding: 5px; border-radius: 4px; font-size: 0.8rem; cursor: pointer; margin-right: 8px; opacity: 0.7; }
         .btn-cam:hover { opacity: 1; background: rgba(255,255,255,0.1); }
         
-        /* Modal Style */
         .modal { position: fixed; top:0; left:0; width:100%; height:100%; background: rgba(0,0,0,0.85); display: none; align-items: center; justify-content: center; z-index: 2000; }
         .modal-content { background: var(--sec); padding: 30px; border-radius: 12px; border-top: 4px solid var(--gold); width: 90%; max-width: 450px; text-align: center; }
         #imgPreview { max-width: 100%; max-height: 300px; border-radius: 8px; margin-top: 10px; border: 2px solid var(--gold); }
@@ -64,8 +63,7 @@
     <h2>PRIZE WALL SETUP</h2>
 
     <div class="nav-buttons">
-        <button class="btn-nav" onclick="location.href='admin_lead.html?event='+eventPrefix">BACK TO LEAD</button>
-        <button class="btn-nav" onclick="location.href='prize_staff.html?event='+eventPrefix" style="background: var(--gold); color: var(--dark); border:none;">GO TO SALES (STAFF)</button>
+        <button class="btn-nav" onclick="goToSales()" style="background: var(--gold); color: var(--dark); border:none;">GO TO SALES</button>
     </div>
 
     <div class="box">
@@ -135,6 +133,11 @@
             sessionStorage.setItem('pl_auth', 'true');
             location.reload();
         } else { alert("ACCESS DENIED."); }
+    }
+    
+    function goToSales() {
+        sessionStorage.setItem('ps_auth', 'true');
+        location.href = 'prize_staff.html?event=' + eventPrefix;
     }
 
     async function loadInventory() {
@@ -237,20 +240,17 @@
         if(desc.includes("VOIDED")) return alert("Already voided.");
         if(!confirm("UNDO this purchase? Unit returns to stock and tickets return to player.")) return;
 
-        // 1. Return Tickets (positive transaction)
         await _supabase.from('player_transactions').insert([{
             event_id: eventPrefix, player_id: pid, amount: Math.abs(amount),
             source_type: 'PRIZE_WALL', description: "VOID: " + desc
         }]);
 
-        // 2. Return unit to stock
         const productName = desc.replace("Redemption: ", "");
         const { data: current } = await _supabase.from('prize_inventory').select('*').eq('event_id', eventPrefix).eq('product_name', productName).single();
         if(current) {
             await _supabase.from('prize_inventory').update({ stock_quantity: current.stock_quantity + 1 }).eq('id', current.id);
         }
 
-        // 3. Mark original as voided to avoid double undo
         await _supabase.from('player_transactions').update({ description: "VOIDED: " + desc }).eq('id', id);
 
         alert("Transaction Voided!");
