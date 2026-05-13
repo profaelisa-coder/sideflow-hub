@@ -64,18 +64,18 @@
             <span class="balance-val" id="displayBalance">0</span>
             <small>AVAILABLE TICKETS</small>
         </div>
+    </div>
 
-        <div class="box">
-            <h3>Inventory Selection</h3>
-            <div id="inventoryList"></div>
-            
-            <div style="margin-top: 20px; padding-top: 15px; border-top: 1px solid rgba(255,255,255,0.2);">
-                <div style="display: flex; justify-content: space-between; margin-bottom: 15px;">
-                    <span>Total Cost:</span>
-                    <b id="totalCart" style="color: var(--gold); font-size: 1.2rem;">0 Tks</b>
-                </div>
-                <button class="btn-green" id="btnCheckout" onclick="processCheckout()">FINALIZE REDEMPTION</button>
+    <div class="box">
+        <h3>Inventory Selection</h3>
+        <div id="inventoryList"></div>
+        
+        <div id="checkoutSection" style="display: none; margin-top: 20px; padding-top: 15px; border-top: 1px solid rgba(255,255,255,0.2);">
+            <div style="display: flex; justify-content: space-between; margin-bottom: 15px;">
+                <span>Total Cost:</span>
+                <b id="totalCart" style="color: var(--gold); font-size: 1.2rem;">0 Tks</b>
             </div>
+            <button class="btn-green" id="btnCheckout" onclick="processCheckout()" disabled>FINALIZE REDEMPTION</button>
         </div>
     </div>
 </div>
@@ -122,21 +122,13 @@
                     <small>${item.ticket_cost} Tks | Stock: ${item.stock_quantity}</small>
                 </div>
                 <div style="font-size: 0.8rem; text-align: center; opacity: 0.7;">QTY:</div>
-                <input type="number" class="qty-input" id="qty-${item.id}" value="0" min="0" max="${item.stock_quantity}" oninput="updateTotal()">
+                <input type="number" class="qty-input" id="qty-${item.id}" value="0" min="0" max="${item.stock_quantity}" oninput="updateTotal()" disabled>
             </div>
         `).join('');
     }
 
-    function formatDriveLink(url) {
-        if (url && url.includes('drive.google.com') && url.includes('/d/')) {
-            const id = url.split('/d/')[1].split('/')[0];
-            return `https://drive.google.com/uc?export=view&id=${id}`;
-        }
-        return url;
-    }
-
     function viewPhoto(url) {
-        document.getElementById('imgPreview').src = formatDriveLink(url);
+        document.getElementById('imgPreview').src = url;
         document.getElementById('photoModal').style.display = 'flex';
     }
 
@@ -154,7 +146,14 @@
         
         document.getElementById('displayName').innerText = currentPlayer.name;
         document.getElementById('displayBalance').innerText = currentPlayer.balance;
+        
         document.getElementById('playerArea').style.display = 'block';
+        document.getElementById('checkoutSection').style.display = 'block';
+        
+        document.querySelectorAll('.qty-input').forEach(input => {
+            input.disabled = false;
+        });
+        
         updateTotal();
     }
 
