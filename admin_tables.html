@@ -6,42 +6,41 @@
     <title>SideFlow - Table Map</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
-        :root { --bg: #1A4B84; --sec: #2B6CB0; --gold: #ffb703; --blue: #63B3ED; --red: #e63946; --green: #2ecc71; --white: #e0e1dd; --dark: #0A2540; --blocked: #666666; }
+        :root { --bg: #1A4B84; --sec: #2B6CB0; --gold: #ffb703; --white: #e0e1dd; --blue: #63B3ED; --red: #e63946; --green: #2ecc71; --dark: #0A2540; --blocked: #666666; }
         body { font-family: 'Segoe UI', sans-serif; background: var(--bg); color: var(--white); margin: 0; padding: 20px; display: flex; flex-direction: column; height: 100vh; box-sizing: border-box; }
         
-        .header-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 10px; }
-        h2 { color: var(--gold); text-transform: uppercase; letter-spacing: 2px; margin: 0; }
-        .btn-top-back { background: transparent; color: var(--gold); border: 1px solid var(--gold); padding: 8px 20px; border-radius: 6px; cursor: pointer; font-weight: bold; text-transform: uppercase; transition: 0.3s; font-size: 0.8rem; }
+        .header-top { display: grid; grid-template-columns: 120px 1fr 120px; align-items: center; margin-bottom: 20px; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 15px; }
+        h2 { grid-column: 2; text-align: center; color: var(--gold); text-transform: uppercase; letter-spacing: 2px; margin: 0; font-size: 1.4rem; }
+        .btn-top-back { grid-column: 3; justify-self: end; background: transparent; color: var(--gold); border: 1.5px solid var(--gold); padding: 8px 20px; border-radius: 8px; cursor: pointer; font-weight: bold; text-transform: uppercase; transition: 0.3s; font-size: 0.8rem; }
         .btn-top-back:hover { background: var(--gold); color: var(--dark); }
         
         .layout { display: flex; gap: 20px; flex: 1; overflow: hidden; }
-        .sidebar { width: 300px; background: var(--sec); border-radius: 12px; padding: 15px; display: flex; flex-direction: column; border-top: 4px solid var(--gold); }
-        .sidebar h3 { margin-top: 0; color: var(--gold); font-size: 1rem; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 10px; }
+        .sidebar { width: 320px; background: var(--sec); border-radius: 12px; padding: 20px; display: flex; flex-direction: column; border-top: 4px solid var(--gold); }
+        .sidebar h3 { margin-top: 0; color: var(--gold); font-size: 1.1rem; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 10px; text-align: center; }
         
-        .pod-card { background: var(--bg); padding: 15px; border-radius: 8px; margin-bottom: 10px; border-left: 4px solid var(--green); }
-        .pod-card h4 { margin: 0 0 5px 0; color: white; }
+        .pod-card { background: var(--bg); padding: 18px; border-radius: 10px; margin-bottom: 12px; border-left: 5px solid var(--green); box-shadow: 0 4px 10px rgba(0,0,0,0.2); }
+        .pod-card h4 { margin: 0 0 10px 0; color: white; font-size: 1rem; }
         
-        .btn-alloc { width: 100%; background: var(--gold); color: var(--dark); border: none; padding: 10px; border-radius: 6px; font-weight: bold; cursor: pointer; text-transform: uppercase; }
-        .btn-wa { width: 100%; background: var(--green); color: white; border: none; padding: 10px; border-radius: 6px; font-weight: bold; cursor: pointer; text-transform: uppercase; margin-top: 10px; display: none; }
+        .btn-alloc { width: 100%; background: var(--gold); color: var(--dark); border: none; padding: 14px; border-radius: 8px; font-weight: bold; cursor: pointer; text-transform: uppercase; font-size: 0.95rem; }
         
-        .btn-red { width: 100%; background: var(--red); color: white; border: none; padding: 12px; border-radius: 6px; font-weight: bold; cursor: pointer; text-transform: uppercase; transition: 0.2s; }
+        .btn-red { width: 100%; background: var(--red); color: white; border: none; padding: 15px; border-radius: 8px; font-weight: bold; cursor: pointer; text-transform: uppercase; transition: 0.2s; font-size: 0.9rem; }
         .btn-red:hover { filter: brightness(1.2); }
         
         .modal { position: fixed; top:0; left:0; width:100%; height:100%; background: rgba(0,0,0,0.85); display: none; align-items: center; justify-content: center; z-index: 2000; }
-        .modal-content { background: var(--sec); padding: 30px; border-radius: 12px; border-top: 4px solid var(--red); width: 90%; max-width: 400px; text-align: center; }
-        .modal-content select { width: 100%; padding: 12px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.2); background: var(--dark); color: white; margin-bottom: 20px; font-size: 1rem; }
+        .modal-content { background: var(--sec); padding: 35px; border-radius: 15px; border-top: 5px solid var(--red); width: 90%; max-width: 450px; text-align: center; }
+        .modal-content select { width: 100%; padding: 15px; border-radius: 10px; border: 1.5px solid rgba(255,255,255,0.2); background: var(--dark); color: white; margin-bottom: 25px; font-size: 1.1rem; }
 
-        .map-area { flex: 1; background: var(--sec); border-radius: 12px; padding: 20px; overflow-y: auto; border: 1px solid rgba(255,255,255,0.1); }
-        .grid-tables { display: grid; grid-template-columns: repeat(auto-fill, minmax(65px, 1fr)); gap: 12px; }
+        .map-area { flex: 1; background: var(--sec); border-radius: 12px; padding: 25px; overflow-y: auto; border: 1px solid rgba(255,255,255,0.1); }
+        .grid-tables { display: grid; grid-template-columns: repeat(auto-fill, minmax(75px, 1fr)); gap: 15px; }
         
-        .table-box { aspect-ratio: 1; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 1.1rem; cursor: pointer; transition: 0.2s; box-shadow: 0 4px 6px rgba(0,0,0,0.3); flex-direction: column; background: var(--dark); border: 1px solid var(--blue); position: relative; }
-        .table-box span { font-size: 0.55rem; margin-top: 4px; opacity: 0.8; text-align: center; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; width: 90%; }
+        .table-box { aspect-ratio: 1; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 1.2rem; cursor: pointer; transition: 0.2s; box-shadow: 0 5px 8px rgba(0,0,0,0.3); flex-direction: column; background: var(--dark); border: 1.5px solid var(--blue); position: relative; }
+        .table-box span { font-size: 0.65rem; margin-top: 5px; opacity: 0.8; text-align: center; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; width: 90%; }
         
-        .free-state { background: rgba(255,255,255,0.05); color: white; border: 1px solid rgba(255,255,255,0.2); }
-        .occupied-state { background: var(--red); color: white; border: 2px solid #a30000; }
-        .blocked-state { background: var(--blocked); color: white; border: 2px solid #333333; cursor: not-allowed; }
+        .free-state { background: rgba(255,255,255,0.05); color: white; border: 1.5px solid rgba(255,255,255,0.2); }
+        .occupied-state { background: var(--red); color: white; border: 2.5px solid #a30000; }
+        .blocked-state { background: var(--blocked); color: white; border: 2.5px solid #333333; cursor: not-allowed; }
         
-        .btn-block-table { position: absolute; top: 2px; right: 2px; background: rgba(0,0,0,0.5); color: white; border: none; font-size: 0.5rem; cursor: pointer; border-radius: 4px; padding: 2px 4px; }
+        .btn-block-table { position: absolute; top: 3px; right: 3px; background: rgba(0,0,0,0.6); color: white; border: none; font-size: 0.6rem; cursor: pointer; border-radius: 5px; padding: 3px 6px; }
         .btn-block-table:hover { background: var(--red); }
     </style>
 </head>
@@ -49,16 +48,12 @@
 
 <div id="massFreeModal" class="modal">
     <div class="modal-content">
-        <h3 style="color: var(--gold); margin-top: 0; border-bottom: none; padding-bottom: 0;">MASS FREE TABLES</h3>
-        <p style="font-size: 0.85rem; margin-bottom: 20px; opacity: 0.8;">Select the tournament you want to close and clear from the map.</p>
-        
-        <select id="massFreeSelect">
-            <option value="">-- LOADING EVENTS --</option>
-        </select>
-        
-        <div style="display: flex; gap: 10px;">
-            <button class="btn-red" style="margin:0; flex:1;" onclick="confirmMassFree()">CONFIRM FREE</button>
-            <button style="background: #666; color: white; border: none; border-radius: 6px; font-weight: bold; margin:0; flex:1; cursor: pointer;" onclick="closeMassFreeModal()">CANCEL</button>
+        <h3 style="color: var(--gold); margin-top: 0; font-size: 1.4rem;">MASS FREE TABLES</h3>
+        <p style="font-size: 1rem; margin-bottom: 25px; opacity: 0.8;">Select the tournament to clear from the map.</p>
+        <select id="massFreeSelect"><option value="">-- LOADING EVENTS --</option></select>
+        <div style="display: flex; gap: 15px;">
+            <button class="btn-red" style="margin:0; flex:1;" onclick="confirmMassFree()">CONFIRM</button>
+            <button style="background: #666; color: white; border: none; border-radius: 10px; font-weight: bold; margin:0; flex:1; cursor: pointer;" onclick="closeMassFreeModal()">CANCEL</button>
         </div>
     </div>
 </div>
@@ -71,8 +66,7 @@
 <div class="layout">
     <div class="sidebar">
         <h3>READY TO ALLOCATE</h3>
-        <div id="readyPodsList" style="flex: 1; overflow-y: auto;"></div>
-        
+        <div id="readyPodsList" style="flex: 1; overflow-y: auto; margin-top: 10px;"></div>
         <div style="margin-top: 15px; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 15px;">
             <button class="btn-red" onclick="openMassFreeModal()">MASS FREE TABLES</button>
         </div>
@@ -90,7 +84,6 @@
     let eventPrefix = urlParams.get('event') || localStorage.getItem('active_event_id');
     let allTables = [];
     let catalogSizes = {}; 
-    let pendingWA = {};
     let subscription = null;
 
     window.onload = async () => {
@@ -98,9 +91,7 @@
         await loadCatalog();
         await loadTables();
         await loadReadyPods();
-        
         setupRealtime();
-        
         document.addEventListener('visibilitychange', () => {
             if (document.visibilityState === 'visible') {
                 loadTables();
@@ -111,9 +102,7 @@
     };
 
     function setupRealtime() {
-        if (subscription) {
-            _supabase.removeChannel(subscription);
-        }
+        if (subscription) { _supabase.removeChannel(subscription); }
         subscription = _supabase.channel('custom-all-channel')
             .on('postgres_changes', { event: '*', schema: 'public', table: 'ode_registrations', filter: `event_id=eq.${eventPrefix}` }, loadReadyPods)
             .on('postgres_changes', { event: '*', schema: 'public', table: 'event_tables', filter: `event_id=eq.${eventPrefix}` }, loadTables)
@@ -130,37 +119,20 @@
         allTables = data || [];
         const grid = document.getElementById('tablesGrid');
         grid.innerHTML = "";
-        
         allTables.forEach(t => {
             const upperStatus = t.status ? t.status.trim().toUpperCase() : '';
             let stateClass = 'free-state';
             let statusText = 'FREE';
-            
             if (upperStatus === 'OCCUPIED') {
                 stateClass = 'occupied-state';
-                if (t.tournament_name) {
-                    statusText = t.pod_number ? t.tournament_name + ' #' + t.pod_number : t.tournament_name;
-                } else {
-                    statusText = 'OCCUPIED';
-                }
+                statusText = t.pod_number ? t.tournament_name + ' #' + t.pod_number : t.tournament_name;
             } else if (upperStatus === 'BLOCKED') {
                 stateClass = 'blocked-state';
                 statusText = 'BLOCKED';
             }
-
-            const isFree = upperStatus === 'FREE';
-            
-            let blockBtn = '';
-            if (isFree) {
-                blockBtn = `<button class="btn-block-table" onclick="event.stopPropagation(); toggleBlockTable('${t.id}', 'BLOCK')">X</button>`;
-            } else if (upperStatus === 'BLOCKED') {
-                 blockBtn = `<button class="btn-block-table" onclick="event.stopPropagation(); toggleBlockTable('${t.id}', 'FREE')">O</button>`;
-            }
-
-            grid.innerHTML += `<div class="table-box ${stateClass}" onclick="clearTable('${t.id}', '${upperStatus}', ${t.table_number})">
-                ${blockBtn}
-                ${t.table_number}<span>${statusText}</span>
-            </div>`;
+            let blockBtn = (upperStatus === 'FREE') ? `<button class="btn-block-table" onclick="event.stopPropagation(); toggleBlockTable('${t.id}', 'BLOCK')">X</button>` : 
+                           (upperStatus === 'BLOCKED') ? `<button class="btn-block-table" onclick="event.stopPropagation(); toggleBlockTable('${t.id}', 'FREE')">O</button>` : '';
+            grid.innerHTML += `<div class="table-box ${stateClass}" onclick="clearTable('${t.id}', '${upperStatus}', ${t.table_number})">${blockBtn}${t.table_number}<span>${statusText}</span></div>`;
         });
     }
 
@@ -172,80 +144,37 @@
         regs.forEach(r => { 
             const key = `${r.tname}|${r.pod_number}`;
             if(!groups[key]) groups[key] = { tname: r.tname, pod_number: r.pod_number, players: [] };
-            groups[key].players.push({id: r.id, phone: r.player_phone});
+            groups[key].players.push(r.id);
         });
         listDiv.innerHTML = "";
         for (const [key, info] of Object.entries(groups)) {
             const targetSize = catalogSizes[info.tname] ? catalogSizes[info.tname].size : 4; 
             if(info.players.length >= targetSize) {
-                const safeKey = key.replace(/[^a-zA-Z0-9]/g, '');
-                const isPending = pendingWA[key];
                 listDiv.innerHTML += `
                     <div class="pod-card">
                         <h4>${info.tname} #${info.pod_number}</h4>
-                        <button class="btn-alloc" id="alloc-${safeKey}" style="display:${isPending?'none':'block'}" onclick="allocate('${info.tname}', '${safeKey}', '${key}')">ALLOCATE</button>
-                        <button class="btn-wa" id="wa-${safeKey}" style="display:${isPending?'block':'none'}" onclick="sendBulkWA('${key}', '${safeKey}')">SEND WHATSAPP</button>
+                        <button class="btn-alloc" onclick="allocate('${info.tname}', ${info.pod_number}, ${JSON.stringify(info.players)})">ALLOCATE</button>
                     </div>`;
             }
         }
     }
 
-    async function allocate(tname, safeKey, groupKey) {
+    async function allocate(tname, podNum, playerIds) {
         const minT = catalogSizes[tname] ? parseInt(catalogSizes[tname].min) || 1 : 1;
         const maxT = catalogSizes[tname] ? parseInt(catalogSizes[tname].max) || 9999 : 9999;
-        
-        const { data: tableData, error } = await _supabase.rpc('assign_table_smart', { target_event_id: eventPrefix, min_t: minT, max_t: maxT });
-        
-        if (error || !tableData || tableData.length === 0) {
-            console.error(error);
-            return alert("NO FREE TABLES IN THIS SECTION!");
-        }
-        
+        const { data: tableData, error: rpcError } = await _supabase.rpc('assign_table_smart', { target_event_id: eventPrefix, min_t: minT, max_t: maxT });
+        if (rpcError || !tableData || tableData.length === 0) return alert("NO FREE TABLES IN THIS SECTION!");
         const tableNum = tableData[0].table_number;
-        const podNum = parseInt(groupKey.split('|')[1]);
-        
-        await _supabase.from('event_tables').update({ tournament_name: tname, pod_number: podNum, status: 'OCCUPIED' }).eq('event_id', eventPrefix).eq('table_number', tableNum);
-        
-        pendingWA[groupKey] = { table: tableNum };
-        document.getElementById(`alloc-${safeKey}`).style.display = 'none';
-        document.getElementById(`wa-${safeKey}`).style.display = 'block';
-        loadTables();
-    }
-
-    async function sendBulkWA(groupKey, safeKey) {
-        const info = pendingWA[groupKey];
-        const [tname, podNum] = groupKey.split('|');
-        
-        const { data: players } = await _supabase
-            .from('ode_registrations')
-            .select('id, player_name, player_phone')
-            .eq('event_id', eventPrefix)
-            .eq('tname', tname)
-            .eq('pod_number', podNum)
-            .eq('status', 'waiting');
-
-        if(players && players.length > 0) {
-            for (const p of players) {
-                if(p.player_phone) {
-                    const msg = encodeURIComponent(`SIDEFLOW: Your Pod ${tname} #${podNum} is READY! Please proceed to Table ${info.table}.`);
-                    if(confirm(`Send WhatsApp to ${p.player_name} (${p.player_phone})?`)) {
-                        window.open(`https://wa.me/${p.player_phone}?text=${msg}`, '_blank');
-                    }
-                }
-            }
-
-            await _supabase.from('ode_registrations')
-                .update({ status: 'allocated', assigned_table: info.table })
-                .in('id', players.map(p => p.id));
+        const { error: tableError } = await _supabase.from('event_tables').update({ tournament_name: tname, pod_number: podNum, status: 'OCCUPIED' }).eq('event_id', eventPrefix).eq('table_number', tableNum);
+        if(!tableError) {
+            await _supabase.from('ode_registrations').update({ status: 'allocated', assigned_table: tableNum }).in('id', playerIds);
+            alert(`SUCCESS! Pod allocated to Table ${tableNum}. Signal sent to players.`);
         }
-
-        delete pendingWA[groupKey];
-        loadReadyPods();
+        loadTables(); loadReadyPods();
     }
 
     async function clearTable(id, status, num) {
-        const safeStatus = status ? status.trim().toUpperCase() : '';
-        if(safeStatus === 'FREE' || safeStatus === 'BLOCKED') return; 
+        if(status !== 'OCCUPIED') return; 
         if(confirm(`Free Table ${num}?`)) {
             await _supabase.from('event_tables').update({ status: 'FREE', tournament_name: null, pod_number: null }).eq('id', id);
             loadTables();
@@ -261,44 +190,22 @@
     function openMassFreeModal() {
         const occupiedTables = allTables.filter(t => (t.status || '').trim().toUpperCase() === 'OCCUPIED' && t.tournament_name);
         const uniqueTournaments = [...new Set(occupiedTables.map(t => t.tournament_name))];
-        
         const select = document.getElementById('massFreeSelect');
         select.innerHTML = '<option value="">-- SELECT EVENT --</option>';
-        
         uniqueTournaments.forEach(name => {
             const count = occupiedTables.filter(t => t.tournament_name === name).length;
-            select.innerHTML += `<option value="${name}">${name} (${count} tables in use)</option>`;
+            select.innerHTML += `<option value="${name}">${name} (${count} tables)</option>`;
         });
-        
         document.getElementById('massFreeModal').style.display = 'flex';
     }
 
-    function closeMassFreeModal() {
-        document.getElementById('massFreeModal').style.display = 'none';
-        document.getElementById('massFreeSelect').value = "";
-    }
+    function closeMassFreeModal() { document.getElementById('massFreeModal').style.display = 'none'; }
 
     async function confirmMassFree() {
         const tname = document.getElementById('massFreeSelect').value;
-        if(!tname) return alert("Please select a tournament first.");
-        
-        const isConfirmed = confirm("Are you sure you want to release all selected tables?");
-        
-        if(isConfirmed) {
-            const { error } = await _supabase
-                .from('event_tables')
-                .update({ status: 'FREE', tournament_name: null, pod_number: null })
-                .eq('event_id', eventPrefix)
-                .eq('tournament_name', tname);
-                
-            if(error) {
-                alert("Error freeing tables: " + error.message);
-            } else {
-                alert("Tables successfully freed!");
-                closeMassFreeModal();
-                loadTables();
-            }
-        }
+        if(!tname || !confirm("Release all selected tables?")) return;
+        const { error } = await _supabase.from('event_tables').update({ status: 'FREE', tournament_name: null, pod_number: null }).eq('event_id', eventPrefix).eq('tournament_name', tname);
+        if(!error) { alert("Tables freed!"); closeMassFreeModal(); loadTables(); }
     }
 </script>
 </body>
