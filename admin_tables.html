@@ -153,7 +153,7 @@
                 listDiv.innerHTML += `
                     <div class="pod-card">
                         <h4>${info.tname} #${info.pod_number}</h4>
-                        <button class="btn-alloc" onclick="allocate('${info.tname}', ${info.pod_number}, ${JSON.stringify(info.players)})">ALLOCATE</button>
+                        <button class="btn-alloc" onclick='allocate("${info.tname}", ${info.pod_number}, ${JSON.stringify(info.players)})'>ALLOCATE</button>
                     </div>`;
             }
         }
