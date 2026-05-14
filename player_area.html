@@ -177,8 +177,9 @@
         currentPlayer = data;
         if(!eventPrefix) { eventPrefix = data.event_id; }
         
-        const { data: nullPass } = await _supabase.from('ode_registrations').select('id').eq('player_id', currentPlayer.player_id).is('player_password', null).maybeSingle();
-        needsPassword = !!nullPass;
+        const { data: passData } = await _supabase.from('ode_registrations').select('player_password').eq('player_id', currentPlayer.player_id).eq('event_id', eventPrefix);
+        const hasPassword = passData && passData.some(row => row.player_password !== null && row.player_password !== '');
+        needsPassword = !hasPassword;
         
         document.getElementById('step1').style.display = 'none';
         document.getElementById('step2').style.display = 'block';
@@ -198,11 +199,11 @@
         if(pass.length !== 5) return alert("PASSWORD MUST BE 5 DIGITS");
         
         if(needsPassword) {
-            const { error } = await _supabase.from('ode_registrations').update({ player_password: pass }).eq('id', currentPlayer.id);
+            const { error } = await _supabase.from('ode_registrations').update({ player_password: pass }).eq('player_id', currentPlayer.player_id).eq('event_id', eventPrefix);
             if(error) return alert("ERROR SAVING PASSWORD");
         } else {
-            const { data: auth } = await _supabase.from('ode_registrations').select('id').eq('player_id', currentPlayer.player_id).eq('player_password', pass).maybeSingle();
-            if(!auth) return alert("INCORRECT PASSWORD");
+            const { data: auth } = await _supabase.from('ode_registrations').select('id').eq('player_id', currentPlayer.player_id).eq('event_id', eventPrefix).eq('player_password', pass).limit(1);
+            if(!auth || auth.length === 0) return alert("INCORRECT PASSWORD");
         }
         
         document.getElementById('authOverlay').style.display = 'none';
