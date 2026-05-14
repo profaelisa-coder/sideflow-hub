@@ -271,6 +271,7 @@
         
         _supabase.channel('player_watch')
             .on('postgres_changes', { event: '*', schema: 'public', table: 'ode_registrations', filter: `player_id=eq.${currentPlayer.player_id}` }, updateData)
+            .on('postgres_changes', { event: '*', schema: 'public', table: 'player_transactions', filter: `player_id=eq.${currentPlayer.player_id}` }, updateData)
             .on('postgres_changes', { event: '*', schema: 'public', table: 'prize_inventory', filter: `event_id=eq.${eventPrefix}` }, fetchPrizeWall)
             .subscribe();
     }
