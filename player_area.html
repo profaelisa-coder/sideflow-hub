@@ -66,6 +66,10 @@
         .prize-locked { opacity: 0.55; filter: grayscale(40%); }
         .prize-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(10, 37, 64, 0.7); display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 5; pointer-events: none; }
         .prize-overlay span { background: var(--dark); padding: 8px 15px; border-radius: 8px; font-size: 0.85rem; border: 1.5px solid var(--gold); color: var(--gold); font-weight: 900; text-transform: uppercase; letter-spacing: 1px; box-shadow: 0 4px 10px rgba(0,0,0,0.5); transform: rotate(-5deg); }
+        
+        #statusContainer { margin-bottom: 20px; display: none; background: var(--green); color: var(--dark); padding: 20px; border-radius: 15px; text-align: center; box-shadow: 0 6px 20px rgba(46, 204, 113, 0.4); border: 3px solid white; }
+        #statusContainer h4 { margin: 0; font-size: 1.8rem; font-weight: 900; text-transform: uppercase; }
+        #statusContainer p { margin: 5px 0 0 0; font-weight: bold; font-size: 1.1rem; }
     </style>
 </head>
 <body>
@@ -112,6 +116,7 @@
 
     <div class="content">
         <div id="tab-home" class="tab-content active">
+            <div id="statusContainer"></div>
             <div class="card">
                 <label>PLAYER NAME</label>
                 <div id="playerName" style="font-size: 1.5rem; font-weight: 900; color: var(--gold);">---</div>
@@ -274,6 +279,10 @@
             .on('postgres_changes', { event: '*', schema: 'public', table: 'player_transactions', filter: `player_id=eq.${currentPlayer.player_id}` }, updateData)
             .on('postgres_changes', { event: '*', schema: 'public', table: 'prize_inventory', filter: `event_id=eq.${eventPrefix}` }, fetchPrizeWall)
             .subscribe();
+
+        document.addEventListener('visibilitychange', () => {
+            if (document.visibilityState === 'visible') updateData();
+        });
     }
 
     async function updateData() {
@@ -286,9 +295,15 @@
         const currentReg = player[0];
         const status = currentReg.status;
         
-        if(status === 'allocated' && lastStatus !== 'allocated') {
-            startPager(currentReg.tname, currentReg.assigned_table);
+        const statusDiv = document.getElementById('statusContainer');
+        if (status === 'allocated') {
+            statusDiv.innerHTML = `<h4>TABLE ${currentReg.assigned_table}</h4><p>${currentReg.tname} #${currentReg.pod_number}</p>`;
+            statusDiv.style.display = 'block';
+            if (lastStatus !== 'allocated') startPager(currentReg.tname, currentReg.assigned_table);
+        } else {
+            statusDiv.style.display = 'none';
         }
+
         lastStatus = status;
         
         const podCard = document.getElementById('activePodCard');
